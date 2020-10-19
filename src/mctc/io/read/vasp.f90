@@ -116,7 +116,7 @@ subroutine read_vasp(mol, unit, error)
    if (j < i) j = len_trim(line)
 
    ! CONTCAR files have additional Element line here since vasp.5.1
-   if (verify(line(i:j), '123456790') /= 0) then
+   if (verify(line(i:j), '1234567890') /= 0) then
       call parse_line(line, args, ntype)
       call getline(unit, line, stat)
       if (debug) print'("->", a)', line

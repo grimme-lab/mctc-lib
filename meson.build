@@ -15,7 +15,7 @@
 project(
   'mctc-lib',
   'fortran',
-  version: '0.1.0',
+  version: '0.1.1',
   license: 'Apache-2.0',
   meson_version: '>=0.53',
   default_options: [
