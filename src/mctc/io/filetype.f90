@@ -71,7 +71,7 @@ elemental function get_filetype(file) result(ftype)
 
    ftype = filetype%unknown
    iext = index(file, '.', back=.true.)
-   isep = scan(file, '/\', back=.true.)
+   isep = scan(file, '\/', back=.true.)
 
    if (iext > isep .and. iext > 0) then
       select case(to_lower(file(iext+1:)))

@@ -21,7 +21,29 @@ md_extensions: markdown.extensions.toc
                markdown.extensions.smarty
 ---
 
-Common tool chain to molecular structure data in various applications developed in our group.
+Common tool chain to molecular structure data in various applications.
+This library provides a unified way to perform operations on molecular structure data, like reading and writing to common geometry file formats.
+
+[TOC]
+
+## Input and Output
+
+The IO module ([[mctc_io]]) provides access to a common type to declare molecular structure data ([[structure_type]]).
+Also, reader routines ([[mctc_io_read]]) to obtain [[structure_type]] objects from input files are available.
+To write a [[structure_type]] object a set of writer routines are available as well ([[mctc_io_write]]).
+
+
+## Standard environment
+
+The tool chain library provides an environment module ([[mctc_env]]) to allow the usage of common constants across different users.
+For a minimal error handling the [[error_type]] is available and should be passed as allocatable type to the library procedures.
+The allocation status of the [[error_type]] is used to determine failed executions and the respective error message is stored transparently in the [[error_type]].
+
+
+## Light testing framework
+
+Additionally, the environment module provides a testsuite implementation to setup a slim and light testing framework in dependent applications.
+The test framework can be easily setup by the [[mctc_env_testing]] module.
 
 
 ## Getting Started

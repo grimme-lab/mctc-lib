@@ -12,6 +12,17 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
+!> Input and output module of the tool chain library.
+!>
+!> This module exports the basic [[structure_type]] as well as routines
+!> to read it from a file or formatted unit ([[read_structure]]) or write
+!> it to a formatted unit ([[write_structure]]).
+!>
+!> Both [[read_structure]] and [[write_structure]] take format hints from
+!> the filetype enumerator. File names can be translated to the respective
+!> enumerator by using the [[get_filetype]] function. This can be useful in
+!> case the caller routine wants to open the formatted unit itself or uses
+!> a non-standard file extension.
 module mctc_io
    use mctc_io_filetype, only : filetype, get_filetype
    use mctc_io_read, only : read_structure

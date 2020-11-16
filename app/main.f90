@@ -12,6 +12,22 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
+!> Example application using tool chain library.
+!>
+!> This program uses the [[read_structure]] and [[write_structure]] procedures
+!> to implement a structure converter.
+!> Usually, the input structure can be inferred by the name of the input file.
+!> To allow formats with non-standard extensions (because most geometry formats
+!> are not really standardized) additional hints can be passed by the command
+!> line to determine the read/write formats.
+!>
+!> To add support for piping standard input and standard output reading and
+!> writing from units is combined with the additional format hints.
+!>
+!> Additional filters or modifications can also be implemented in an intermediary
+!> step, this program implements an element symbol normalization. Other filters
+!> like folding back to central cells or removing lattice vector could be added
+!> in a similar manner.
 program main
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
    use mctc_env
