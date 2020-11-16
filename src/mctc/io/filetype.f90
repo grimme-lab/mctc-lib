@@ -77,7 +77,7 @@ elemental function get_filetype(file) result(ftype)
       select case(to_lower(file(iext+1:)))
       case('coord', 'tmol')
          ftype = filetype%tmol
-      case('xyz')
+      case('xyz', 'log')
          ftype = filetype%xyz
       case('mol')
          ftype = filetype%molfile

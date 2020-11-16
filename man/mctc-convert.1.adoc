@@ -1,0 +1,43 @@
+= mctc-convert(1)
+:doctype: manpage
+
+== Name
+mctc-convert - Convert between supported input formats of the tool chain library
+
+
+== Synopsis
+*mctc-convert* [_options_] _input_ _output_
+
+
+== Description
+
+Read structure from input file and writes it to output file.
+The format is determined by the file extension or the format hint.
+
+Supported formats:
+
+- Xmol/xyz files (xyz, log)
+- Turbomole's coord, riper's periodic coord (tmol, coord)
+- DFTB+ genFormat geometry inputs as cluster, supercell or fractional (gen)
+- VASP's POSCAR/CONTCAR input files (vasp, poscar, contcar)
+- Protein Database files, only single files (pdb)
+- Connection table files, molfile (mol) and structure data format (sdf)
+- Gaussian's external program input (ein)
+
+
+== Options
+
+*-i, --input* _format_::
+Hint for the format of the input file
+
+*-o, --output* _format_::
+Hint for the format of the output file
+
+*--normalize*::
+Normalize all element symbols to capitalized format
+
+*--version*::
+Print program version and exit
+
+*--help*::
+Show this help message

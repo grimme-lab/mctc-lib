@@ -29,6 +29,7 @@ subroutine write_xyz(mol, unit, comment_line)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: comment_line
    integer :: iat
+   logical :: expo
 
    write(unit, '(i0)') mol%nat
    if (present(comment_line)) then
@@ -36,10 +37,18 @@ subroutine write_xyz(mol, unit, comment_line)
    else
       write(unit, '(a)')
    end if
-   do iat = 1, mol%nat
-      write(unit, '(a4, 1x, 3es24.14)') &
-         & mol%sym(mol%id(iat)), mol%xyz(:, iat)*autoaa
-   enddo
+   expo = maxval(mol%xyz) > 1.0e+5 .or. minval(mol%xyz) < -1.0e+5
+   if (expo) then
+      do iat = 1, mol%nat
+         write(unit, '(a4, 1x, 3es24.14)') &
+            & mol%sym(mol%id(iat)), mol%xyz(:, iat)*autoaa
+      enddo
+   else
+      do iat = 1, mol%nat
+         write(unit, '(a4, 1x, 3f24.14)') &
+            & mol%sym(mol%id(iat)), mol%xyz(:, iat)*autoaa
+      enddo
+   end if
 
 end subroutine write_xyz
 

@@ -15,7 +15,7 @@
 project(
   'mctc-lib',
   'fortran',
-  version: '0.1.1',
+  version: '0.1.2',
   license: 'Apache-2.0',
   meson_version: '>=0.53',
   default_options: [
@@ -70,6 +70,17 @@ if install
     mctc_lib,
     description: 'Modular computation tool chain',
   )
+
+  asciidoc = find_program('asciidoctor', required: false)
+  if asciidoc.found()
+    install_man(
+      configure_file(
+        command: [asciidoc, '-b', 'manpage', '@INPUT@', '-o', '@OUTPUT@'],
+        input: files('man/mctc-convert.1.adoc'),
+        output: '@BASENAME@',
+      )
+    )
+  endif
 endif
 
 # add the testsuite
