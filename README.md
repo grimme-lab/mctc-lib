@@ -33,6 +33,49 @@ meson test -C _build --print-errorlogs
 ```
 
 
+## Example
+
+An example application is provided with the [``mctc-convert``](man/mctc-convert.1.adoc) program to convert between different supported input formats.
+
+To read an input file using the IO library use the ``read_structure`` routine.
+The final geometry data is stored in a ``structure_type``:
+
+```fortran
+use mctc_io
+use mctc_env
+type(structure_type) :: mol
+type(error_type), allocatable :: error
+
+call read_structure(mol, "input.xyz", error)
+if (allocated(error)) then
+   print '("[Error]", 1x, a)', error%message
+   error stop
+end if
+```
+
+The environment library provides a basic error back-propagation mechanism using an allocatable ``error_type``, which is passed to the library routines.
+Usually the reader can detect the file type from the suffix of file names.
+Alternatively, the ``filetype`` enumerator provides the identifiers of all supported file types, which can be passed as optional argument to the ``read_structure`` routine.
+
+In a similar way the ``write_structure`` routine allows to write a ``structure_type`` to a file or unit:
+
+``` fortran
+use mctc_io
+use mctc_env
+type(structure_type) :: mol
+type(error_type), allocatable :: error
+
+call write_structure(mol, "output.xyz", error)
+if (allocated(error)) then
+   print '("[Error]", 1x, a)', error%message
+   error stop
+end if
+```
+
+The [``mctc-convert``](man/mctc-convert.1.adoc) program provides a chained reader and writer call to act as a geometry file converter.
+Checkout the implementation in [``app/main.f90``](app/main.f90).
+
+
 ## License
 
 Licensed under the Apache License, Version 2.0 (the “License”);
