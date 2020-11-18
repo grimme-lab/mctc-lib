@@ -87,6 +87,7 @@ subroutine read_molfile(mol, unit, error)
    type(sdf_data), allocatable :: sdf(:)
    type(structure_info) :: info
    real(wp), allocatable :: xyz(:, :)
+   integer, allocatable :: bond(:, :)
 
    two_dim = .false.
 
@@ -131,7 +132,7 @@ subroutine read_molfile(mol, unit, error)
       sdf(iatom)%valence = list12(6)
    end do
 
-   !call mol%bonds%allocate(size=number_of_bonds, order=3)
+   allocate(bond(3, number_of_bonds))
    do ibond = 1, number_of_bonds
       call getline(unit, line, stat)
       read(line, '(7i3)', iostat=stat) &
@@ -140,7 +141,7 @@ subroutine read_molfile(mol, unit, error)
          call fatal_error(error, "Cannot read topology from connection table")
          return
       end if
-      !call mol%bonds%push_back([iatom, jatom, btype])
+      bond(:, ibond) = [ibond, jatom, btype]
    end do
 
    do while(stat == 0)
@@ -161,7 +162,7 @@ subroutine read_molfile(mol, unit, error)
 
    info = structure_info(two_dimensional=two_dim, &
       & missing_hydrogen=any(sdf%hydrogens > 1))
-   call new(mol, sym, xyz, charge=real(sum(sdf%charge), wp), info=info)
+   call new(mol, sym, xyz, charge=real(sum(sdf%charge), wp), info=info, bond=bond)
    call move_alloc(sdf, mol%sdf)
    !if (len(name) > 0) mol%name = name
 

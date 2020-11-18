@@ -96,6 +96,8 @@ subroutine test_valid1_mol(error)
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
    if (allocated(error)) return
+   call check(error, struc%nbd, 12, "Number of bonds does not match")
+   if (allocated(error)) return
 
 end subroutine test_valid1_mol
 
@@ -173,6 +175,8 @@ subroutine test_valid2_mol(error)
    call check(error, struc%nat, 24, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 7, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 25, "Number of bonds does not match")
    if (allocated(error)) return
 
 end subroutine test_valid2_mol
@@ -350,6 +354,8 @@ subroutine test_valid1_sdf(error)
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
    if (allocated(error)) return
+   call check(error, struc%nbd, 12, "Number of bonds does not match")
+   if (allocated(error)) return
 
 end subroutine test_valid1_sdf
 
@@ -420,6 +426,8 @@ subroutine test_valid2_sdf(error)
    call check(error, struc%nat, 3, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 2, "Number of bonds does not match")
    if (allocated(error)) return
 
 end subroutine test_valid2_sdf
