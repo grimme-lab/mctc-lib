@@ -13,7 +13,7 @@
 ! limitations under the License.
 
 module mctc_io_read
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_filetype, only : filetype, get_filetype
    use mctc_io_read_ctfile, only : read_molfile, read_sdf
    use mctc_io_read_gaussian, only : read_gaussian_external
@@ -22,11 +22,11 @@ module mctc_io_read
    use mctc_io_read_turbomole, only : read_coord
    use mctc_io_read_vasp, only : read_vasp
    use mctc_io_read_xyz, only : read_xyz
-   use mctc_io_structure, only : structure_type, new_structure
+   use mctc_io_structure, only : structure_type, new_structure, resize
    implicit none
    private
 
-   public :: read_structure
+   public :: read_structure, read_structures
    public :: structure_reader, get_structure_reader
 
 
@@ -34,6 +34,12 @@ module mctc_io_read
       module procedure :: read_structure_from_file
       module procedure :: read_structure_from_unit
    end interface read_structure
+
+
+   interface read_structures
+      module procedure :: read_structures_from_file
+      module procedure :: read_structures_from_unit
+   end interface read_structures
 
 
    abstract interface
@@ -164,6 +170,100 @@ subroutine get_structure_reader(reader, ftype)
    end select
 
 end subroutine get_structure_reader
+
+
+subroutine read_structures_from_file(self, file, error, format)
+
+   !> Instance of the molecular structure data
+   type(structure_type), allocatable, intent(out) :: self(:)
+
+   !> Name of the file to read
+   character(len=*), intent(in) :: file
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> File type format hint
+   integer, intent(in), optional :: format
+
+   logical :: exist
+   integer :: unit, stat, ftype
+
+   inquire(file=file, exist=exist)
+   if (.not.exist) then
+      call fatal_error(error, "File '"//file//"' cannot be found")
+      return
+   end if
+
+   open(file=file, newunit=unit, status='old', iostat=stat)
+   if (stat /= 0) then
+      call fatal_error(error, "Cannot open '"//file//"'")
+      return
+   end if
+
+   if (present(format)) then
+      ftype = format
+   else
+      ftype = get_filetype(file)
+   end if
+
+   call read_structures(self, unit, ftype, error)
+   close(unit)
+
+end subroutine read_structures_from_file
+
+
+subroutine read_structures_from_unit(self, unit, ftype, error)
+
+   !> Instance of the molecular structure data
+   type(structure_type), allocatable, intent(out) :: self(:)
+
+   !> File handle
+   integer, intent(in) :: unit
+
+   !> File type to read
+   integer, intent(in) :: ftype
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer :: nstr
+   integer :: stat
+   type(structure_type) :: tmp
+   procedure(structure_reader), pointer :: reader
+
+   nstr = 0
+   stat = 0
+   call resize(self)
+
+   call get_structure_reader(reader, ftype)
+   if (.not.associated(reader)) then
+      call fatal_error(error, "Cannot read structure from unknown file format")
+      return
+   end if
+
+   do while(.not.allocated(error))
+      call reader(tmp, unit, error)
+      if (.not.allocated(error)) then
+         if (nstr >= size(self)) call resize(self)
+         nstr = nstr + 1
+         self(nstr) = tmp
+      end if
+   end do
+
+   if (nstr > 0) then
+      call resize(self, nstr)
+      if (allocated(error)) then
+         if (error%stat == mctc_stat%file_end) deallocate(error)
+      end if
+   else
+      if (.not.allocated(error)) then
+         call fatal_error(error, "No structures found")
+      end if
+      deallocate(self)
+   end if
+
+end subroutine read_structures_from_unit
 
 
 end module mctc_io_read

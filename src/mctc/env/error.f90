@@ -27,8 +27,11 @@ module mctc_env_error
       !> Successful run
       integer :: success = 0
 
-      !> Internal error:
+      !> Internal error
       integer :: fatal = 1
+
+      !> File ended
+      integer :: file_end = 2
 
    end type enum_stat
 

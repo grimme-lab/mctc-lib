@@ -14,7 +14,7 @@
 
 module mctc_io_read_gaussian
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_structure, only : structure_type, new
    implicit none
    private
@@ -43,7 +43,12 @@ subroutine read_gaussian_external(self, unit, error)
 
    read(unit, '(4i10)', iostat=stat) n, mode, chrg, spin
    if (stat.ne.0) then
-      call fatal_error(error, "Could not read number of atoms, check format!")
+      if (is_iostat_end(stat)) then
+         call fatal_error(error, "Unexpected end of input encountered", &
+            & stat=mctc_stat%file_end)
+      else
+         call fatal_error(error, "Could not read number of atoms, check format!")
+      end if
       return
    end if
 

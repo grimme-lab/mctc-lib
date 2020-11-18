@@ -14,7 +14,7 @@
 
 module mctc_io_read_ctfile
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : sdf_data, structure_info
@@ -91,6 +91,15 @@ subroutine read_molfile(mol, unit, error)
    two_dim = .false.
 
    call getline(unit, name, stat)
+   if (stat /= 0) then
+      if (is_iostat_end(stat)) then
+         call fatal_error(error, "Unexpected end of input encountered", &
+            & stat=mctc_stat%file_end)
+      else
+         call fatal_error(error, "Error while reading of input encountered")
+      end if
+      return
+   end if
    call getline(unit, line, stat)
    read(line, '(20x, a2)', iostat=stat) sdf_dim
    if (stat == 0) then
