@@ -36,6 +36,7 @@ subroutine collect_read_xyz(testsuite)
       & new_unittest("valid2-xyz", test_valid2_xyz), &
       & new_unittest("valid3-xyz", test_valid3_xyz), &
       & new_unittest("valid4-xyz", test_valid4_xyz), &
+      & new_unittest("valid5-xyz", test_valid5_xyz), &
       & new_unittest("invalid1-xyz", test_invalid1_xyz, should_fail=.true.), &
       & new_unittest("invalid2-xyz", test_invalid2_xyz, should_fail=.true.), &
       & new_unittest("invalid3-xyz", test_invalid3_xyz, should_fail=.true.), &
@@ -222,6 +223,43 @@ subroutine test_valid4_xyz(error)
    if (allocated(error)) return
 
 end subroutine test_valid4_xyz
+
+
+subroutine test_valid5_xyz(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "3", &
+      "WATER27, H2O", &
+      "8     1.1847029    1.1150792   -0.0344641 ", &
+      "1     0.4939088    0.9563767    0.6340089 ", &
+      "1     2.0242676    1.0811246    0.4301417 ", &
+      "3", &
+      "WATER27, H2O", &
+      "8    -1.1469443    0.0697649    1.1470196 ", &
+      "1    -1.2798308   -0.5232169    1.8902833 ", &
+      "1    -1.0641398   -0.4956693    0.3569250 "
+   rewind(unit)
+
+   call read_xyz(struc, unit, error)
+   if (.not.allocated(error)) then
+      call read_xyz(struc, unit, error)
+   end if
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 3, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid5_xyz
 
 
 subroutine test_invalid1_xyz(error)

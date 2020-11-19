@@ -17,7 +17,7 @@ module mctc_io_read_xyz
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
-   use mctc_io_symbols, only : to_number, symbol_length
+   use mctc_io_symbols, only : to_number, to_symbol, symbol_length
    use mctc_io_utils, only : getline
    implicit none
    private
@@ -84,6 +84,14 @@ subroutine read_xyz(self, unit, error)
       end if
 
       iat = to_number(chdum)
+      if (iat <= 0) then
+         read(chdum, *, iostat=stat) iat
+         if (stat == 0) then
+            chdum = to_symbol(iat)
+         else
+            iat = 0
+         end if
+      end if
       if (iat > 0) then
          ii = ii+1
          sym(ii) = trim(chdum)
