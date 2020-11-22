@@ -3,7 +3,6 @@
 [![Apache-2.0](https://img.shields.io/github/license/grimme-lab/mctc-lib)](LICENSE)
 [![CI](https://github.com/grimme-lab/mctc-lib/workflows/CI/badge.svg)](https://github.com/grimme-lab/mctc-lib/actions)
 [![docs](https://github.com/grimme-lab/mctc-lib/workflows/docs/badge.svg)](https://grimme-lab.github.io/mctc-lib)
-[![codecov](https://codecov.io/gh/grimme-lab/mctc-lib/branch/main/graph/badge.svg)](https://codecov.io/gh/grimme-lab/mctc-lib)
 
 
 ## Installation
@@ -19,7 +18,7 @@ Setup a build with
 meson setup _build
 ```
 
-You can select the Fortran compiler by the `FC` environment variable, currently this project supports GCC and Intel compilers.
+You can select the Fortran compiler by the `FC` environment variable, currently this project supports GCC, Intel and PGI/NVHPC compilers.
 To compile the project run
 
 ```
