@@ -14,7 +14,7 @@
 
 module mctc_io_read_pdb
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
    use mctc_io_symbols, only : to_number, symbol_length
@@ -92,7 +92,12 @@ subroutine read_pdb(self, unit, error)
       end if
    end do
    if (stat /= 0) then
-      call fatal_error(error, "could not read in coordinates, last line was: '"//line//"'")
+      if (is_iostat_end(stat)) then
+         call fatal_error(error, "Unexpected end of input encountered", &
+            & stat=mctc_stat%file_end)
+      else
+         call fatal_error(error, "could not read in coordinates, last line was: '"//line//"'")
+      end if
       return
    end if
 

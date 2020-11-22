@@ -26,13 +26,19 @@ module mctc_io_write
    implicit none
    private
 
-   public :: write_structure
+   public :: write_structure, write_structures
 
 
    interface write_structure
       module procedure :: write_structure_to_file
       module procedure :: write_structure_to_unit
    end interface write_structure
+
+
+   interface write_structures
+      module procedure :: write_structures_to_file
+      module procedure :: write_structures_to_unit
+   end interface write_structures
 
 
 contains
@@ -67,7 +73,7 @@ subroutine write_structure_to_file(self, file, error, format)
    end if
 
    ! Unknown file type is inacceptable in this situation,
-   ! try to figure something at least something out
+   ! try to figure at least something out
    if (ftype == filetype%unknown) then
       if (any(self%periodic)) then
          ftype = filetype%vasp
@@ -131,6 +137,70 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
    end select
 
 end subroutine write_structure_to_unit
+
+
+subroutine write_structures_to_file(self, file, error, format)
+
+   !> Instance of the molecular structure data
+   class(structure_type), intent(in) :: self(:)
+
+   !> Name of the file to read
+   character(len=*), intent(in) :: file
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> File type format hint
+   integer, intent(in), optional :: format
+
+   integer :: unit, ftype, stat
+
+   open(file=file, newunit=unit, iostat=stat)
+   if (stat /= 0) then
+      call fatal_error(error, "Cannot open '"//file//"'")
+      return
+   end if
+
+   if (present(format)) then
+      ftype = format
+   else
+      ftype = get_filetype(file)
+   end if
+
+   ! Unknown file type is inacceptable in this situation,
+   ! try to figure at least something out
+   if (ftype == filetype%unknown) then
+      ftype = filetype%xyz
+   end if
+
+   call write_structures(self, unit, ftype, error)
+   close(unit)
+
+end subroutine write_structures_to_file
+
+
+subroutine write_structures_to_unit(self, unit, ftype, error)
+
+   !> Instance of the molecular structure data
+   class(structure_type), intent(in) :: self(:)
+
+   !> File handle
+   integer, intent(in) :: unit
+
+   !> File type to read
+   integer, intent(in) :: ftype
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer :: ii
+
+   do ii = 1, size(self)
+      call write_structure(self(ii), unit, ftype, error)
+      if (allocated(error)) exit
+   end do
+
+end subroutine write_structures_to_unit
 
 
 end module mctc_io_write

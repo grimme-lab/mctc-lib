@@ -14,7 +14,7 @@
 
 module mctc_io_read_vasp
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
    use mctc_io_structure, only : structure_type, new
@@ -63,7 +63,12 @@ subroutine read_vasp(mol, unit, error)
    ! first line contains the symbols of different atom types
    call getline(unit, line, stat)
    if (stat /= 0) then
-      call fatal_error(error, "Unexpected end of input encountered")
+      if (is_iostat_end(stat)) then
+         call fatal_error(error, "Unexpected end of input encountered", &
+            & stat=mctc_stat%file_end)
+      else
+         call fatal_error(error, "Unexpected end of input encountered")
+      end if
       return
    end if
    if (debug) print'(">", a)', line

@@ -14,7 +14,7 @@
 
 module mctc_io_read_xyz
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
    use mctc_io_symbols, only : to_number, to_symbol, symbol_length
@@ -50,7 +50,12 @@ subroutine read_xyz(self, unit, error)
 
    read(unit, *, iostat=stat) n
    if (stat /= 0) then
-      call fatal_error(error, "Could not read number of atoms, check format!")
+      if (is_iostat_end(stat)) then
+         call fatal_error(error, "Unexpected end of input encountered", &
+            & stat=mctc_stat%file_end)
+      else
+         call fatal_error(error, "Could not read number of atoms, check format!")
+      end if
       return
    end if
 

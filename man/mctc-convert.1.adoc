@@ -36,6 +36,9 @@ Hint for the format of the output file
 *--normalize*::
 Normalize all element symbols to capitalized format
 
+*--trajectory*::
+Expect multiple geometries in the input file
+
 *--version*::
 Print program version and exit
 

@@ -14,7 +14,7 @@
 
 module mctc_io_read_turbomole
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_constants, only : pi
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
@@ -74,9 +74,8 @@ subroutine read_coord(mol, unit, error)
    lattice = 0.0_wp
    pbc = .false.
 
-   stat = 0
+   call getline(unit, line, stat)
    do while(stat == 0)
-      call getline(unit, line, stat)
       if (index(line, flag) == 1) then
          if (index(line, 'end') == 2) then
             exit
@@ -127,10 +126,16 @@ subroutine read_coord(mol, unit, error)
 
          end if
       end if
+      call getline(unit, line, stat)
    end do
 
    if (.not.has_coord .or. iatom == 0) then
-      call fatal_error(error, "coordinates not present, cannot work without coordinates")
+      if (is_iostat_end(stat)) then
+         call fatal_error(error, "Unexpected end of input encountered", &
+            & stat=mctc_stat%file_end)
+      else
+         call fatal_error(error, "coordinates not present, cannot work without coordinates")
+      end if
       return
    end if
 

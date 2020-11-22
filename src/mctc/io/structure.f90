@@ -21,7 +21,7 @@ module mctc_io_structure
    implicit none
    private
 
-   public :: structure_type, new_structure, new
+   public :: structure_type, new_structure, new, resize
 
 
    !> Structure representation
@@ -74,6 +74,15 @@ module mctc_io_structure
       module procedure :: new_structure_num
       module procedure :: new_structure_sym
    end interface
+
+
+   !> Overloaded resize interface
+   interface resize
+      module procedure :: resize_structure_1d
+   end interface resize
+
+
+   integer, parameter :: initial_size = 32
 
 
 contains
@@ -247,6 +256,41 @@ subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, inf
    call new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, info)
 
 end subroutine new_structure_sym
+
+
+pure subroutine resize_structure_1d(var, n)
+
+   !> Instance of the array to be resized
+   type(structure_type), allocatable, intent(inout) :: var(:)
+
+   !> Dimension of the final array size
+   integer, intent(in), optional :: n
+
+   type(structure_type), allocatable :: tmp(:)
+   integer :: this_size, new_size
+
+   if (allocated(var)) then
+      this_size = size(var, 1)
+      call move_alloc(var, tmp)
+   else
+      this_size = initial_size
+   end if
+
+   if (present(n)) then
+      new_size = n
+   else
+      new_size = this_size + this_size/2 + 1
+   end if
+
+   allocate(var(new_size))
+
+   if (allocated(tmp)) then
+      this_size = min(size(tmp, 1), size(var, 1))
+      var(:this_size) = tmp(:this_size)
+      deallocate(tmp)
+   end if
+
+end subroutine resize_structure_1d
 
 
 end module mctc_io_structure

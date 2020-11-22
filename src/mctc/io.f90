@@ -25,14 +25,15 @@
 !> a non-standard file extension.
 module mctc_io
    use mctc_io_filetype, only : filetype, get_filetype
-   use mctc_io_read, only : read_structure
+   use mctc_io_read, only : read_structure, read_structures
    use mctc_io_structure, only : structure_type, new_structure
-   use mctc_io_write, only : write_structure
+   use mctc_io_write, only : write_structure, write_structures
    implicit none
    private
 
    public :: filetype, get_filetype
    public :: read_structure, write_structure
+   public :: read_structures, write_structures
    public :: structure_type, new_structure
 
 

@@ -37,42 +37,71 @@ program main
    implicit none
    character(len=*), parameter :: prog_name = "mctc-convert"
 
-   character(len=:), allocatable :: input, output
+   integer :: ii, ndim
+   character(len=:), allocatable :: input, output, basename, suffix, output
    integer, allocatable :: input_format, output_format
    type(structure_type) :: mol
+   type(structure_type), allocatable :: mols(:)
    type(error_type), allocatable :: error
-   logical :: normalize
+   logical :: normalize, trajectory
 
-   call get_arguments(input, input_format, output, output_format, normalize, error)
+   call get_arguments(input, input_format, output, output_format, normalize, &
+      & trajectory, error)
    if (allocated(error)) then
       write(error_unit, '(a)') error%message
       error stop
    end if
 
-   if (input == "-") then
-      if (.not.allocated(input_format)) input_format = filetype%xyz
-      call read_structure(mol, input_unit, input_format, error)
+   if (trajectory) then
+      if (input == "-") then
+         if (.not.allocated(input_format)) input_format = filetype%xyz
+         call read_structures(mols, input_unit, input_format, error)
+      else
+         call read_structures(mols, input, error, input_format)
+      end if
+      if (allocated(error)) then
+         write(error_unit, '(a)') error%message
+         error stop
+      end if
+
+      do ii = 1, size(mols)
+         if (normalize) then
+            mols(ii)%sym = to_symbol(mols(ii)%num)
+         end if
+      end do
+
+      if (output == "-") then
+         if (.not.allocated(output_format)) output_format = filetype%xyz
+         call write_structures(mols, output_unit, output_format, error)
+      else
+         call write_structures(mols, output, error, output_format)
+      end if
    else
-      call read_structure(mol, input, error, input_format)
-   end if
-   if (allocated(error)) then
-      write(error_unit, '(a)') error%message
-      error stop
-   end if
+      if (input == "-") then
+         if (.not.allocated(input_format)) input_format = filetype%xyz
+         call read_structure(mol, input_unit, input_format, error)
+      else
+         call read_structure(mol, input, error, input_format)
+      end if
+      if (allocated(error)) then
+         write(error_unit, '(a)') error%message
+         error stop
+      end if
 
-   if (normalize) then
-      mol%sym = to_symbol(mol%num)
-   end if
+      if (normalize) then
+         mol%sym = to_symbol(mol%num)
+      end if
 
-   if (output == "-") then
-      if (.not.allocated(output_format)) output_format = filetype%xyz
-      call write_structure(mol, output_unit, output_format, error)
-   else
-      call write_structure(mol, output, error, output_format)
-   end if
-   if (allocated(error)) then
-      write(error_unit, '(a)') error%message
-      error stop
+      if (output == "-") then
+         if (.not.allocated(output_format)) output_format = filetype%xyz
+         call write_structure(mol, output_unit, output_format, error)
+      else
+         call write_structure(mol, output, error, output_format)
+      end if
+      if (allocated(error)) then
+         write(error_unit, '(a)') error%message
+         error stop
+      end if
    end if
 
 
@@ -95,6 +124,7 @@ subroutine help(unit)
       "-i, --input <format>", "Hint for the format of the input file", &
       "-o, --output <format>", "Hint for the format of the output file", &
       "--normalize", "Normalize all element symbols to capitalized format", &
+      "--trajectory", "Expect multiple geometries in the input file", &
       "--version", "Print program version and exit", &
       "--help", "Show this help message"
 
@@ -147,7 +177,7 @@ end subroutine get_argument
 
 
 subroutine get_arguments(input, input_format, output, output_format, normalize, &
-      & error)
+      & trajectory, error)
 
    !> Input file name
    character(len=:), allocatable :: input
@@ -164,6 +194,9 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
    !> Normalize element symbols
    logical, intent(out) :: normalize
 
+   !> Expect input to be a trajectory of multiple geometries
+   logical, intent(out) :: trajectory
+
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
@@ -171,6 +204,7 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
    character(len=:), allocatable :: arg
 
    normalize = .false.
+   trajectory = .false.
    iarg = 0
    narg = command_argument_count()
    do while(iarg < narg)
@@ -212,6 +246,8 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
          output_format = get_filetype("."//arg)
       case("--normalize")
          normalize = .true.
+      case("--trajectory")
+         trajectory = .true.
       end select
    end do
 

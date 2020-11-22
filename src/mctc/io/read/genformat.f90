@@ -14,7 +14,7 @@
 
 module mctc_io_read_genformat
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : structure_info
@@ -50,6 +50,15 @@ subroutine read_genformat(mol, unit, error)
    type(structure_info) :: info
 
    call next_line(unit, line, stat)
+   if (stat /= 0) then
+      if (is_iostat_end(stat)) then
+         call fatal_error(error, "Unexpected end of input encountered", &
+            & stat=mctc_stat%file_end)
+      else
+         call fatal_error(error, "Could not read input")
+      end if
+      return
+   end if
    read(line, *, iostat=stat) natoms, variant
    if (stat /= 0 .or. natoms < 1) then
       call fatal_error(error, 'could not read number of atoms')
