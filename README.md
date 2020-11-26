@@ -31,6 +31,24 @@ You can run the projects testsuite with
 meson test -C _build --print-errorlogs
 ```
 
+Alternatively, this project can be build with CMake (in this case ninja 1.10 or newer is required):
+
+```
+cmake -B _build -G Ninja
+```
+
+To compile the project with CMake run
+
+```
+cmake --build _build
+```
+
+You can run the project testsuite with
+
+```
+pushd _build && ctest && popd
+```
+
 
 ## Example
 
