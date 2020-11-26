@@ -7,8 +7,9 @@ author: Grimme group, Bonn
 github: https://github.com/grimme-lab
 src_dir: ./src
          ./app
-output_dir: ./docs
+output_dir: ./_docs
 exclude_dir: ./test
+page_dir: ./doc
 docmark: <
 predocmark: >
 source: true
