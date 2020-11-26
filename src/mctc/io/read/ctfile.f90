@@ -29,10 +29,10 @@ module mctc_io_read_ctfile
 contains
 
 
-subroutine read_sdf(mol, unit, error)
+subroutine read_sdf(self, unit, error)
 
    !> Instance of the molecular structure data
-   type(structure_type), intent(out) :: mol
+   type(structure_type), intent(out) :: self
 
    !> File handle
    integer, intent(in) :: unit
@@ -43,7 +43,7 @@ subroutine read_sdf(mol, unit, error)
    character(len=:), allocatable :: line
    integer :: stat
 
-   call read_molfile(mol, unit, error)
+   call read_molfile(self, unit, error)
    if (allocated(error)) return
 
    stat = 0
@@ -59,10 +59,10 @@ subroutine read_sdf(mol, unit, error)
 end subroutine read_sdf
 
 
-subroutine read_molfile(mol, unit, error)
+subroutine read_molfile(self, unit, error)
 
    !> Instance of the molecular structure data
-   type(structure_type), intent(out) :: mol
+   type(structure_type), intent(out) :: self
 
    !> File handle
    integer, intent(in) :: unit
@@ -71,7 +71,7 @@ subroutine read_molfile(mol, unit, error)
    type(error_type), allocatable, intent(out) :: error
 
    character(len=:), allocatable :: line
-   character(len=:), allocatable :: name
+   character(len=:), allocatable :: comment
    integer :: i, iatom, jatom, ibond, btype, atomtype
    integer :: stat, length, charge(2, 15)
    integer :: number_of_atoms, number_of_bonds, number_of_atom_lists, &
@@ -87,10 +87,11 @@ subroutine read_molfile(mol, unit, error)
    type(sdf_data), allocatable :: sdf(:)
    type(structure_info) :: info
    real(wp), allocatable :: xyz(:, :)
+   integer, allocatable :: bond(:, :)
 
    two_dim = .false.
 
-   call getline(unit, name, stat)
+   call getline(unit, comment, stat)
    call getline(unit, line, stat)
    read(line, '(20x, a2)', iostat=stat) sdf_dim
    if (stat == 0) then
@@ -131,7 +132,7 @@ subroutine read_molfile(mol, unit, error)
       sdf(iatom)%valence = list12(6)
    end do
 
-   !call mol%bonds%allocate(size=number_of_bonds, order=3)
+   allocate(bond(3, number_of_bonds))
    do ibond = 1, number_of_bonds
       call getline(unit, line, stat)
       read(line, '(7i3)', iostat=stat) &
@@ -140,7 +141,7 @@ subroutine read_molfile(mol, unit, error)
          call fatal_error(error, "Cannot read topology from connection table")
          return
       end if
-      !call mol%bonds%push_back([iatom, jatom, btype])
+      bond(:, ibond) = [ibond, jatom, btype]
    end do
 
    do while(stat == 0)
@@ -161,9 +162,9 @@ subroutine read_molfile(mol, unit, error)
 
    info = structure_info(two_dimensional=two_dim, &
       & missing_hydrogen=any(sdf%hydrogens > 1))
-   call new(mol, sym, xyz, charge=real(sum(sdf%charge), wp), info=info)
-   call move_alloc(sdf, mol%sdf)
-   !if (len(name) > 0) mol%name = name
+   call new(self, sym, xyz, charge=real(sum(sdf%charge), wp), info=info, bond=bond)
+   call move_alloc(sdf, self%sdf)
+   if (len(comment) > 0) self%comment = comment
 
 end subroutine read_molfile
 

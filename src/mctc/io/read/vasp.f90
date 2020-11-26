@@ -33,10 +33,10 @@ module mctc_io_read_vasp
 contains
 
 
-subroutine read_vasp(mol, unit, error)
+subroutine read_vasp(self, unit, error)
 
    !> Instance of the molecular structure data
-   type(structure_type), intent(out) :: mol
+   type(structure_type), intent(out) :: self
 
    !> File handle
    integer, intent(in) :: unit
@@ -49,7 +49,7 @@ subroutine read_vasp(mol, unit, error)
    integer, allocatable :: ncount(:)
    real(wp) :: ddum, latvec(3), scalar, coord(3), lattice(3, 3)
    real(wp), allocatable :: xyz(:, :)
-   character(len=:), allocatable :: line
+   character(len=:), allocatable :: line, comment
    character(len=2*symbol_length), allocatable :: args(:), args2(:)
    character(len=symbol_length), allocatable :: sym(:)
    type(structure_info) :: info
@@ -69,6 +69,7 @@ subroutine read_vasp(mol, unit, error)
    if (debug) print'(">", a)', line
 
    call parse_line(line, args, ntype)
+   call move_alloc(line, comment)
 
    ! this line contains the global scaling factor,
    call getline(unit, line, stat)
@@ -124,6 +125,8 @@ subroutine read_vasp(mol, unit, error)
          call fatal_error(error, "Unexpected end of input encountered")
          return
       end if
+   else
+      deallocate(comment)
    end if
    call parse_line(line, args2, nn)
    if (nn /= ntype) then
@@ -196,7 +199,8 @@ subroutine read_vasp(mol, unit, error)
 
    ! save information about this POSCAR for later
    info = structure_info(scale=ddum, selective=selective, cartesian=cartesian)
-   call new(mol, sym, xyz, lattice=lattice, info=info)
+   call new(self, sym, xyz, lattice=lattice, info=info)
+   if (allocated(comment)) self%comment = comment
 
 end subroutine read_vasp
 

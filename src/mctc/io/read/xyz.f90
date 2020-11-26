@@ -44,7 +44,7 @@ subroutine read_xyz(self, unit, error)
    real(wp), allocatable :: xyz(:, :)
    character(len=symbol_length) :: chdum
    character(len=symbol_length), allocatable :: sym(:)
-   character(len=:), allocatable :: line
+   character(len=:), allocatable :: line, comment
 
    conv = aatoau
 
@@ -62,8 +62,8 @@ subroutine read_xyz(self, unit, error)
    allocate(sym(n))
    allocate(xyz(3, n))
 
-   ! drop next record
-   read(unit, '(a)', iostat=stat)
+   ! next record is a comment
+   call getline(unit, comment, stat)
    if (stat /= 0) then
       call fatal_error(error, "Unexpected end of file")
       return
@@ -108,6 +108,7 @@ subroutine read_xyz(self, unit, error)
    end if
 
    call new(self, sym, xyz)
+   if (len(comment) > 0) self%comment = comment
 
 end subroutine read_xyz
 

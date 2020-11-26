@@ -110,6 +110,7 @@ module mctc_env_testing
 
    interface check
       module procedure :: check_stat
+      module procedure :: check_logical
       module procedure :: check_float_sp
       module procedure :: check_float_dp
       module procedure :: check_int_i1
@@ -394,6 +395,31 @@ subroutine check_stat(error, stat, message, more)
    end if
 
 end subroutine check_stat
+
+
+subroutine check_logical(error, expression, message, more)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Result of logical operator
+   logical, intent(in) :: expression
+
+   !> A detailed message describing the error
+   character(len=*), intent(in), optional :: message
+
+   !> Another line of error message
+   character(len=*), intent(in), optional :: more
+
+   if (.not.expression) then
+      if (present(message)) then
+         call test_failed(error, message, more)
+      else
+         call test_failed(error, "Condition not fullfilled", more)
+      end if
+   end if
+
+end subroutine check_logical
 
 
 subroutine check_float_dp(error, actual, expected, message, more, thr, rel)

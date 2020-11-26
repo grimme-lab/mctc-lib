@@ -26,14 +26,14 @@
 module mctc_io
    use mctc_io_filetype, only : filetype, get_filetype
    use mctc_io_read, only : read_structure
-   use mctc_io_structure, only : structure_type, new_structure
+   use mctc_io_structure, only : structure_type, new_structure, new
    use mctc_io_write, only : write_structure
    implicit none
    private
 
    public :: filetype, get_filetype
    public :: read_structure, write_structure
-   public :: structure_type, new_structure
+   public :: structure_type, new_structure, new
 
 
 contains

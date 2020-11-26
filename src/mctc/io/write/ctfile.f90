@@ -70,17 +70,20 @@ subroutine write_molfile(self, unit, comment_line)
 
    call date_and_time(date, time)
 
-   write(unit, '(a)')
-   write(unit, '(2x, 3x, 5x, 3a2, a4, "3D")') &
-      &  date(5:6), date(7:8), date(3:4), time(:4)
    if (present(comment_line)) then
       write(unit, '(a)') comment_line
    else
-      write(unit, '(a)')
+      if (allocated(self%comment)) then
+         write(unit, '(a)') self%comment
+      else
+         write(unit, '(a)')
+      end if
    end if
+   write(unit, '(2x, 3x, 5x, 3a2, a4, "3D")') &
+      &  date(5:6), date(7:8), date(3:4), time(:4)
+   write(unit, '(a)')
    write(unit, '(3i3, 3x, 2i3, 12x, i3, 1x, a5)') &
-      &  self%nat, 0, 0, 0, 0, 999, 'V2000'
-      !&  len(self), len(self%bonds), 0, 0, 0, 999, 'V2000'
+      &  self%nat, self%nbd, 0, 0, 0, 999, 'V2000'
 
    has_sdf_data = allocated(self%sdf)
 
@@ -95,11 +98,17 @@ subroutine write_molfile(self, unit, comment_line)
          & self%xyz(:, iatom)*autoaa, self%sym(self%id(iatom)), list12
    enddo
 
-!   do ibond = 1, len(self%bonds)
-!      call self%bonds%get_item(ibond, iatoms)
-!      write(unit, '(7i3)') &
-!         & iatoms, list4
-!   enddo
+   if (self%nbd > 0) then
+      if (size(self%bond, 1) > 2) then
+         do ibond = 1, self%nbd
+            write(unit, '(7i3)') self%bond(:3, ibond), list4
+         end do
+      else
+         do ibond = 1, self%nbd
+            write(unit, '(7i3)') self%bond(:2, ibond), 1, list4
+         end do
+      end if
+   end if
 
    if (has_sdf_data) then
       if (sum(self%sdf%charge) /= nint(self%charge)) then

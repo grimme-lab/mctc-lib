@@ -75,6 +75,10 @@ subroutine test_valid1_xyz(error)
    close(unit)
    if (allocated(error)) return
 
+   call check(error, allocated(struc%comment), "Comment line should be preserved")
+   if (allocated(error)) return
+   call check(error, struc%comment, "WATER27, (H2O)3")
+   if (allocated(error)) return
    call check(error, struc%nat, 9, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
@@ -125,6 +129,8 @@ subroutine test_valid2_xyz(error)
    close(unit)
    if (allocated(error)) return
 
+   call check(error, .not.allocated(struc%comment), "Empty comment line should not be saved")
+   if (allocated(error)) return
    call check(error, struc%nat, 24, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 7, "Number of species does not match")

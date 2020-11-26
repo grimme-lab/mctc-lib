@@ -33,6 +33,9 @@ module mctc_io_structure
       !> Number of unique species
       integer :: nid = 0
 
+      !> Number of bonds
+      integer :: nbd = 0
+
       !> Species identifier
       integer, allocatable :: id(:)
 
@@ -57,6 +60,12 @@ module mctc_io_structure
       !> Periodic directions
       logical, allocatable :: periodic(:)
 
+      !> Bond indices
+      integer, allocatable :: bond(:, :)
+
+      !> Comment, name or identifier for this structure
+      character(len=:), allocatable :: comment
+
       !> Vendor specific structure annotations
       type(structure_info) :: info = structure_info()
 
@@ -80,7 +89,8 @@ contains
 
 
 !> Constructor for structure representations
-subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, info)
+subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
+      & info, bond)
 
    !> Instance of the structure representation
    type(structure_type), intent(out) :: self
@@ -108,6 +118,9 @@ subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, in
 
    !> Vendor specific structure information
    type(structure_info), intent(in), optional :: info
+
+   !> Bond topology of the system
+   integer, intent(in), optional :: bond(:, :)
 
    integer :: ndim, iid
    integer, allocatable :: map(:)
@@ -164,11 +177,17 @@ subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, in
       self%info = structure_info()
    end if
 
+   if (present(bond)) then
+      self%nbd = size(bond, 2)
+      self%bond = bond
+   end if
+
 end subroutine new_structure
 
 
 !> Simplified constructor for structure representations
-subroutine new_structure_num(self, num, xyz, charge, uhf, lattice, periodic, info)
+subroutine new_structure_num(self, num, xyz, charge, uhf, lattice, periodic, &
+      & info, bond)
 
    !> Instance of the structure representation
    type(structure_type), intent(out) :: self
@@ -194,6 +213,9 @@ subroutine new_structure_num(self, num, xyz, charge, uhf, lattice, periodic, inf
    !> Vendor specific structure information
    type(structure_info), intent(in), optional :: info
 
+   !> Bond topology of the system
+   integer, intent(in), optional :: bond(:, :)
+
    integer :: ndim, iat
    character(len=symbol_length), allocatable :: sym(:)
 
@@ -203,13 +225,15 @@ subroutine new_structure_num(self, num, xyz, charge, uhf, lattice, periodic, inf
       sym(iat) = to_symbol(num(iat))
    end do
 
-   call new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, info)
+   call new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
+      & info, bond)
 
 end subroutine new_structure_num
 
 
 !> Simplified constructor for structure representations
-subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, info)
+subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, &
+      & info, bond)
 
    !> Instance of the structure representation
    type(structure_type), intent(out) :: self
@@ -235,6 +259,9 @@ subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, inf
    !> Vendor specific structure information
    type(structure_info), intent(in), optional :: info
 
+   !> Bond topology of the system
+   integer, intent(in), optional :: bond(:, :)
+
    integer :: ndim, iat
    integer, allocatable :: num(:)
 
@@ -244,7 +271,8 @@ subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, inf
       num(iat) = to_number(sym(iat))
    end do
 
-   call new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, info)
+   call new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
+      & info, bond)
 
 end subroutine new_structure_sym
 
