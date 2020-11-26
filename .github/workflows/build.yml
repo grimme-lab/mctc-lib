@@ -36,17 +36,29 @@ jobs:
         --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
         --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
 
-    - name: Install meson
-      run: pip3 install meson ninja
+    - name: Install meson/cmake
+      run: pip3 install meson ninja cmake
 
     - name: Configure build
-      run: meson setup _build
+      run: meson setup build
 
-    - name: Build library
-      run: meson compile -C _build
+    - name: Build library (meson)
+      run: meson compile -C build
 
-    - name: Run unit tests
-      run: meson test -C _build --print-errorlogs --no-rebuild
+    - name: Run unit tests (meson)
+      run: meson test -C build --print-errorlogs --no-rebuild
+
+    - name: Configure cmake build
+      run: cmake -B _build -G Ninja
+
+    - name: Build library (CMake)
+      run: cmake --build _build
+
+    - name: Run unit tests (CTest)
+      run: |
+        pushd _build
+        ctest
+        popd
 
 
   intel-build:
@@ -82,14 +94,26 @@ jobs:
         source /opt/intel/oneapi/setvars.sh
         printenv >> $GITHUB_ENV
 
-    - name: Install meson
-      run: pip3 install meson ninja
+    - name: Install meson/cmake
+      run: pip3 install meson ninja cmake
 
     - name: Configure meson build
       run: meson setup build
 
-    - name: Build library
+    - name: Build library (meson)
       run: meson compile -C build
 
-    - name: Run unit tests
+    - name: Run unit tests (meson)
       run: meson test -C build --print-errorlogs --no-rebuild
+
+    - name: Configure cmake build
+      run: cmake -B _build -G Ninja
+
+    - name: Build library (CMake)
+      run: cmake --build _build
+
+    - name: Run unit tests (CTest)
+      run: |
+        pushd _build
+        ctest
+        popd
