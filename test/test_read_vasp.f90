@@ -13,7 +13,8 @@
 ! limitations under the License.
 
 module test_read_vasp
-   use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
+   use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
+      & test_failed
    use mctc_io_read_vasp
    use mctc_io_structure
    implicit none
@@ -78,6 +79,8 @@ subroutine test_valid1_poscar(error)
    close(unit)
    if (allocated(error)) return
 
+   call check(error, .not.allocated(struc%comment), "Pre-Vasp5 comment line is used to store symbols")
+   if (allocated(error)) return
    call check(error, struc%nat, 6, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
@@ -123,6 +126,10 @@ subroutine test_valid2_poscar(error)
    close(unit)
    if (allocated(error)) return
 
+   call check(error, allocated(struc%comment), "Comment line should be preserved")
+   if (allocated(error)) return
+   call check(error, struc%comment, "Anatase")
+   if (allocated(error)) return
    call check(error, struc%nat, 12, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
@@ -157,6 +164,8 @@ subroutine test_valid3_poscar(error)
    close(unit)
    if (allocated(error)) return
 
+   call check(error, struc%comment, "cubic diamond")
+   if (allocated(error)) return
    call check(error, struc%nat, 2, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 1, "Number of species does not match")

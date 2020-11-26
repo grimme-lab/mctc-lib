@@ -63,6 +63,9 @@ module mctc_io_structure
       !> Bond indices
       integer, allocatable :: bond(:, :)
 
+      !> Comment, name or identifier for this structure
+      character(len=:), allocatable :: comment
+
       !> Vendor specific structure annotations
       type(structure_info) :: info = structure_info()
 
