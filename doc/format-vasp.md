@@ -4,6 +4,8 @@ title: Vasp's POSCAR format
 
 @Note [Reference](https://www.vasp.at/wiki/index.php/POSCAR)
 
+The format is identified by the extension ``vasp``, ``poscar`` or ``contcar``.
+Alternatively, the basenames ``poscar`` and ``contcar`` identify the format as well.
 
 ## Examples
 

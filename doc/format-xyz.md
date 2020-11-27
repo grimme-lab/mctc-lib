@@ -1,12 +1,27 @@
 ---
-title: xyz Format
+title: xyz format
 ---
 
 ## Specification
 
 @Note [Reference](http://www.ccl.net/chemistry/resources/messages/1996/10/21.005-dir/index.html)
 
+Simple format to store cartesian coordinates and element symbols.
+The first line contains the number of atoms in the geometry.
+The second line is a comment line and ignored, some program store additional
+information here.
+The following lines contain a short character identifier and three reals.
+The first entry is interpreted as element symbol and defines the atomic species.
+The atomic coordinates are given in Ångström.
+
+A scalar quantity can be added to each atom with one real as well as a vector
+quantity by three reals, allowing additional four reals per atomic entry.
+
+The format is identified by the file extension ``xyz`` or ``log``.
+
 ## Examples
+
+Caffeine molecule in xyz format
 
 ```text
 24

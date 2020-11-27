@@ -6,6 +6,8 @@ title: Protein data bank (PDB) format
 
 @Note [Reference](http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html)
 
+The extension identifying this format is ``pdb``.
+
 ## Example
 
 4QXX protein with explicit hydrogen:

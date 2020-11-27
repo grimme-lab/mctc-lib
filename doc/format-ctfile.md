@@ -6,6 +6,9 @@ title: Connection table format
 
 @Note [Reference](https://www.daylight.com/meetings/mug05/Kappler/ctfile.pdf)
 
+The molfile is identified by the extension ``mol`` and the structure data format
+is identified by ``sdf``.
+
 ## Example
 
 Caffeine molecule in mol format:

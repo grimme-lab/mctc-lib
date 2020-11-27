@@ -6,6 +6,69 @@ title: Turbomole's coordinate data group
 
 @Note [Reference](https://www.turbomole.org/wp-content/uploads/2019/11/Turbomole_Manual_7-4-1.pdf)
 
+The Turbomole format mainly builds around the ``control`` file.
+The ``control`` file contains several data groups which are delimited by
+their identifier, groups are either present in the ``control`` file or
+references from the ``control`` file.
+This format is defined by the geometry related information from the
+``control`` file, mainly the:
+
+- ``coord`` data group
+- ``lattice`` data group
+- ``cell`` data group
+- ``periodic`` data group
+- ``eht`` data group
+
+For simplicity file references are not allowed and all data groups should be
+in the same file. The data groups are not required to be in any particular order.
+
+A group is started by a ``$`` symbol and accept modifiers. It is terminated by
+another group or the ``end`` group which stops the scanning for further groups:
+
+```text
+$group1 [modifier]...
+[entries]...
+$group2 [modifier]...
+[entries]...
+$end
+```
+
+The ``coord`` data group contains the cartesian coordinates of all atoms and
+their element symbols at the end of each line.
+Atomic coordinates can either be specified in Bohr, by default or with the ``bohr``
+modifier on the ``coord`` data group, in Ångström with the modifer ``angs`` or
+as fractions of the lattice vectors with the modifier ``frac``.
+Fractional coordinates can only be present for periodicities greater than zero.
+
+The periodicity of the system is specified as modifier to the ``periodic`` data
+group, the group itself is empty.
+
+The lattice parameters can either be specified in the ``lattice`` or the ``cell``
+data group, which requre different amounts of entries depending on the systems
+periodicity. Both data groups are either given in atomic units (Bohr) or in
+Ångström with the ``angs`` modifier.
+
+For 3D periodic systems three lines with each three reals are required in the
+``lattice`` data group. For a 2D periodic system two lines with each two reals
+are required and the aperiodic direction is the z-axis.
+Finally, for 1D periodic systems one real is required, giving the translation
+vector in the x-direction.
+The periodic directions are fixed in this format.
+
+Similarly, the ``cell`` data groups allows for six, three, and one entries for
+3D, 2D, and 1D periodic systems, respectively. The cell parameters are given
+as the length of the lattice vectors and their angles, with the angles given
+in degrees.
+
+Charge and spin can be given in the ``eht`` data group with
+
+```text
+$eht charge=<int> unpaired=<int>
+```
+
+The format is identified by ``coord`` or ``tmol`` extension or by using ``coord``
+as basename.
+
 ## Example
 
 Caffeine molecule in Turbomole's coord format
@@ -69,14 +132,16 @@ $end
 
 ## Extensions
 
-The original format does only allow for the `$periodic` group to appear in the
-`control` file, to make self contained file
+The original format does only allow for the ``periodic`` or ``eht`` group to
+appear in the ``control`` file, to make the format self-contained, all groups
+must appear in the same file.
 
 ## Missing Features
 
 The following features are currently not supported:
 
-- Preserving information about frozen atoms from `$coord` data group
+- Preserving information about frozen atoms from ``coord`` data group
+- Reading charge and spin from the ``eht`` data group
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.

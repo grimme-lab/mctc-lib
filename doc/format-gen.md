@@ -1,10 +1,36 @@
 ---
-title: DFTB+ genFormat
+title: DFTB+ general format
 ---
 
 ## Specification
 
 @Note [Reference](https://dftbplus.org/fileadmin/DFTBPLUS/public/dftbplus/latest/manual.pdf)
+
+The general (gen) format is used for DFTB+ as geometry input format.
+It is based on the [xyz format](./format-xyz.html).
+
+The first line contains the number of atoms and the specific kind of provided
+geometry.
+Available types are cluster (``C``), supercell (``S``), fractional (``F``),
+and helical (``H``), the letter defining the format is case-insensitive.
+
+The second line gives the element symbols for each group of atoms separated by
+spaces, the groups are indexed starting from 1 and references in the specification
+of the atomic coordinates by this index rather than their element symbol.
+
+The following lines are specified as two integers and three reals separated by
+spaces. The first integer is currently ignored. The second integer references
+the the element symbol in the second line.
+The atomic coordinates are given in Ångström for cluster, supercell and helical,
+while they are given as fraction of the lattice vector for fractional input types.
+
+For supercell and fractional input the next lines contains three reals containing
+the origin of the stucture, followed by three lines of each three reals for the
+lattice vectors.
+
+Lines starting with the ``#`` are comments and are ignored while parsing.
+
+The format is identified by the extension ``gen``.
 
 ## Example
 
