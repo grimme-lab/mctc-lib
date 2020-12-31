@@ -1,3 +1,8 @@
 name = "mctc-lib"
 version = "0.2.0"
 license = "Apache-2.0"
+maintainer = ["@awvwgk"]
+author = ["Sebastian Ehlert"]
+copyright = "2020-2021 Sebastian Ehlert"
+description = "Modular computation tool chain library"
+keywords = ["computational-chemistry", "io"]
