@@ -1,6 +1,7 @@
 # Modular computation tool chain library
 
 [![Apache-2.0](https://img.shields.io/github/license/grimme-lab/mctc-lib)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/grimme-lab/mctc-lib)](https://github.com/grimme-lab/mctc-lib/releases/latest)
 [![CI](https://github.com/grimme-lab/mctc-lib/workflows/CI/badge.svg)](https://github.com/grimme-lab/mctc-lib/actions)
 [![docs](https://github.com/grimme-lab/mctc-lib/workflows/docs/badge.svg)](https://grimme-lab.github.io/mctc-lib)
 
