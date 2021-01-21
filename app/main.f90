@@ -30,11 +30,10 @@
 !> in a similar manner.
 program main
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
-   use mctc_env
-   use mctc_env_system, only : get_argument
-   use mctc_io
-   use mctc_io_symbols, only : to_symbol
-   use mctc_version
+   use mctc_env, only : error_type, fatal_error, get_argument, wp
+   use mctc_io, only : structure_type, read_structure, write_structure, &
+      & filetype, get_filetype, to_symbol
+   use mctc_version, only : get_mctc_version
    implicit none
    character(len=*), parameter :: prog_name = "mctc-convert"
 
