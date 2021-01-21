@@ -15,5 +15,6 @@
 srcs += files(
   'accuracy.f90',
   'error.f90',
+  'system.f90',
   'testing.f90',
 )

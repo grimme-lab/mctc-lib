@@ -18,6 +18,7 @@ list(
   APPEND srcs
   "${dir}/accuracy.f90"
   "${dir}/error.f90"
+  "${dir}/system.f90"
   "${dir}/testing.f90"
 )
 
