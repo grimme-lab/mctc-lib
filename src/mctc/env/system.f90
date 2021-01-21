@@ -89,22 +89,22 @@ end subroutine get_variable
 
 
 !> Try to determine if we run on Windows and don't have POSIX compliance around
-function is_windows() result(windows)
+function is_windows()
 
    !> Operating system seems to be Windows
-   logical :: windows
+   logical :: is_windows
 
    character(len=:), allocatable :: tmp
 
-   windows = .false.
+   is_windows = .false.
    call get_variable('OS', tmp)
    if (allocated(tmp)) then
-      windows = index(tmp, 'Windows_NT') > 0
+      is_windows = index(tmp, 'Windows_NT') > 0
    end if
-   if (.not.windows) then
+   if (.not.is_windows) then
       call get_variable('OSTYPE', tmp)
       if (allocated(tmp)) then
-         windows = index(tmp, 'win') > 0 .or. index(tmp, 'msys') > 0
+         is_windows = index(tmp, 'win') > 0 .or. index(tmp, 'msys') > 0
       end if
    end if
 
@@ -112,14 +112,14 @@ end function is_windows
 
 
 !> Try to determine if we run on Unix and probably can rely on POSIX compliance
-function is_unix() result(unix)
+function is_unix()
 
    !> Operating system seems to be Unix
-   logical :: unix
+   logical :: is_unix
 
    character(len=:), allocatable :: tmp
 
-   unix = .not. is_windows()
+   is_unix = .not. is_windows()
 
 end function is_unix
 
