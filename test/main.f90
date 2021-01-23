@@ -15,6 +15,7 @@
 !> Driver for unit testing
 program tester
    use, intrinsic :: iso_fortran_env, only : error_unit
+   use mctc_env_system, only : get_argument
    use mctc_env_testing, only : run_testsuite, new_testsuite, testsuite_type, &
       & select_suite, run_selected
    use test_math, only : collect_math
@@ -98,41 +99,6 @@ program tester
       write(error_unit, '(i0, 1x, a)') stat, "test(s) failed!"
       error stop 1
    end if
-
-
-contains
-
-
-!> Obtain the command line argument at a given index
-subroutine get_argument(idx, arg)
-
-   !> Index of command line argument, range [0:command_argument_count()]
-   integer, intent(in) :: idx
-
-   !> Command line argument
-   character(len=:), allocatable, intent(out) :: arg
-
-   integer :: length, stat
-
-   call get_command_argument(idx, length=length, status=stat)
-   if (stat /= 0) then
-      return
-   endif
-
-   allocate(character(len=length) :: arg, stat=stat)
-   if (stat /= 0) then
-      return
-   endif
-
-   if (length > 0) then
-      call get_command_argument(idx, arg, status=stat)
-      if (stat /= 0) then
-         deallocate(arg)
-         return
-      end if
-   end if
-
-end subroutine get_argument
 
 
 end program tester

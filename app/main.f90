@@ -30,10 +30,10 @@
 !> in a similar manner.
 program main
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
-   use mctc_env
-   use mctc_io
-   use mctc_io_symbols, only : to_symbol
-   use mctc_version
+   use mctc_env, only : error_type, fatal_error, get_argument, wp
+   use mctc_io, only : structure_type, read_structure, write_structure, &
+      & filetype, get_filetype, to_symbol
+   use mctc_version, only : get_mctc_version
    implicit none
    character(len=*), parameter :: prog_name = "mctc-convert"
 
@@ -112,38 +112,6 @@ subroutine version(unit)
       & prog_name, "version", version_string
 
 end subroutine version
-
-
-!> Obtain the command line argument at a given index
-subroutine get_argument(idx, arg)
-
-   !> Index of command line argument, range [0:command_argument_count()]
-   integer, intent(in) :: idx
-
-   !> Command line argument
-   character(len=:), allocatable, intent(out) :: arg
-
-   integer :: length, stat
-
-   call get_command_argument(idx, length=length, status=stat)
-   if (stat /= 0) then
-      return
-   endif
-
-   allocate(character(len=length) :: arg, stat=stat)
-   if (stat /= 0) then
-      return
-   endif
-
-   if (length > 0) then
-      call get_command_argument(idx, arg, status=stat)
-      if (stat /= 0) then
-         deallocate(arg)
-         return
-      end if
-   end if
-
-end subroutine get_argument
 
 
 subroutine get_arguments(input, input_format, output, output_format, normalize, &
