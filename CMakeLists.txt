@@ -18,7 +18,7 @@ get_directory_property(is-subproject PARENT_DIRECTORY)
 project(
   "mctc-lib"
   LANGUAGES "Fortran"
-  VERSION "0.2.0"
+  VERSION "0.2.1"
   DESCRIPTION "Modular computation tool chain"
 )
 

@@ -13,6 +13,9 @@ mctc-convert - Convert between supported input formats of the tool chain library
 
 Read structure from input file and writes it to output file.
 The format is determined by the file extension or the format hint.
+The input structure can be read from standard input by providing - as argument.
+Similarly, the output structure can be written to standard output with - as argument.
+Standard input and standard output should be combined with a format hint option.
 
 Supported formats:
 
@@ -35,6 +38,16 @@ Hint for the format of the output file
 
 *--normalize*::
 Normalize all element symbols to capitalized format
+
+*--template* _file_::
+File to use as template to fill in meta data (useful to add back SDF or PDB annotions).
+Transfers lattice, periodicity, comments and format specific annotations from the template
+to the input structure.
+If the standard input, -, is provided the template structure will
+be read _before_ the input structure.
+
+*--template-format* _format_::
+Hint for the format of the template file (only used if template file name is provided)
 
 *--version*::
 Print program version and exit

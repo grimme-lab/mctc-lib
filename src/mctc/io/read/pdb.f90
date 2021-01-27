@@ -97,7 +97,7 @@ subroutine read_pdb(self, unit, error)
    end if
 
    call new(self, sym(:iatom), xyz(:, :iatom))
-   !self%pdb = pdb(:iatom)
+   self%pdb = pdb(:iatom)
    self%charge = sum(pdb(:iatom)%charge)
 
    if (.not.all(self%num > 0)) then

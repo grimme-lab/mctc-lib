@@ -37,16 +37,34 @@ program main
    implicit none
    character(len=*), parameter :: prog_name = "mctc-convert"
 
-   character(len=:), allocatable :: input, output
-   integer, allocatable :: input_format, output_format
+   character(len=:), allocatable :: input, output, template
+   integer, allocatable :: input_format, output_format, template_format
    type(structure_type) :: mol
+   type(structure_type), allocatable :: mol_template
    type(error_type), allocatable :: error
    logical :: normalize
 
-   call get_arguments(input, input_format, output, output_format, normalize, error)
+   call get_arguments(input, input_format, output, output_format, normalize, &
+      & template, template_format, error)
    if (allocated(error)) then
       write(error_unit, '(a)') error%message
       error stop
+   end if
+
+   if (allocated(template)) then
+      allocate(mol_template)
+      if (template == "-") then
+         if (.not.allocated(template_format)) then
+            template_format = merge(output_format, filetype%xyz, allocated(output_format))
+         end if
+         call read_structure(mol_template, input_unit, template_format, error)
+      else
+         call read_structure(mol_template, template, error, template_format)
+      end if
+      if (allocated(error)) then
+         write(error_unit, '(a)') error%message
+         error stop
+      end if
    end if
 
    if (input == "-") then
@@ -58,6 +76,22 @@ program main
    if (allocated(error)) then
       write(error_unit, '(a)') error%message
       error stop
+   end if
+
+   if (allocated(mol_template)) then
+      if (mol%nat /= mol_template%nat) then
+         write(error_unit, '(*(a, 1x))') &
+            "Number of atoms missmatch in", template, "and", input
+         error stop
+      end if
+
+      ! move_alloc can also move non-allocated objects
+      call move_alloc(mol_template%lattice, mol%lattice)
+      call move_alloc(mol_template%periodic, mol%periodic)
+      call move_alloc(mol_template%bond, mol%bond)
+      call move_alloc(mol_template%comment, mol%comment)
+      call move_alloc(mol_template%pdb, mol%pdb)
+      call move_alloc(mol_template%sdf, mol%sdf)
    end if
 
    if (normalize) then
@@ -95,6 +129,9 @@ subroutine help(unit)
       "-i, --input <format>", "Hint for the format of the input file", &
       "-o, --output <format>", "Hint for the format of the output file", &
       "--normalize", "Normalize all element symbols to capitalized format", &
+      "--template <file>", "File to use as template to fill in meta data", &
+      "", "(useful to add back SDF or PDB annotions)", &
+      "--template-format <format>", "", "", "Hint for the format of the template file", &
       "--version", "Print program version and exit", &
       "--help", "Show this help message"
 
@@ -115,7 +152,7 @@ end subroutine version
 
 
 subroutine get_arguments(input, input_format, output, output_format, normalize, &
-      & error)
+      & template, template_format, error)
 
    !> Input file name
    character(len=:), allocatable :: input
@@ -128,6 +165,12 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
 
    !> Output file format
    integer, allocatable, intent(out) :: output_format
+
+   !> Template file name
+   character(len=:), allocatable :: template
+
+   !> Template file format
+   integer, allocatable, intent(out) :: template_format
 
    !> Normalize element symbols
    logical, intent(out) :: normalize
@@ -180,6 +223,21 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
          output_format = get_filetype("."//arg)
       case("--normalize")
          normalize = .true.
+      case("--template")
+         iarg = iarg + 1
+         call get_argument(iarg, template)
+         if (.not.allocated(template)) then
+            call fatal_error(error, "Missing argument for template file")
+            exit
+         end if
+      case("--template-format")
+         iarg = iarg + 1
+         call get_argument(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for template format")
+            exit
+         end if
+         template_format = get_filetype("."//arg)
       end select
    end do
 
