@@ -1,5 +1,5 @@
 ---
-title: Supported formats
+title: Formats
 ---
 
 This library supports reading and writing of the following formats:
