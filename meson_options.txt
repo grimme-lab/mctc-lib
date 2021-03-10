@@ -15,7 +15,7 @@
 option(
   'openmp',
   type: 'boolean',
-  value: true,
+  value: false,
   yield: true,
   description: 'use OpenMP parallelisation',
 )
