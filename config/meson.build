@@ -50,7 +50,7 @@ elif fc_id == 'flang'
   )
 endif
 
-if fc_id == 'intel'
+if get_option('openmp')
   omp_dep = dependency('openmp')
   lib_deps += omp_dep
 endif
