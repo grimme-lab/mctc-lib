@@ -115,8 +115,12 @@ jobs:
           git
           mingw-w64-${{ matrix.arch }}-gcc-fortran
           mingw-w64-${{ matrix.arch }}-cmake
-          mingw-w64-${{ matrix.arch }}-meson
+          mingw-w64-${{ matrix.arch }}-python
+          mingw-w64-${{ matrix.arch }}-python-pip
           mingw-w64-${{ matrix.arch }}-ninja
+
+    - name: Install meson/cmake
+      run: pip3 install meson==0.56.2
 
     - name: Configure meson build
       run: meson setup ${{ env.M_BUILD_DIR }}
