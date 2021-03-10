@@ -49,3 +49,8 @@ elif fc_id == 'flang'
     language: 'fortran',
   )
 endif
+
+if get_option('openmp')
+  omp_dep = dependency('openmp')
+  lib_deps += omp_dep
+endif
