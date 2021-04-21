@@ -64,8 +64,8 @@ subroutine write_vasp(self, unit, comment_line)
    ! scaling factor for lattice parameters is always one
    write(unit, '(f20.14)') self%info%scale
    ! write the lattice parameters
-   if (allocated(self%lattice)) then
-      do i = 1, 3
+   if (any(self%periodic)) then
+      do i = 1, size(self%lattice, 2)
          write(unit, '(3f20.14)') self%lattice(:, i)*autoaa/self%info%scale
       enddo
    else
@@ -87,7 +87,7 @@ subroutine write_vasp(self, unit, comment_line)
    if (self%info%selective) write(unit, '("Selective")')
 
    ! we write cartesian coordinates
-   if (.not.allocated(self%lattice) .or. self%info%cartesian) then
+   if (any(shape(self%lattice) /= [3, 3]) .or. self%info%cartesian) then
       write(unit, '("Cartesian")')
 
       ! now write the cartesian coordinates
