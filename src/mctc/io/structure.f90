@@ -133,6 +133,8 @@ subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
 
    if (present(lattice)) then
       self%lattice = lattice
+   else
+      allocate(self%lattice(0, 0))
    end if
 
    if (present(periodic)) then
