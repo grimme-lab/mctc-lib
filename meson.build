@@ -65,10 +65,17 @@ if install
     install_dir: get_option('datadir')/'licenses'/meson.project_name()
   )
 
+  module_id = meson.project_name() / fc_id + '-' + fc.version()
+  meson.add_install_script(
+    find_program(files('config'/'install-mod.py')),
+    get_option('includedir') / module_id,
+  )
+
   pkg = import('pkgconfig')
   pkg.generate(
     mctc_lib,
     description: 'Modular computation tool chain',
+    subdirs: ['', module_id],
   )
 
   asciidoc = find_program('asciidoctor', required: false)
