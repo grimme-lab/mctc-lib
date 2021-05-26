@@ -10,9 +10,17 @@
 ## Installation
 
 To build this project from the source code in this repository you need to have
-- a Fortran compiler supporting Fortran 2008
-- [meson](https://mesonbuild.com) version 0.53 or newer
-- a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
+a Fortran compiler supporting Fortran 2008 and one of the supported build systems:
+- [meson](https://mesonbuild.com) version 0.53 or newer, with
+  a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
+- [cmake](https://cmake.org) version 3.14 or newer, with
+  a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.10 or newer
+- [fpm](https://github.com/fortran-lang/fpm) version 0.2.0 or newer
+
+Currently this project supports GCC, Intel and PGI/NVHPC compilers.
+
+
+### Building with meson
 
 Setup a build with
 
@@ -20,7 +28,7 @@ Setup a build with
 meson setup _build
 ```
 
-You can select the Fortran compiler by the `FC` environment variable, currently this project supports GCC, Intel and PGI/NVHPC compilers.
+You can select the Fortran compiler by the `FC` environment variable.
 To compile the project run
 
 ```
@@ -32,6 +40,26 @@ You can run the projects testsuite with
 ```
 meson test -C _build --print-errorlogs
 ```
+
+To include ``mctc-lib`` in your project add the following wrap file to your subprojects directory:
+
+```ini
+[wrap-git]
+directory = mctc-lib
+url = https://github.com/grimme-lab/mctc-lib
+revision = head
+```
+
+You can retrieve the dependency from the wrap fallback with
+
+```meson
+mctc_dep = dependency('mctc-lib', ['mctc-lib', 'mctc_dep'])
+```
+
+and add it as dependency to your targets.
+
+
+### Building with CMake
 
 Alternatively, this project can be build with CMake (in this case ninja 1.10 or newer is required):
 
@@ -49,6 +77,56 @@ You can run the project testsuite with
 
 ```
 pushd _build && ctest && popd
+```
+
+To include ``mctc-lib`` in your CMake project retrieve it using the ``FetchContent`` module:
+
+```cmake
+if(NOT TARGET mctc-lib)
+  set("mctc-lib-url" "https://github.com/grimme-lab/mctc-lib")
+  message(STATUS "Retrieving mctc-lib from ${mctc-lib-url}")
+  include(FetchContent)
+  FetchContent_Declare(
+    "mctc-lib"
+    GIT_REPOSITORY "${mctc-lib-url}"
+    GIT_TAG "HEAD"
+  )
+  FetchContent_MakeAvailable("mctc-lib")
+endif()
+```
+
+And link against the ``"mctc-lib"`` interface library.
+
+```cmake
+target_link_libraries("${PROJECT_NAME}-lib" PUBLIC "mctc-lib")
+```
+
+
+### Building with fpm
+
+Invoke fpm in the project root with
+
+```
+fpm build
+```
+
+To run the testsuite use
+
+```
+fpm test
+```
+
+You can access the ``mctc-convert`` program using the run subcommand
+
+```
+fpm run -- --help
+```
+
+To use ``mctc-lib`` for testing include it as dependency in your package manifest
+
+```toml
+[dependencies]
+mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
 ```
 
 
