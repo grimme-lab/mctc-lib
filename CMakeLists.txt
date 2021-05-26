@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.9)
-get_directory_property(is-subproject PARENT_DIRECTORY)
+cmake_minimum_required(VERSION 3.14)
 
 project(
   "mctc-lib"
@@ -48,7 +47,7 @@ set_target_properties(
 )
 target_include_directories(
   "${PROJECT_NAME}-lib"
-  INTERFACE
+  PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -56,50 +55,40 @@ target_include_directories(
 # Add example application
 add_subdirectory("app")
 
-if(NOT is-subproject OR BUILD_SHARED_LIBS)
-  # Export targets for other projects
-  add_library("${PROJECT_NAME}" INTERFACE)
-  target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
-  install(
-    TARGETS
-    "${PROJECT_NAME}"
-    "${PROJECT_NAME}-lib"
-    EXPORT
-    "${PROJECT_NAME}-targets"
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  )
-  install(
-    EXPORT
-    "${PROJECT_NAME}-targets"
-    NAMESPACE
-    "${PROJECT_NAME}::"
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
-  )
-  set(
-    module-id
-    "${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
-  )
-  install(
-    DIRECTORY
-    "${CMAKE_CURRENT_BINARY_DIR}/include/"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${module-id}"
-  )
-  # Package license files
-  install(
-    FILES
-    "LICENSE"
-    DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME}"
-  )
-else()
-  # Expose license files to parent project
-  set(
-    "${PROJECT_NAME}-lic"
-    "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE-Apache"
-    "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE-MIT"
-    PARENT_SCOPE
-  )
-endif()
+# Export targets for other projects
+add_library("${PROJECT_NAME}" INTERFACE)
+target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
+install(
+  TARGETS
+  "${PROJECT_NAME}"
+  "${PROJECT_NAME}-lib"
+  EXPORT
+  "${PROJECT_NAME}-targets"
+  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+)
+install(
+  EXPORT
+  "${PROJECT_NAME}-targets"
+  NAMESPACE
+  "${PROJECT_NAME}::"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+set(
+  module-id
+  "${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
+)
+install(
+  DIRECTORY
+  "${CMAKE_CURRENT_BINARY_DIR}/include/"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${module-id}"
+)
+# Package license files
+install(
+  FILES
+  "LICENSE"
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME}"
+)
 
 # add the testsuite
 enable_testing()
