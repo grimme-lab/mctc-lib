@@ -6,4 +6,4 @@ Name: @PROJECT_NAME@
 Description: @PROJECT_DESCRIPTION@
 Version: @PROJECT_VERSION@
 Libs: -L${libdir} -l@PROJECT_NAME@
-Cflags: -I${includedir} -I${includedir}/@PROJECT_NAME@/@CMAKE_Fortran_COMPILER_ID@-@CMAKE_Fortran_COMPILER_VERSION@
+Cflags: -I${includedir} -I${includedir}/@module-dir@

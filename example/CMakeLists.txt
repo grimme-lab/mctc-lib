@@ -12,19 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(
+cmake_minimum_required(VERSION 3.14)
+
+project(
   "mctc-convert"
-  "main.f90"
+  LANGUAGES "Fortran"
+  VERSION "0.2.3"
+  DESCRIPTION "Example project for converting geometry inputs"
+)
+
+if(NOT TARGET "mctc-lib::mctc-lib")
+  find_package("mctc-lib")
+endif()
+
+add_executable(
+  "${PROJECT_NAME}"
+  "../app/main.f90"
 )
 target_link_libraries(
-  "mctc-convert"
+  "${PROJECT_NAME}"
   PRIVATE
-  "mctc-lib"
+  "mctc-lib::mctc-lib"
 )
 
 install(
   TARGETS
-  "mctc-convert"
+  "${PROJECT_NAME}"
   DESTINATION
   "${CMAKE_INSTALL_BINDIR}"
 )

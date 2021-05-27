@@ -12,19 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_executable(
-  "mctc-convert"
-  "main.f90"
-)
-target_link_libraries(
-  "mctc-convert"
-  PRIVATE
-  "mctc-lib"
+project(
+  'mctc-convert',
+  'fortran',
 )
 
-install(
-  TARGETS
-  "mctc-convert"
-  DESTINATION
-  "${CMAKE_INSTALL_BINDIR}"
+mctc_dep = dependency('mctc-lib', fallback: ['mctc-lib', 'mctc_dep'])
+
+mctc_convert_exe = executable(
+  'mctc-convert',
+  sources: files('../app/main.f90'),
+  dependencies: mctc_dep,
+  install: true,
 )

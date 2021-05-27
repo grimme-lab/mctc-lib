@@ -53,7 +53,7 @@ revision = head
 You can retrieve the dependency from the wrap fallback with
 
 ```meson
-mctc_dep = dependency('mctc-lib', ['mctc-lib', 'mctc_dep'])
+mctc_dep = dependency('mctc-lib', fallback: ['mctc-lib', 'mctc_dep'])
 ```
 
 and add it as dependency to your targets.
