@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.14)
 project(
   "mctc-lib"
   LANGUAGES "Fortran"
-  VERSION "0.2.2"
+  VERSION "0.2.3"
   DESCRIPTION "Modular computation tool chain"
 )
 
@@ -49,7 +49,7 @@ target_include_directories(
   "${PROJECT_NAME}-lib"
   PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
 )
 
 # Add example application

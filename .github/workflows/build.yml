@@ -63,7 +63,9 @@ jobs:
       run: meson test -C ${{ env.M_BUILD_DIR }} --print-errorlogs --no-rebuild
 
     - name: Install project (meson)
-      run: meson install -C ${{ env.M_BUILD_DIR }} --no-rebuild
+      run: |
+        meson install -C ${{ env.M_BUILD_DIR }} --no-rebuild
+        echo "MCTC_M_PREFIX=$PWD/_mdist" >> $GITHUB_ENV
 
     - name: Create coverage report (meson)
       run: ninja -C ${{ env.M_BUILD_DIR }} coverage
@@ -86,7 +88,33 @@ jobs:
       working-directory: ${{ env.C_BUILD_DIR }}
 
     - name: Install project (CMake)
-      run: cmake --install ${{ env.C_BUILD_DIR }}
+      run: |
+        cmake --install ${{ env.C_BUILD_DIR }}
+        echo "MCTC_C_PREFIX=$PWD/_cdist" >> $GITHUB_ENV
+
+    - name: Test integration (meson/meson)
+      run: |
+        meson _build_mm
+        meson compile -C  _build_mm
+      working-directory: example
+      env:
+       PKG_CONFIG_PATH: ${{ env.MCTC_M_PREFIX }}/lib/pkgconfig
+
+    - name: Test integration (CMake/meson)
+      run: |
+        meson _build_cm
+        meson compile -C  _build_cm
+      working-directory: example
+      env:
+       PKG_CONFIG_PATH: ${{ env.MCTC_C_PREFIX }}/lib/pkgconfig
+
+    - name: Test integration (CMake/CMake)
+      run: |
+        cmake -B _build_cc -G Ninja
+        cmake --build _build_cc
+      working-directory: example
+      env:
+       CMAKE_PREFIX_PATH: ${{ env.MCTC_C_PREFIX }}/lib/cmake
 
 
   # Test native MinGW Windows build
