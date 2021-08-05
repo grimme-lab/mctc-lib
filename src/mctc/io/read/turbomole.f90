@@ -49,11 +49,12 @@ subroutine read_coord(mol, unit, error)
    integer, parameter :: p_initial_size = 100
    integer, parameter :: p_nlv(3) = [1, 4, 9], p_ncp(3) = [1, 3, 6]
 
-   logical :: has_coord, has_periodic, has_lattice, has_cell
+   logical :: has_coord, has_periodic, has_lattice, has_cell, has_eht
    logical :: cartesian, coord_in_bohr, lattice_in_bohr, pbc(3)
-   integer :: stat, iatom, i, j, natoms, periodic, cell_vectors
+   integer :: stat, iatom, i, j, natoms, periodic, cell_vectors, icharge
+   integer, allocatable :: unpaired
    real(wp) :: latvec(9), conv, cellpar(6), lattice(3, 3)
-   real(wp), allocatable :: coord(:, :), xyz(:, :)
+   real(wp), allocatable :: coord(:, :), xyz(:, :), charge
    character(len=:), allocatable :: line, cell_string, lattice_string
    character(len=symbol_length), allocatable :: sym(:)
    type(structure_info) :: info
@@ -64,6 +65,7 @@ subroutine read_coord(mol, unit, error)
    iatom = 0
    periodic = 0
    cell_vectors = 0
+   has_eht = .false.
    has_coord = .false.
    has_periodic = .false.
    has_lattice = .false.
@@ -75,11 +77,24 @@ subroutine read_coord(mol, unit, error)
    pbc = .false.
 
    stat = 0
+   call getline(unit, line, stat)
    do while(stat == 0)
-      call getline(unit, line, stat)
       if (index(line, flag) == 1) then
          if (index(line, 'end') == 2) then
             exit
+
+         else if (.not.has_eht .and. index(line, 'eht') == 2) then
+            has_eht = .true.
+            i = index(line, 'charge=')
+            if (i > 0) then
+               read(line(i+7:), *, iostat=stat) icharge
+               charge = real(icharge, wp)
+            end if
+            j = index(line, 'unpaired=')
+            if (j > 0) then
+               allocate(unpaired)
+               read(line(j+9:), *, iostat=stat) unpaired
+            end if
 
          else if (.not.has_coord .and. index(line, 'coord') == 2) then
             has_coord = .true.
@@ -87,15 +102,13 @@ subroutine read_coord(mol, unit, error)
             call select_unit(line, coord_in_bohr, cartesian)
             coord_group: do while(stat == 0)
                call getline(unit, line, stat)
-               if (index(line, flag) == 1) then
-                  backspace(unit)
-                  exit coord_group
-               end if
+               if (index(line, flag) == 1) exit coord_group
                if (iatom >= size(coord, 2)) call resize(coord)
                if (iatom >= size(sym)) call resize(sym)
                iatom = iatom + 1
                read(line, *, iostat=stat) coord(:, iatom), sym(iatom)
             end do coord_group
+            cycle
 
          else if (.not.has_periodic .and. index(line, 'periodic') == 2) then
             has_periodic = .true.
@@ -110,13 +123,11 @@ subroutine read_coord(mol, unit, error)
             lattice_string = ''
             lattice_group: do while(stat == 0)
                call getline(unit, line, stat)
-               if (index(line, flag) == 1) then
-                  backspace(unit)
-                  exit lattice_group
-               end if
+               if (index(line, flag) == 1) exit lattice_group
                cell_vectors = cell_vectors + 1
                lattice_string = lattice_string // ' ' // line
             end do lattice_group
+            cycle
 
          else if (.not.has_cell .and. index(line, 'cell') == 2) then
             has_cell = .true.
@@ -127,6 +138,7 @@ subroutine read_coord(mol, unit, error)
 
          end if
       end if
+      call getline(unit, line, stat)
    end do
 
    if (.not.has_coord .or. iatom == 0) then
@@ -217,7 +229,8 @@ subroutine read_coord(mol, unit, error)
    ! save data on input format
    info = structure_info(cartesian=cartesian, lattice=has_lattice, &
       & angs_lattice=.not.lattice_in_bohr, angs_coord=.not.coord_in_bohr)
-   call new(mol, sym(:natoms), xyz, lattice=lattice, periodic=pbc, info=info)
+   call new(mol, sym(:natoms), xyz, charge=charge, uhf=unpaired, &
+      & lattice=lattice, periodic=pbc, info=info)
 
 contains
 

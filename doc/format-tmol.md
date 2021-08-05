@@ -136,12 +136,14 @@ The original format does only allow for the ``periodic`` or ``eht`` group to
 appear in the ``control`` file, to make the format self-contained, all groups
 must appear in the same file.
 
+The ``coord`` group only supports the ``frac`` modifier in Turbomole, but this
+reader also allows ``angs`` and ``bohr``.
+
 ## Missing Features
 
 The following features are currently not supported:
 
 - Preserving information about frozen atoms from ``coord`` data group
-- Reading charge and spin from the ``eht`` data group
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.

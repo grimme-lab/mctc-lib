@@ -33,6 +33,8 @@ subroutine write_coord(mol, unit)
    do iat = 1, mol%nat
       write(unit, '(3es24.14, 6x, a)') mol%xyz(:, iat), trim(mol%sym(mol%id(iat)))
    enddo
+   write(unit, '(a, *(1x, a, "=", i0))') &
+      "$eht", "charge", nint(mol%charge), "unpaired", mol%uhf
    write(unit, '(a, 1x, i0)') "$periodic", count(mol%periodic)
    if (any(mol%periodic)) then
       write(unit, '(a)') "$lattice bohr"
