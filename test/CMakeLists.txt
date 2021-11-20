@@ -45,15 +45,15 @@ foreach(t IN LISTS tests)
 endforeach()
 
 add_executable(
-  tester
+  "${PROJECT_NAME}-tester"
   "${test-srcs}"
 )
 target_link_libraries(
-  tester
+  "${PROJECT_NAME}-tester"
   PRIVATE
   "${PROJECT_NAME}-lib"
 )
 
 foreach(t IN LISTS tests)
-  add_test("${t}" tester "${t}")
+  add_test("${PROJECT_NAME}/${t}" "${PROJECT_NAME}-tester" "${t}")
 endforeach()

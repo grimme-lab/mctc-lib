@@ -22,7 +22,7 @@ md_extensions: markdown.extensions.toc
                markdown.extensions.smarty
 ---
 
-Common tool chain to molecular structure data in various applications.
+Common tool chain for working with molecular structure data in various applications.
 This library provides a unified way to perform operations on molecular structure data, like reading and writing to common geometry file formats.
 
 [TOC]
