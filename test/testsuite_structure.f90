@@ -52,7 +52,7 @@ end subroutine get_structure
 subroutine mindless01(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "Na", "H", "O", "H", "F", "H", "H", "O", "N", "H", "H", "Cl", "B", "B", "N", "Al"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & -1.85528263484662_wp,  3.58670515364616_wp, -2.41763729306344_wp, &
@@ -79,7 +79,7 @@ end subroutine mindless01
 subroutine mindless02(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "H", "S", "B", "O", "Mg", "H", "H", "H", "Si", "H", "B", "Li", "F", "H", "H", "S"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & -1.79537625851198_wp, -3.77866422935275_wp, -1.07883558363403_wp, &
@@ -107,7 +107,7 @@ end subroutine mindless02
 subroutine mindless03(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "C", "O", "H", "Li", "Mg", "Al", "C", "H", "H", "H", "F", "S", "C", "H", "Na", "H"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & -0.02148551327524_wp, -0.67161751504297_wp, -4.75078512817560_wp, &
@@ -134,7 +134,7 @@ end subroutine mindless03
 subroutine mindless04(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "H", "B", "H", "F", "B", "H", "H", "Si", "H", "H", "C", "Al", "Si", "O", "H", "B"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & -1.34544890768411_wp,  2.85946545334720_wp,  3.11183388215396_wp, &
@@ -161,7 +161,7 @@ end subroutine mindless04
 subroutine mindless05(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "B", "P", "H", "H", "B", "P", "H", "Cl", "N", "H", "P", "Si", "H", "H", "P", "N"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       &  0.68391902268453_wp,  0.21679405065309_wp, -2.81441127558071_wp, &
@@ -189,7 +189,7 @@ end subroutine mindless05
 subroutine mindless06(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "B", "N", "H", "O", "B", "H", "Al", "H", "B", "Mg", "H", "H", "H", "H", "C", "H"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       &  0.10912945825730_wp,  1.64180252123600_wp,  0.27838149792131_wp, &
@@ -217,7 +217,7 @@ end subroutine mindless06
 subroutine mindless07(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "C", "H", "B", "H", "H", "Cl", "F", "N", "C", "H", "S", "H", "H", "O", "F", "Mg"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & -3.75104222741336_wp, -5.81308736205268_wp, -1.22507366840233_wp, &
@@ -245,7 +245,7 @@ end subroutine mindless07
 subroutine mindless08(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "C", "O", "B", "F", "H", "Al", "H", "H", "O", "B", "Be", "C", "H", "H", "B", "F"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       & -1.27823293129313_wp,  0.06442674490989_wp,  2.76980447300615_wp, &
@@ -273,7 +273,7 @@ end subroutine mindless08
 subroutine mindless09(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "H", "H", "H", "H", "Li", "H", "C", "B", "H", "H", "Si", "H", "Cl", "F", "H", "B"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       &  3.97360649552839_wp,  1.71723751297383_wp, -0.51862929250676_wp, &
@@ -300,7 +300,7 @@ end subroutine mindless09
 subroutine mindless10(self)
    type(structure_type), intent(out) :: self
    integer, parameter :: nat = 16
-   character(len=*), parameter :: sym(nat) = [character(len=4) ::&
+   character(len=*), parameter :: sym(nat) = [character(len=2) ::&
       & "H", "Si", "H", "Cl", "C", "H", "F", "H", "C", "N", "B", "H", "Mg", "C", "H", "H"]
    real(wp), parameter :: xyz(3, nat) = reshape([&
       &  3.57062307661218_wp, -1.68792229443234_wp,  2.78939425857465_wp, &
