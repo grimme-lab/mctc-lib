@@ -245,12 +245,12 @@ pure subroutine get_identity_symbol(nid, identity, symbol)
    integer, intent(out) :: nid
 
    !> Element symbols
-   character(len=symbol_length), intent(in) :: symbol(:)
+   character(len=*), intent(in) :: symbol(:)
 
    !> Chemical identity
    integer, intent(out) :: identity(:)
 
-   character(len=symbol_length), allocatable :: stmp(:)
+   character(len=len(symbol)), allocatable :: stmp(:)
    integer :: nat, iat, iid
 
    nat = size(identity)
