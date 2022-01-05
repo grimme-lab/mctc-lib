@@ -50,6 +50,9 @@ module mctc_io_filetype
       !> Gaussian external format
       integer :: gaussian = 8
 
+      !> QCSchema JSON file
+      integer :: qcschema = 9
+
    end type enum_filetype
 
    !> File type enumerator
@@ -91,6 +94,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%gen
       case('ein')
          ftype = filetype%gaussian
+      case('json')
+         ftype = filetype%qcschema
       end select
       if (ftype /= filetype%unknown) return
    else

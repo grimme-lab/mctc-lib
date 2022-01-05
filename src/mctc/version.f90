@@ -31,7 +31,7 @@ contains
 
 
 !> Getter function to retrieve mctc-lib version
-subroutine get_mctc_version(major, minor, patch, string)
+pure subroutine get_mctc_version(major, minor, patch, string)
 
    !> Major version number of the mctc-lib version
    integer, intent(out), optional :: major

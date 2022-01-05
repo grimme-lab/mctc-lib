@@ -141,7 +141,7 @@ subroutine read_molfile(self, unit, error)
          call fatal_error(error, "Cannot read topology from connection table")
          return
       end if
-      bond(:, ibond) = [ibond, jatom, btype]
+      bond(:, ibond) = [iatom, jatom, btype]
    end do
 
    do while(stat == 0)

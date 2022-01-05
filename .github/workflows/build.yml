@@ -41,7 +41,7 @@ jobs:
           compiler: gnu
           version: 9
 
-        - os: macos-latest
+        - os: ubuntu-latest
           build: meson
           build-type: coverage
           compiler: gnu
@@ -52,12 +52,6 @@ jobs:
           build-type: coverage
           compiler: gnu
           version: 11
-
-        - os: macos-latest
-          build: meson
-          build-type: debug
-          compiler: gnu
-          version: 5
 
         - os: ubuntu-latest
           build: meson
