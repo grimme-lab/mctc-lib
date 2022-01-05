@@ -19,6 +19,7 @@ module mctc_io_write
    use mctc_io_write_gaussian, only : write_gaussian_external
    use mctc_io_write_genformat, only : write_genformat
    use mctc_io_write_pdb, only : write_pdb
+   use mctc_io_write_qcschema, only : write_qcschema
    use mctc_io_write_turbomole, only : write_coord
    use mctc_io_write_vasp, only : write_vasp
    use mctc_io_write_xyz, only : write_xyz
@@ -127,6 +128,9 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
 
    case(filetype%gaussian)
       call write_gaussian_external(self, unit)
+
+   case(filetype%qcschema)
+      call write_qcschema(self, unit)
 
    end select
 
