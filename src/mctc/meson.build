@@ -18,5 +18,5 @@ subdir('io')
 srcs += files(
   'env.f90',
   'io.f90',
-  'version.f90',
+  'version.F90',
 )

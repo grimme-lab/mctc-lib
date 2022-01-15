@@ -18,6 +18,7 @@ module mctc_io_read
    use mctc_io_read_ctfile, only : read_molfile, read_sdf
    use mctc_io_read_gaussian, only : read_gaussian_external
    use mctc_io_read_genformat, only : read_genformat
+   use mctc_io_read_qcschema, only : read_qcschema
    use mctc_io_read_pdb, only : read_pdb
    use mctc_io_read_turbomole, only : read_coord
    use mctc_io_read_vasp, only : read_vasp
@@ -142,6 +143,9 @@ subroutine get_structure_reader(reader, ftype)
 
    case(filetype%molfile)
       reader => read_molfile
+
+   case(filetype%qcschema)
+      reader => read_qcschema
 
    case(filetype%pdb)
       reader => read_pdb

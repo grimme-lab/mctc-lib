@@ -11,3 +11,4 @@ This library supports reading and writing of the following formats:
 - [a subset of PDB format](./format-pdb.html)
 - [DFTB+ general format](./format-gen.html)
 - [Gaussian external format](./format-ein.html)
+- [QCSchema JSON format](./format-qcschema.html)

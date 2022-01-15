@@ -6,3 +6,6 @@ author = ["Sebastian Ehlert"]
 copyright = "2020-2021 Sebastian Ehlert"
 description = "Modular computation tool chain library"
 keywords = ["computational-chemistry", "io"]
+
+[dependencies]
+json-fortran.git = "https://github.com/jacobwilliams/json-fortran.git"

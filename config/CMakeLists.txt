@@ -15,12 +15,21 @@
 option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
 
 option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" TRUE)
+option(WITH_JSON "Enable support for JSON parsing via json-fortran" FALSE)
 
 set(
   module-dir
   "${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
 )
 set(module-dir "${module-dir}" PARENT_SCOPE)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" PARENT_SCOPE)
+install(
+  DIRECTORY
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
 
 # Set build type as CMake does not provide defaults
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -52,6 +61,17 @@ install(
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
+
+if(BUILD_SHARED_LIBS)
+  set(PKG_CONFIG_REQUIRES "Requires.private")
+else()
+  set(PKG_CONFIG_REQUIRES "Requires")
+endif()
+if(WITH_JSON)
+  set(PKG_CONFIG_REQUIREMENTS "json-fortran")
+else()
+  set(PKG_CONFIG_REQUIREMENTS)
+endif()
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/template.pc"
