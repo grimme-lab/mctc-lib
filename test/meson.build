@@ -18,6 +18,7 @@ tests = [
   'read-ctfile',
   'read-gaussian',
   'read-genformat',
+  'read-qcschema',
   'read-pdb',
   'read-turbomole',
   'read-vasp',

@@ -27,6 +27,11 @@ include(GNUInstallDirs)
 # General configuration information
 add_subdirectory("config")
 
+# Dependencies
+if(NOT TARGET "jsonfortran::jsonfortran" AND WITH_JSON)
+  find_package("jsonfortran" REQUIRED)
+endif()
+
 # Collect source of the project
 set(srcs)
 add_subdirectory("src")
@@ -36,6 +41,18 @@ add_library(
   "${PROJECT_NAME}-lib"
   "${srcs}"
 )
+target_compile_definitions(
+  "${PROJECT_NAME}-lib"
+  PRIVATE
+  "WITH_JSON=$<BOOL:${WITH_JSON}>"
+)
+if(WITH_JSON)
+  target_link_libraries(
+    "${PROJECT_NAME}-lib"
+    PRIVATE
+    "jsonfortran::jsonfortran"
+  )
+endif()
 set_target_properties(
   "${PROJECT_NAME}-lib"
   PROPERTIES
@@ -48,6 +65,7 @@ set_target_properties(
 target_include_directories(
   "${PROJECT_NAME}-lib"
   PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>

@@ -19,3 +19,11 @@ option(
   yield: true,
   description: 'use OpenMP parallelisation',
 )
+
+option(
+  'json',
+  type: 'feature',
+  value: 'auto',
+  yield: true,
+  description: 'support JSON input',
+)

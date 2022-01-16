@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-add_subdirectory("env")
-add_subdirectory("io")
-
-set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
-
-list(
-  APPEND srcs
-  "${dir}/env.f90"
-  "${dir}/io.f90"
-  "${dir}/version.F90"
-)
-
-set(srcs "${srcs}" PARENT_SCOPE)
+if(NOT TARGET "jsonfortran::jsonfortran")
+  # json-fortran tries to make it hard to get found
+  string(TOLOWER "jsonfortran-${CMAKE_Fortran_COMPILER_ID}" jsonfortran)
+  find_package("${jsonfortran}" CONFIG)
+  add_library("jsonfortran::jsonfortran" IMPORTED INTERFACE)
+  target_link_libraries(
+    "jsonfortran::jsonfortran"
+    INTERFACE
+    "jsonfortran$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:-static>"
+  )
+  target_include_directories(
+    "jsonfortran::jsonfortran"
+    INTERFACE
+    "${jsonfortran_INCLUDE_DIRS}"
+  )
+endif()

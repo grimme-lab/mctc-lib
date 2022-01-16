@@ -23,6 +23,7 @@ program tester
    use test_read_ctfile, only : collect_read_ctfile
    use test_read_gaussian, only : collect_read_gaussian
    use test_read_genformat, only : collect_read_genformat
+   use test_read_qcschema, only : collect_read_qcschema
    use test_read_pdb, only : collect_read_pdb
    use test_read_turbomole, only : collect_read_turbomole
    use test_read_vasp, only : collect_read_vasp
@@ -51,6 +52,7 @@ program tester
       & new_testsuite("read-ctfile", collect_read_ctfile), &
       & new_testsuite("read-gaussian", collect_read_gaussian), &
       & new_testsuite("read-genformat", collect_read_genformat), &
+      & new_testsuite("read-qcschema", collect_read_qcschema), &
       & new_testsuite("read-pdb", collect_read_pdb), &
       & new_testsuite("read-turbomole", collect_read_turbomole), &
       & new_testsuite("read-vasp", collect_read_vasp), &

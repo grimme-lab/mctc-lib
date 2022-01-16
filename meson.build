@@ -17,7 +17,7 @@ project(
   'fortran',
   version: '0.2.3',
   license: 'Apache-2.0',
-  meson_version: '>=0.53',
+  meson_version: '>=0.55',
   default_options: [
     'buildtype=debugoptimized',
     'default_library=both',
@@ -38,7 +38,11 @@ mctc_lib = library(
   meson.project_name(),
   sources: srcs,
   version: meson.project_version(),
+  include_directories: include_directories('include'),
   dependencies: lib_deps,
+  fortran_args: [
+    '-DWITH_JSON=@0@'.format(jsonfortran_dep.found() ? '1' : '0'),
+  ],
   install: install,
 )
 

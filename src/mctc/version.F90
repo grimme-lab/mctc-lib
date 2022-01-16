@@ -12,12 +12,14 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
+#include "mctc/defs.h"
+
 module mctc_version
    implicit none
    private
 
    public :: mctc_version_string, mctc_version_compact
-   public :: get_mctc_version
+   public :: get_mctc_version, get_mctc_feature
 
 
    !> String representation of the mctc-lib version
@@ -25,6 +27,10 @@ module mctc_version
 
    !> Numeric representation of the mctc-lib version
    integer, parameter :: mctc_version_compact(3) = [0, 2, 3]
+
+
+   !> With support for JSON
+   logical, parameter :: mctc_with_json = 0 /= WITH_JSON
 
 
 contains
@@ -59,6 +65,24 @@ pure subroutine get_mctc_version(major, minor, patch, string)
    end if
 
 end subroutine get_mctc_version
+
+
+pure function get_mctc_feature(feature) result(has_feature)
+
+   !> Feature name
+   character(len=*), intent(in) :: feature
+
+   !> Whether the feature is enabled
+   logical :: has_feature
+
+   select case(feature)
+   case("json")
+      has_feature = mctc_with_json
+   case default
+      has_feature = .false.
+   end select
+
+end function get_mctc_feature
 
 
 end module mctc_version
