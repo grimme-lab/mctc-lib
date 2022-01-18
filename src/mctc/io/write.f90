@@ -15,6 +15,7 @@
 module mctc_io_write
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_filetype, only : filetype, get_filetype
+   use mctc_io_write_aims, only : write_aims
    use mctc_io_write_ctfile, only : write_molfile, write_sdf
    use mctc_io_write_gaussian, only : write_gaussian_external
    use mctc_io_write_genformat, only : write_genformat
@@ -131,6 +132,9 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
 
    case(filetype%qcschema)
       call write_qcschema(self, unit)
+
+   case(filetype%aims)
+      call write_aims(self, unit)
 
    end select
 

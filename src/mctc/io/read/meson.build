@@ -13,6 +13,7 @@
 # limitations under the License.
 
 srcs += files(
+  'aims.f90',
   'ctfile.f90',
   'gaussian.f90',
   'genformat.f90',

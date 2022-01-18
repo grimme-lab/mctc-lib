@@ -15,6 +15,7 @@
 module mctc_io_read
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_filetype, only : filetype, get_filetype
+   use mctc_io_read_aims, only : read_aims
    use mctc_io_read_ctfile, only : read_molfile, read_sdf
    use mctc_io_read_gaussian, only : read_gaussian_external
    use mctc_io_read_genformat, only : read_genformat
@@ -164,6 +165,9 @@ subroutine get_structure_reader(reader, ftype)
 
    case(filetype%gaussian)
       reader => read_gaussian_external
+
+   case(filetype%aims)
+      reader => read_aims
 
    end select
 

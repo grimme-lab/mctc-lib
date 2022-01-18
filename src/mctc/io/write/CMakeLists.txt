@@ -16,6 +16,7 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
+  "${dir}/aims.f90"
   "${dir}/ctfile.f90"
   "${dir}/gaussian.f90"
   "${dir}/genformat.f90"

@@ -19,7 +19,8 @@ module mctc_io_read_genformat
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : structure_info
    use mctc_io_symbols, only : to_number, symbol_length
-   use mctc_io_utils, only : getline
+   use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
+      read_token, to_string
    implicit none
    private
 
@@ -45,14 +46,18 @@ subroutine read_genformat(mol, unit, error)
    logical :: cartesian, periodic
    real(wp) :: coord(3), lattice(3, 3)
    character(len=1) :: variant
+   type(token_type) :: token
    character(len=symbol_length), allocatable :: species(:), sym(:)
    real(wp), allocatable :: xyz(:, :), abc(:, :)
    type(structure_info) :: info
+   integer :: pos, lnum
 
-   call next_line(unit, line, stat)
-   read(line, *, iostat=stat) natoms, variant
+   lnum = 0
+   call advance_line(unit, line, pos, lnum, stat)
+   call read_token(line, pos, token, natoms, stat)
    if (stat /= 0 .or. natoms < 1) then
-      call fatal_error(error, 'could not read number of atoms')
+      call io_error(error, "Could not read number of atoms", &
+         & line, token, filename(unit), lnum, "expected integer value")
       return
    end if
 
@@ -61,7 +66,8 @@ subroutine read_genformat(mol, unit, error)
    allocate(xyz(3, natoms))
    allocate(abc(3, natoms))
 
-   select case(variant)
+   call next_token(line, pos, token)
+   select case(line(token%first:token%last))
    case('c', 'C')
       cartesian = .true.
       periodic = .false.
@@ -72,32 +78,42 @@ subroutine read_genformat(mol, unit, error)
       cartesian = .false.
       periodic = .true.
    case default
-      call fatal_error(error, 'invalid input version')
+      call io_error(error, "Invalid input version found", &
+         & line, token, filename(unit), lnum, "unknown identifier")
       return
    endselect
 
-   call next_line(unit, line, stat)
-   istart = 1
-   iend = 1
+   call advance_line(unit, line, pos, lnum, stat)
    isp = 0
-   do while(iend < len_trim(line))
-      istart = verify(line(iend:), ' ') - 1 + iend
-      iend = scan(line(istart:), ' ') - 1 + istart
-      if (iend < istart) iend = len_trim(line)
+   do while(pos < len(line))
+      call next_token(line, pos, token)
       isp = isp + 1
-      species(isp) = trim(line(istart:iend))
+      token%last = min(token%last, token%first + symbol_length - 1)
+      species(isp) = line(token%first:token%last)
+      if (to_number(species(isp)) == 0) then
+         call io_error(error, "Cannot map symbol to atomic number", &
+            & line, token, filename(unit), lnum, "unknown element")
+         return
+      end if
    end do
    nspecies = isp
-   if (any(to_number(species(:nspecies)) == 0)) then
-      call fatal_error(error, 'unknown atom type present')
-      return
-   end if
 
    do iatom = 1, natoms
-      call next_line(unit, line, stat)
-      read(line, *, iostat=stat) dummy, isp, coord
+      token = token_type(0, 0)
+      call advance_line(unit, line, pos, lnum, stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, dummy, stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, isp, stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, coord(1), stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, coord(2), stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, coord(3), stat)
       if (stat /= 0) then
-         call fatal_error(error, 'could not read coordinates from file')
+         call io_error(error, "Cannot read coordinates", &
+            & line, token, filename(unit), lnum, "unexpected value")
          return
       end if
       sym(iatom) = species(isp)
@@ -109,16 +125,23 @@ subroutine read_genformat(mol, unit, error)
    end do
 
    if (periodic) then
-      call next_line(unit, line, stat)
+      call advance_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
-         call fatal_error(error, 'missing lattice information')
+         call io_error(error, "Unexpected end of file", &
+            & line, token_type(0, 0), filename(unit), lnum, "missing lattice information")
          return
       end if
       do ilat = 1, 3
-         call next_line(unit, line, stat)
-         read(line, *, iostat=stat) coord
+         call advance_line(unit, line, pos, lnum, stat)
+         if (stat == 0) &
+            call read_token(line, pos, token, coord(1), stat)
+         if (stat == 0) &
+            call read_token(line, pos, token, coord(2), stat)
+         if (stat == 0) &
+            call read_token(line, pos, token, coord(3), stat)
          if (stat /= 0) then
-            call fatal_error(error, 'could not read lattice from file')
+            call io_error(error, "Cannot read lattice vector", &
+               & line, token, filename(unit), lnum, "expected real value")
             return
          end if
          lattice(:, ilat) = coord * aatoau
@@ -135,21 +158,23 @@ subroutine read_genformat(mol, unit, error)
 
 contains
 
-subroutine next_line(unit, line, stat)
+subroutine advance_line(unit, line, pos, num, stat)
    integer,intent(in) :: unit
+   integer, intent(out) :: pos
+   integer, intent(inout) :: num
    character(len=:), allocatable, intent(out) :: line
    integer, intent(out) :: stat
    integer :: ihash
 
    stat = 0
    do while(stat == 0)
-      call getline(unit, line, stat)
+      call next_line(unit, line, pos, num, stat)
       ihash = index(line, '#')
       if (ihash > 0) line = line(:ihash-1)
       if (len_trim(line) > 0) exit
    end do
    line = trim(adjustl(line))
-end subroutine next_line
+end subroutine advance_line
 
 end subroutine read_genformat
 

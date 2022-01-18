@@ -212,7 +212,8 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
             call fatal_error(error, "Missing argument for input format")
             exit
          end if
-         input_format = get_filetype("."//arg)
+         if (index(arg, ".") == 0) arg = "."//arg
+         input_format = get_filetype(arg)
       case("-o", "--output")
          iarg = iarg + 1
          call get_argument(iarg, arg)
