@@ -247,7 +247,7 @@ subroutine test_invalid3_gen(error)
    open(status='scratch', newunit=unit)
    write(unit, '(a)') &
       "2  F", &
-      "Ga ***", &
+      "Ga ***As", &
       "1 1 0.00 0.00 0.00", &
       "2 2 0.25 0.25 0.25", &
       "0.0000000E+00 0.0000000E+00 0.0000000E+00", &

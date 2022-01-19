@@ -27,6 +27,7 @@ Supported formats:
 - Connection table files, molfile (mol) and structure data format (sdf)
 - Gaussian's external program input (ein)
 - JSON input with `qcschema_molecule` or `qcschema_input` structure (json)
+- FHI-AIMS' input files (geometry.in)
 
 
 == Options

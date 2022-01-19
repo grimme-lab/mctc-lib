@@ -53,6 +53,9 @@ module mctc_io_filetype
       !> QCSchema JSON file
       integer :: qcschema = 9
 
+      !> FHI-aims geometry.in format
+      integer :: aims = 10
+
    end type enum_filetype
 
    !> File type enumerator
@@ -103,7 +106,13 @@ elemental function get_filetype(file) result(ftype)
    end if
 
    if (iext > isep) then
+      if (file(isep+1:) == 'geometry.in') then
+         ftype = filetype%aims
+      end if
+
       select case(to_lower(file(isep+1:iext-1)))
+      case('geometry.in')
+         ftype = filetype%aims
       case('coord')
          ftype = filetype%tmol
       case('poscar', 'contcar')

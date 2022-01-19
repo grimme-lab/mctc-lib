@@ -20,14 +20,13 @@ module mctc_io_read_vasp
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : structure_info
    use mctc_io_symbols, only : to_number, symbol_length
-   use mctc_io_utils, only : getline
+   use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
+      read_token, to_string
    implicit none
    private
 
    public :: read_vasp
 
-
-   logical, parameter :: debug = .false.
 
 
 contains
@@ -45,10 +44,11 @@ subroutine read_vasp(self, unit, error)
    type(error_type), allocatable, intent(out) :: error
 
    logical :: selective, cartesian
-   integer :: i, j, k, nn, ntype, natoms, izp, stat
+   integer :: i, j, k, nn, ntype, natoms, izp, stat, pos, lnum
    integer, allocatable :: ncount(:)
    real(wp) :: ddum, latvec(3), scalar, coord(3), lattice(3, 3)
    real(wp), allocatable :: xyz(:, :)
+   type(token_type) :: token
    character(len=:), allocatable :: line, comment
    character(len=2*symbol_length), allocatable :: args(:), args2(:)
    character(len=symbol_length), allocatable :: sym(:)
@@ -58,58 +58,60 @@ subroutine read_vasp(self, unit, error)
    cartesian = .true.  ! Cartesian or direct
    lattice = 0
    stat = 0
+   lnum = 0
 
    ntype = 0
    ! first line contains the symbols of different atom types
-   call getline(unit, line, stat)
+   call next_line(unit, line, pos, lnum, stat)
    if (stat /= 0) then
       call fatal_error(error, "Unexpected end of input encountered")
       return
    end if
-   if (debug) print'(">", a)', line
 
    call parse_line(line, args, ntype)
    call move_alloc(line, comment)
 
    ! this line contains the global scaling factor,
-   call getline(unit, line, stat)
+   call next_line(unit, line, pos, lnum, stat)
    if (stat /= 0) then
       call fatal_error(error, "Unexpected end of input encountered")
       return
    end if
-   if (debug) print'(">", a)', line
-   read(line, *, iostat=stat) ddum
+   call read_token(line, pos, token, ddum, stat)
    if (stat /= 0) then
-      call fatal_error(error, "Cannot read scaling factor from input")
+      call io_error(error, "Cannot read scaling factor", &
+         & line, token, filename(unit), lnum, "expected real value")
       return
    end if
    ! the Ang->au conversion is included in the scaling factor
-   if (debug) print'("->", g0)', ddum
    scalar = ddum*aatoau
 
    ! reading the lattice constants
    do i = 1, 3
-      call getline(unit, line, stat)
+      call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
          call fatal_error(error, "Unexpected end of lattice vectors encountered")
          return
       end if
-      if (debug) print'("->", a)', line
-      read(line, *, iostat=stat) latvec
+      call read_token(line, pos, token, latvec(1), stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, latvec(2), stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, latvec(3), stat)
       if (stat /= 0) then
-         call fatal_error(error, "Cannot read lattice vectors from input")
+         call io_error(error, "Cannot read lattice vectors from input", &
+            & line, token, filename(unit), lnum, "expected real value")
          return
       end if
       lattice(:, i) = latvec * scalar
    end do
    ! Either here are the numbers of each element,
    ! or (>vasp.5.1) here are the element symbols
-   call getline(unit, line, stat)
+   call next_line(unit, line, pos, lnum, stat)
    if (stat /= 0) then
       call fatal_error(error, "Unexpected end of input encountered")
       return
    end if
-   if (debug) print'(">", a)', line
 
    ! try to verify that first element is actually a number
    i = max(verify(line, ' '), 1)
@@ -119,8 +121,7 @@ subroutine read_vasp(self, unit, error)
    ! CONTCAR files have additional Element line here since vasp.5.1
    if (verify(line(i:j), '1234567890') /= 0) then
       call parse_line(line, args, ntype)
-      call getline(unit, line, stat)
-      if (debug) print'("->", a)', line
+      call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
          call fatal_error(error, "Unexpected end of input encountered")
          return
@@ -156,17 +157,15 @@ subroutine read_vasp(self, unit, error)
       end do
    end do
 
-   call getline(unit, line, stat)
+   call next_line(unit, line, pos, lnum, stat)
    if (stat /= 0) then
       call fatal_error(error, "Could not read POSCAR")
       return
    end if
-   if (debug) print'(">", a)', line
    line = adjustl(line)
    if (line(:1).eq.'s' .or. line(:1).eq.'S') then
       selective = .true.
-      call getline(unit, line, stat)
-      if (debug) print'("->", a)', line
+      call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
          call fatal_error(error, "Unexpected end of input encountered")
          return
@@ -177,15 +176,19 @@ subroutine read_vasp(self, unit, error)
    cartesian = (line(:1).eq.'c' .or. line(:1).eq.'C' .or. &
       &         line(:1).eq.'k' .or. line(:1).eq.'K')
    do i = 1, natoms
-      call getline(unit, line, stat)
+      call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
          call fatal_error(error, "Unexpected end of geometry encountered")
          return
       end if
-      if (debug) print'("-->", a)', line
-      read(line, *, iostat=stat) coord
+      call read_token(line, pos, token, coord(1), stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, coord(2), stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, coord(3), stat)
       if (stat /= 0) then
-         call fatal_error(error, "Cannot read geometry from input")
+         call io_error(error, "Cannot read geometry from input", &
+            & line, token, filename(unit), lnum, "expected real value")
          return
       end if
 

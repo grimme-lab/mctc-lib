@@ -18,7 +18,8 @@ module mctc_io_read_xyz
    use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
    use mctc_io_symbols, only : to_number, to_symbol, symbol_length
-   use mctc_io_utils, only : getline
+   use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
+      read_token, to_string
    implicit none
    private
 
@@ -39,23 +40,28 @@ subroutine read_xyz(self, unit, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: ii, n, iat, stat
+   integer :: ii, n, iat, stat, pos, lnum
    real(wp) :: x, y, z, conv
    real(wp), allocatable :: xyz(:, :)
+   type(token_type) :: token, tsym, tnat
    character(len=symbol_length) :: chdum
    character(len=symbol_length), allocatable :: sym(:)
-   character(len=:), allocatable :: line, comment
+   character(len=:), allocatable :: line, comment, fline
 
    conv = aatoau
+   lnum = 0
 
-   read(unit, *, iostat=stat) n
+   call next_line(unit, fline, pos, lnum, stat)
+   call read_token(fline, pos, tnat, n, stat)
    if (stat /= 0) then
-      call fatal_error(error, "Could not read number of atoms, check format!")
+      call io_error(error, "Could not read number of atoms", &
+         & fline, tnat, filename(unit), lnum, "expected integer vale")
       return
    end if
 
    if (n.lt.1) then
-      call fatal_error(error, "Found no atoms, cannot work without atoms!")
+      call io_error(error, "Impossible number of atoms provided", &
+         & fline, tnat, filename(unit), lnum, "expected positive integer value")
       return
    end if
 
@@ -63,7 +69,7 @@ subroutine read_xyz(self, unit, error)
    allocate(xyz(3, n))
 
    ! next record is a comment
-   call getline(unit, comment, stat)
+   call next_line(unit, comment, pos, lnum, stat)
    if (stat /= 0) then
       call fatal_error(error, "Unexpected end of file")
       return
@@ -71,18 +77,28 @@ subroutine read_xyz(self, unit, error)
 
    ii = 0
    do while (ii < n)
-      call getline(unit, line, stat)
+      call next_line(unit, line, pos, lnum, stat)
       if (is_iostat_end(stat)) exit
       if (stat /= 0) then
          call fatal_error(error, "Could not read geometry from xyz file")
          return
       end if
-      read(line, *, iostat=stat) chdum, x, y, z
+      call next_token(line, pos, tsym)
+      if (stat == 0) &
+         call read_token(line, pos, token, x, stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, y, stat)
+      if (stat == 0) &
+         call read_token(line, pos, token, z, stat)
       if (stat /= 0) then
-         call fatal_error(error, "Could not parse coordinates from xyz file")
+         call io_error(error, "Could not parse coordinates from xyz file", &
+            & line, token, filename(unit), lnum, "expected real value")
          return
       end if
 
+      ! Adjust the token length to faithfully report the used chars in case of an error
+      tsym%last = min(tsym%last, tsym%first + symbol_length - 1)
+      chdum = line(tsym%first:tsym%last)
       iat = to_number(chdum)
       if (iat <= 0) then
          read(chdum, *, iostat=stat) iat
@@ -97,13 +113,15 @@ subroutine read_xyz(self, unit, error)
          sym(ii) = trim(chdum)
          xyz(:, ii) = [x, y, z]*conv
       else
-         call fatal_error(error, "Unknown element symbol: '"//trim(chdum)//"'")
+         call io_error(error, "Cannot map symbol to atomic number", &
+            & line, tsym, filename(unit), lnum, "unknown element")
          return
       end if
    end do
 
    if (ii /= n) then
-      call fatal_error(error, "Atom number missmatch in xyz file")
+      call io_error(error, "Atom number missmatch in xyz file", &
+         & fline, tnat, filename(unit), 1, "found "//to_string(ii)//" atoms in input")
       return
    end if
 

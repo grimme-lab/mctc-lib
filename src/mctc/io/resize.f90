@@ -25,6 +25,7 @@ module mctc_io_resize
    interface resize
       module procedure :: resize_char
       module procedure :: resize_int
+      module procedure :: resize_logical
       module procedure :: resize_real
       module procedure :: resize_real_2d
    end interface resize
@@ -107,6 +108,42 @@ pure subroutine resize_char(var, n)
    end if
 
 end subroutine resize_char
+
+
+!> Reallocate list of logicals
+pure subroutine resize_logical(var, n)
+
+   !> Instance of the array to be resized
+   logical, allocatable, intent(inout) :: var(:)
+
+   !> Dimension of the final array size
+   integer, intent(in), optional :: n
+
+   logical, allocatable :: tmp(:)
+   integer :: this_size, new_size
+
+   if (allocated(var)) then
+      this_size = size(var, 1)
+      call move_alloc(var, tmp)
+   else
+      this_size = initial_size
+   end if
+
+   if (present(n)) then
+      new_size = n
+   else
+      new_size = this_size + this_size/2 + 1
+   end if
+
+   allocate(var(new_size))
+
+   if (allocated(tmp)) then
+      this_size = min(size(tmp, 1), size(var, 1))
+      var(:this_size) = tmp(:this_size)
+      deallocate(tmp)
+   end if
+
+end subroutine resize_logical
 
 
 !> Reallocate list of reals

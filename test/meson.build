@@ -15,6 +15,7 @@
 tests = [
   'math',
   'read',
+  'read-aims',
   'read-ctfile',
   'read-gaussian',
   'read-genformat',
@@ -25,6 +26,7 @@ tests = [
   'read-xyz',
   'symbols',
   'write',
+  'write-aims',
   'write-ctfile',
   'write-gaussian',
   'write-genformat',

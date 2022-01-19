@@ -42,7 +42,8 @@ subroutine collect_read_xyz(testsuite)
       & new_unittest("invalid3-xyz", test_invalid3_xyz, should_fail=.true.), &
       & new_unittest("invalid4-xyz", test_invalid4_xyz, should_fail=.true.), &
       & new_unittest("invalid5-xyz", test_invalid5_xyz, should_fail=.true.), &
-      & new_unittest("invalid6-xyz", test_invalid6_xyz, should_fail=.true.) &
+      & new_unittest("invalid6-xyz", test_invalid6_xyz, should_fail=.true.), &
+      & new_unittest("invalid7-xyz", test_invalid7_xyz, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_xyz
@@ -381,9 +382,9 @@ subroutine test_invalid5_xyz(error)
    write(unit, '(a)') &
       "3", &
       "H2O", &
-      "***   1.1847029    1.1150792   -0.0344641 ", &
-      "***   0.4939088    0.9563767    0.6340089 ", &
-      "***   2.0242676    1.0811246    0.4301417 "
+      "****o   1.1847029    1.1150792   -0.0344641 ", &
+      "****h   0.4939088    0.9563767    0.6340089 ", &
+      "****h   2.0242676    1.0811246    0.4301417 "
    rewind(unit)
 
    call read_xyz(struc, unit, error)
@@ -415,6 +416,35 @@ subroutine test_invalid6_xyz(error)
    if (allocated(error)) return
 
 end subroutine test_invalid6_xyz
+
+
+subroutine test_invalid7_xyz(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "nine", &
+      "WATER27, (H2O)3", &
+      "O     1.1847029    1.1150792   -0.0344641 ", &
+      "H     0.4939088    0.9563767    0.6340089 ", &
+      "H     2.0242676    1.0811246    0.4301417 ", &
+      "O    -1.1469443    0.0697649    1.1470196 ", &
+      "H    -1.2798308   -0.5232169    1.8902833 ", &
+      "H    -1.0641398   -0.4956693    0.3569250 ", &
+      "O    -0.1633508   -1.0289346   -1.2401808 ", &
+      "H     0.4914771   -0.3248733   -1.0784838 ", &
+      "H    -0.5400907   -0.8496512   -2.1052499 "
+   rewind(unit)
+
+   call read_xyz(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid7_xyz
 
 
 end module test_read_xyz
