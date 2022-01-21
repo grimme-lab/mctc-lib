@@ -145,7 +145,7 @@ type(error_type), allocatable :: error
 
 call read_structure(mol, "input.xyz", error)
 if (allocated(error)) then
-   print '("[Error]", 1x, a)', error%message
+   print '(a)', error%message
    error stop
 end if
 ```
@@ -164,13 +164,71 @@ type(error_type), allocatable :: error
 
 call write_structure(mol, "output.xyz", error)
 if (allocated(error)) then
-   print '("[Error]", 1x, a)', error%message
+   print '(a)', error%message
    error stop
 end if
 ```
 
 The [``mctc-convert``](man/mctc-convert.1.adoc) program provides a chained reader and writer call to act as a geometry file converter.
 Checkout the implementation in [``app/main.f90``](app/main.f90).
+
+
+## Error reporting
+
+The geometry input readers try to be provide helpful error messages, no user should be left alone with an error message like *invalid input*.
+Unclear error messages are considered a bug in *mctc-lib*, if you struggle to make sense of a reported error, file us an issue and we will make the report better.
+
+**How can helpful error messages look like?**
+Here are some examples.
+
+1. negative number of atoms declared in xyz file
+
+```
+Error: Impossible number of atoms provided
+ --> struc.xyz:1:1-2
+  |
+1 | -3
+  | ^^ expected positive integer value
+  |
+```
+
+2. total charge is not specified as integer
+
+```
+Error: Cannot read eht entry
+  --> struc.coord:18:13-15
+   |
+18 | $eht charge=one unpaired=0
+   |             ^^^ expected integer value
+   |
+```
+
+3. a fixed width entry contains an incorrect value
+
+```
+Error: Cannot read charges
+  --> struc.mol:29:23-25
+   |
+29 | M  CHG  3   1   1   3   b   2  -1
+   |                       ^^^ expected integer value
+   |
+```
+
+4. Turbomole input with confliciting data groups
+
+```
+Error: Conflicting lattice and cell groups
+  --> struc.coord:37:1-5
+   |
+35 | $lattice angs
+   | -------- lattice first defined here
+   :
+37 | $cell angs
+   | ^^^^^ conflicting cell group
+   |
+```
+
+We try to retain as much information as possible when displaying the error message to make it easy to fix the offending part in the input.
 
 
 ## License

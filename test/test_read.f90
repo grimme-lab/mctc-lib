@@ -168,7 +168,7 @@ subroutine test_sdf(error)
       "  6 12  1  0  0  0  0", &
       "  7  2  1  0  0  0  0", &
       "  7 13  1  0  0  0  0", &
-      "M  CHG  1  5  1", &
+      "M  CHG  1   5   1", &
       "M  END", &
       ">  <total energy / Eh>", &
       "-18.421705869411", &

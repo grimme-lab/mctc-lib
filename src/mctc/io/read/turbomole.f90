@@ -14,14 +14,15 @@
 
 module mctc_io_read_turbomole
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type
    use mctc_io_constants, only : pi
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : structure_info
    use mctc_io_symbols, only : to_number, symbol_length
-   use mctc_io_utils, only : getline
+   use mctc_io_utils, only : next_line, token_type, next_token, io_error, io2_error, &
+      filename, read_next_token, to_string
    implicit none
    private
 
@@ -52,16 +53,20 @@ subroutine read_coord(mol, unit, error)
    logical :: has_coord, has_periodic, has_lattice, has_cell, has_eht
    logical :: cartesian, coord_in_bohr, lattice_in_bohr, pbc(3)
    integer :: stat, iatom, i, j, natoms, periodic, cell_vectors, icharge
+   integer :: lnum, pos, lcell, llattice, lperiodic, lcoord, leht
    integer, allocatable :: unpaired
+   type(token_type) :: token, token2
    real(wp) :: latvec(9), conv, cellpar(6), lattice(3, 3)
    real(wp), allocatable :: coord(:, :), xyz(:, :), charge
-   character(len=:), allocatable :: line, cell_string, lattice_string
+   character(len=:), allocatable :: line, cell_string, lattice_string, &
+      & line_cell, line_lattice, line_periodic, line_coord, line_eht
    character(len=symbol_length), allocatable :: sym(:)
    type(structure_info) :: info
 
    allocate(sym(p_initial_size), source=repeat(' ', symbol_length))
    allocate(coord(3, p_initial_size), source=0.0_wp)
 
+   lnum = 0
    iatom = 0
    periodic = 0
    cell_vectors = 0
@@ -77,102 +82,226 @@ subroutine read_coord(mol, unit, error)
    pbc = .false.
 
    stat = 0
-   call getline(unit, line, stat)
+   call next_line(unit, line, pos, lnum, stat)
    do while(stat == 0)
       if (index(line, flag) == 1) then
+         call next_token(line, pos, token)
          if (index(line, 'end') == 2) then
             exit
 
-         else if (.not.has_eht .and. index(line, 'eht') == 2) then
+         else if (index(line, 'eht') == 2) then
+            if (has_eht) then
+               pos = 0
+               call next_token(line_eht, pos, token2)
+               call io2_error(error, "Duplicated eht data group", &
+                  & line_eht, line, token2, token, &
+                  & filename(unit), leht, lnum, &
+                  & "charge/multiplicity first defined here", "duplicated eht data")
+               return
+            end if
             has_eht = .true.
+            leht = lnum
+            line_eht = line
             i = index(line, 'charge=')
             if (i > 0) then
-               read(line(i+7:), *, iostat=stat) icharge
+               pos = i + 6
+               call read_next_token(line, pos, token, icharge, stat)
                charge = real(icharge, wp)
             end if
             j = index(line, 'unpaired=')
-            if (j > 0) then
+            if (j > 0 .and. stat == 0) then
                allocate(unpaired)
-               read(line(j+9:), *, iostat=stat) unpaired
+               pos = j + 8
+               call read_next_token(line, pos, token, unpaired, stat)
+            end if
+            if (stat /= 0) then
+               call io_error(error, "Cannot read eht entry", &
+                  & line, token, filename(unit), lnum, "expected integer value")
+               return
             end if
 
-         else if (.not.has_coord .and. index(line, 'coord') == 2) then
+         else if (index(line, 'coord') == 2) then
+            if (has_coord) then
+               pos = 0
+               call next_token(line_coord, pos, token2)
+               call io2_error(error, "Duplicated coord data group", &
+                  & line_coord, line, token2, token, &
+                  & filename(unit), lcoord, lnum, &
+                  & "coordinates first defined here", "duplicated coordinate group")
+               return
+            end if
+            lcoord = lnum
+            line_coord = line
             has_coord = .true.
             ! $coord angs / $coord bohr / $coord frac
             call select_unit(line, coord_in_bohr, cartesian)
             coord_group: do while(stat == 0)
-               call getline(unit, line, stat)
+               call next_line(unit, line, pos, lnum, stat)
                if (index(line, flag) == 1) exit coord_group
                if (iatom >= size(coord, 2)) call resize(coord)
                if (iatom >= size(sym)) call resize(sym)
                iatom = iatom + 1
-               read(line, *, iostat=stat) coord(:, iatom), sym(iatom)
+               call read_next_token(line, pos, token, coord(1, iatom), stat)
+               if (stat == 0) &
+                  call read_next_token(line, pos, token, coord(2, iatom), stat)
+               if (stat == 0) &
+                  call read_next_token(line, pos, token, coord(3, iatom), stat)
+               if (stat == 0) &
+                  call next_token(line, pos, token)
+               if (stat /= 0) then
+                  call io_error(error, "Cannot read coordinates", &
+                     & line, token, filename(unit), lnum, "expected real value")
+                  return
+               end if
+
+               token%last = min(token%last, token%first + symbol_length - 1)
+               sym(iatom) = line(token%first:token%last)
+               if (to_number(sym(iatom)) == 0) then
+                  call io_error(error, "Cannot map symbol to atomic number", &
+                     & line, token, filename(unit), lnum, "unknown element")
+                  return
+               end if
             end do coord_group
             cycle
 
-         else if (.not.has_periodic .and. index(line, 'periodic') == 2) then
+         else if (index(line, 'periodic') == 2) then
+            if (has_periodic) then
+               pos = 0
+               call next_token(line_periodic, pos, token2)
+               call io2_error(error, "Duplicated periodic data group", &
+                  & line_periodic, line, token2, token, &
+                  & filename(unit), lperiodic, lnum, &
+                  & "periodicity first defined here", "duplicated periodicity data")
+               return
+            end if
+            lperiodic = lnum
+            line_periodic = line
             has_periodic = .true.
             ! $periodic 0/1/2/3
-            read(line(10:), *, iostat=stat) periodic
+            call read_next_token(line, pos, token, periodic, stat)
+            if (stat /= 0 .or. periodic < 0 .or. periodic > 3) then
+               call io_error(error, "Cannot read periodicity of system", &
+                  & line, token, filename(unit), lnum, "expected integer (0 to 3)")
+               return
+            end if
 
-         else if (.not.has_lattice .and. index(line, 'lattice') == 2) then
+         else if (index(line, 'lattice') == 2) then
+            if (has_lattice) then
+               pos = 0
+               call next_token(line_lattice, pos, token2)
+               call io2_error(error, "Duplicated lattice data group", &
+                  & line_lattice, line, token2, token, &
+                  & filename(unit), llattice, lnum, &
+                  & "lattice parameters first defined here", "duplicated lattice group")
+               return
+            end if
+            llattice = lnum
+            line_lattice = line
             has_lattice = .true.
             ! $lattice bohr / $lattice angs
             call select_unit(line, lattice_in_bohr)
             cell_vectors = 0
             lattice_string = ''
             lattice_group: do while(stat == 0)
-               call getline(unit, line, stat)
+               call next_line(unit, line, pos, lnum, stat)
                if (index(line, flag) == 1) exit lattice_group
                cell_vectors = cell_vectors + 1
                lattice_string = lattice_string // ' ' // line
             end do lattice_group
             cycle
 
-         else if (.not.has_cell .and. index(line, 'cell') == 2) then
+         else if (index(line, 'cell') == 2) then
+            if (has_cell) then
+               pos = 0
+               call next_token(line_cell, pos, token2)
+               call io2_error(error, "Duplicated cell data group", &
+                  & line_cell, line, token2, token, &
+                  & filename(unit), lcell, lnum, &
+                  & "cell parameters first defined here", "duplicated cell group")
+               return
+            end if
+            lcell = lnum
+            line_cell = line
             has_cell = .true.
             ! $cell bohr / $cell angs
             call select_unit(line, lattice_in_bohr)
-            call getline(unit, cell_string, stat)
+            call next_line(unit, cell_string, pos, lnum, stat)
             if (debug) print*, cell_string
 
          end if
       end if
-      call getline(unit, line, stat)
+      token = token_type(0, 0)
+      call next_line(unit, line, pos, lnum, stat)
    end do
+   if (allocated(error)) return
 
    if (.not.has_coord .or. iatom == 0) then
-      call fatal_error(error, "coordinates not present, cannot work without coordinates")
+      call io_error(error, "coordinates not present, cannot work without coordinates", &
+         & line, token, filename(unit), lnum, "unexpected end of input")
       return
    end if
 
    if (has_cell .and. has_lattice) then
-      call fatal_error(error, "both lattice and cell group are present")
+      block
+         type(token_type) :: tcell, tlattice
+         pos = 0
+         call next_token(line_cell, pos, tcell)
+         pos = 0
+         call next_token(line_lattice, pos, tlattice)
+         tlattice = token_type(1, len(line_lattice))
+         if (lcell > llattice) then
+            call io2_error(error, "Conflicting lattice and cell groups", &
+               & line_lattice, line_cell, tlattice, tcell, &
+               & filename(unit), llattice, lcell, &
+               & "lattice first defined here", "conflicting cell group")
+         else
+            call io2_error(error, "Conflicting lattice and cell groups", &
+               & line_cell, line_lattice, tcell, tlattice, &
+               & filename(unit), lcell, llattice, &
+               & "cell first defined here", "conflicting lattice group")
+         end if
+      end block
       return
    end if
 
    if (.not.has_periodic .and. (has_cell .or. has_lattice)) then
-      call fatal_error(error, "cell and lattice definition is present, but periodicity is not given")
+      pos = 0
+      if (has_cell) then
+         call next_token(line_cell, pos, token)
+         call io_error(error, "Cell parameters defined without periodicity", &
+            & line_cell, token, filename(unit), &
+            & lcell, "cell defined here")
+      end if
+      if (has_lattice) then
+         call next_token(line_lattice, pos, token)
+         call io_error(error, "Lattice parameters defined without periodicity", &
+            & line_lattice, token, filename(unit), &
+            & llattice, "lattice defined here")
+      end if
       return
    end if
 
    if (periodic > 0 .and. .not.(has_cell .or. has_lattice)) then
-      call fatal_error(error, "system is periodic but definition of lattice/cell is missing")
+      pos = 0
+      call next_token(line_periodic, pos, token)
+      call io_error(error, "Missing lattice or cell data", &
+         & line_periodic, token, filename(unit), &
+         & lperiodic, "periodic system defined here")
       return
    end if
 
    if (.not.cartesian .and. periodic == 0) then
-      call fatal_error(error, "fractional coordinates do not work for molecular systems")
+      pos = 0
+      call next_token(line_coord, pos, token)
+      call next_token(line_coord, pos, token)
+      call io_error(error, "Molecular systems cannot have fractional coordinates", &
+         & line_coord, token, filename(unit), &
+         & lcoord, "fractional modifier found")
       return
    end if
 
    natoms = iatom
    allocate(xyz(3, natoms))
-
-   if (any(to_number(sym(:natoms)) == 0)) then
-      call fatal_error(error, "unknown element present")
-      return
-   end if
 
    if (periodic > 0) pbc(:periodic) = .true.
 
@@ -199,7 +328,13 @@ subroutine read_coord(mol, unit, error)
 
    if (has_lattice) then
       if (cell_vectors /= periodic) then
-         call fatal_error(error, "number of cell vectors does not match periodicity")
+         pos = 0
+         call next_token(line_lattice, pos, token)
+         pos = len_trim(line_periodic)
+         call io2_error(error, "Number of lattice vectors does not match periodicity", &
+            & line_lattice, line_periodic, token, token_type(pos, pos), &
+            & filename(unit), llattice, lperiodic, &
+            & "lattice vectors defined here", "conflicting periodicity")
          return
       end if
       read(lattice_string, *, iostat=stat) latvec(:p_nlv(periodic))

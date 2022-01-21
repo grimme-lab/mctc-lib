@@ -16,6 +16,8 @@ module mctc_io_read_gaussian
    use mctc_env_accuracy, only : wp
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_structure, only : structure_type, new
+   use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
+      read_token, to_string
    implicit none
    private
 
@@ -36,19 +38,41 @@ subroutine read_gaussian_external(self, unit, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: stat, n, mode, chrg, spin, iat, ii
+   integer :: stat, n, mode, chrg, spin, iat, ii, pos, lnum
+   type(token_type) :: token, tnat
+   character(len=:), allocatable :: line
    integer, allocatable :: at(:)
    real(wp), allocatable :: xyz(:,:)
    real(wp) :: coord(3), q
 
-   read(unit, '(4i10)', iostat=stat) n, mode, chrg, spin
-   if (stat.ne.0) then
-      call fatal_error(error, "Could not read number of atoms, check format!")
+   lnum = 0
+   call next_line(unit, line, pos, lnum, stat)
+   if (stat == 0) then
+      token = token_type(1, 10)
+      tnat = token
+      call read_token(line, token, n, stat)
+   end if
+   if (stat == 0) then
+      token = token_type(11, 20)
+      call read_token(line, token, mode, stat)
+   end if
+   if (stat == 0) then
+      token = token_type(21, 30)
+      call read_token(line, token, chrg, stat)
+   end if
+   if (stat == 0) then
+      token = token_type(31, 40)
+      call read_token(line, token, spin, stat)
+   end if
+   if (stat /= 0) then
+      call io_error(error, "Could not read number of atoms", &
+         & line, token, filename(unit), lnum, "expected integer value")
       return
    end if
 
    if (n <= 0) then
-      call fatal_error(error, "Found no atoms, cannot work without atoms!")
+      call io_error(error, "Found no atoms, cannot work without atoms!", &
+         & line, tnat, filename(unit), lnum, "expected positive integer")
       return
    end if
 
@@ -57,10 +81,32 @@ subroutine read_gaussian_external(self, unit, error)
 
    ii = 0
    do while (ii < n)
-      read(unit, '(i10, 4f20.12)', iostat=stat) iat, coord, q
+      call next_line(unit, line, pos, lnum, stat)
       if (is_iostat_end(stat)) exit
-      if (stat.ne.0) then
-         call fatal_error(error, "Could not read geometry from Gaussian file")
+      if (stat == 0) then
+         token = token_type(1, 10)
+         tnat = token
+         call read_token(line, token, iat, stat)
+      end if
+      if (stat == 0) then
+         token = token_type(11, 30)
+         call read_token(line, token, coord(1), stat)
+      end if
+      if (stat == 0) then
+         token = token_type(31, 40)
+         call read_token(line, token, coord(2), stat)
+      end if
+      if (stat == 0) then
+         token = token_type(41, 60)
+         call read_token(line, token, coord(3), stat)
+      end if
+      if (stat == 0) then
+         token = token_type(61, 80)
+         call read_token(line, token, q, stat)
+      end if
+      if (stat /= 0) then
+         call io_error(error, "Could not read geometry from Gaussian file", &
+            & line, token, filename(unit), lnum, "unexpected value")
          return
       end if
       if (iat > 0) then
@@ -68,7 +114,8 @@ subroutine read_gaussian_external(self, unit, error)
          at(ii) = iat
          xyz(:, ii) = coord
       else
-         call fatal_error(error, "Invalid atomic number")
+         call io_error(error, "Invalid atomic number", &
+            & line, tnat, filename(unit), lnum, "expected positive integer")
          return
       end if
    end do

@@ -14,13 +14,13 @@
 
 module mctc_io_read_genformat
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type
    use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : structure_info
    use mctc_io_symbols, only : to_number, symbol_length
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
-      read_token, to_string
+      read_next_token, to_string
    implicit none
    private
 
@@ -54,7 +54,7 @@ subroutine read_genformat(mol, unit, error)
 
    lnum = 0
    call advance_line(unit, line, pos, lnum, stat)
-   call read_token(line, pos, token, natoms, stat)
+   call read_next_token(line, pos, token, natoms, stat)
    if (stat /= 0 .or. natoms < 1) then
       call io_error(error, "Could not read number of atoms", &
          & line, token, filename(unit), lnum, "expected integer value")
@@ -102,15 +102,15 @@ subroutine read_genformat(mol, unit, error)
       token = token_type(0, 0)
       call advance_line(unit, line, pos, lnum, stat)
       if (stat == 0) &
-         call read_token(line, pos, token, dummy, stat)
+         call read_next_token(line, pos, token, dummy, stat)
       if (stat == 0) &
-         call read_token(line, pos, token, isp, stat)
+         call read_next_token(line, pos, token, isp, stat)
       if (stat == 0) &
-         call read_token(line, pos, token, coord(1), stat)
+         call read_next_token(line, pos, token, coord(1), stat)
       if (stat == 0) &
-         call read_token(line, pos, token, coord(2), stat)
+         call read_next_token(line, pos, token, coord(2), stat)
       if (stat == 0) &
-         call read_token(line, pos, token, coord(3), stat)
+         call read_next_token(line, pos, token, coord(3), stat)
       if (stat /= 0) then
          call io_error(error, "Cannot read coordinates", &
             & line, token, filename(unit), lnum, "unexpected value")
@@ -134,11 +134,11 @@ subroutine read_genformat(mol, unit, error)
       do ilat = 1, 3
          call advance_line(unit, line, pos, lnum, stat)
          if (stat == 0) &
-            call read_token(line, pos, token, coord(1), stat)
+            call read_next_token(line, pos, token, coord(1), stat)
          if (stat == 0) &
-            call read_token(line, pos, token, coord(2), stat)
+            call read_next_token(line, pos, token, coord(2), stat)
          if (stat == 0) &
-            call read_token(line, pos, token, coord(3), stat)
+            call read_next_token(line, pos, token, coord(3), stat)
          if (stat /= 0) then
             call io_error(error, "Cannot read lattice vector", &
                & line, token, filename(unit), lnum, "expected real value")

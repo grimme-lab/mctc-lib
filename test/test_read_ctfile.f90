@@ -37,11 +37,13 @@ subroutine collect_read_ctfile(testsuite)
       & new_unittest("invalid1-mol", test_invalid1_mol, should_fail=.true.), &
       & new_unittest("invalid2-mol", test_invalid2_mol, should_fail=.true.), &
       & new_unittest("invalid3-mol", test_invalid3_mol, should_fail=.true.), &
+      & new_unittest("invalid4-mol", test_invalid4_mol, should_fail=.true.), &
       & new_unittest("valid1-sdf", test_valid1_sdf), &
       & new_unittest("valid2-sdf", test_valid2_sdf), &
       & new_unittest("invalid1-sdf", test_invalid1_sdf, should_fail=.true.), &
       & new_unittest("invalid2-sdf", test_invalid2_sdf, should_fail=.true.), &
-      & new_unittest("invalid3-sdf", test_invalid3_sdf, should_fail=.true.) &
+      & new_unittest("invalid3-sdf", test_invalid3_sdf, should_fail=.true.), &
+      & new_unittest("invalid4-sdf", test_invalid4_sdf, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_ctfile
@@ -306,6 +308,54 @@ subroutine test_invalid3_mol(error)
    close(unit)
 
 end subroutine test_invalid3_mol
+
+
+subroutine test_invalid4_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "", &
+      "  Mrv1823 10191918163D          ", &
+      "", &
+      " 12 12  0  0  0  0            999 V2000", &
+      "   -0.0090   -0.0157   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -0.7131    1.2038   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    1.3990   -0.0157   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -0.0090    2.4232   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    2.1031    1.2038   -0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    1.3990    2.4232    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -0.5203   -0.9011   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -1.7355    1.2038    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    1.9103   -0.9011    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -0.5203    3.3087    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    3.1255    1.2038    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    1.9103    3.3087   -0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "  2  1  4  0  0  0  0", &
+      "  3  1  4  0  0  0  0", &
+      "  4  2  4  0  0  0  0", &
+      "  5  3  4  0  0  0  0", &
+      "  6  4  4  0  0  0  0", &
+      "  6  5  4  0  0  0  0", &
+      "  1  7  1  0  0  0  0", &
+      "  2  8  1  0  0  0  0", &
+      "  3  9  1  0  0  0  0", &
+      "  4 10  1  0  0  0  0", &
+      "  5 11  1  0  0  0  0", &
+      "  6 12  1  0  0  0  0", &
+      "M  CHG  3   1   1   3   b   2  -1", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid4_mol
 
 
 subroutine test_valid1_sdf(error)
@@ -594,6 +644,62 @@ subroutine test_invalid3_sdf(error)
    if (allocated(error)) return
 
 end subroutine test_invalid3_sdf
+
+
+subroutine test_invalid4_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "", &
+      "  xtb     08072014173D", &
+      "", &
+      " 13 13  0     0  0            999 V2000", &
+      "    1.4896   -2.2438   -0.0275 O   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    0.8475   -1.2058   -0.0075 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    1.4981    0.0466    0.2360 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    0.7744    1.2240    0.2564 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -0.5681    1.2354    0.0512 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -1.3469   -0.0099   -0.2052 C   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -0.5125   -1.2225   -0.2193 N   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    2.5680    0.0344    0.3998 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "    1.2958    2.1567    0.4406 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -1.0960    2.1819    0.0742 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -1.8599    0.0606   -1.1755 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -2.1168   -0.1374    0.5699 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "   -0.9728   -2.1202   -0.3930 H   0  0  0  0  0  0  0  0  0  0  0  0", &
+      "  1  2  2  0  0  0  0", &
+      "  2  3  1  0  0  0  0", &
+      "  3  4  2  0  0  0  0", &
+      "  3  8  1  0  0  0  0", &
+      "  4  5  1  0  0  0  0", &
+      "  4  9  1  0  0  0  0", &
+      "  5  6  1  0  0  0  0", &
+      "  5 10  1  0  0  0  0", &
+      "  6  7  1  0  0  0  0", &
+      "  6 11  1  0  0  0  0", &
+      "  6 12  1  0  0  0  0", &
+      "  7  2  1  0  0  0  0", &
+      "  7 13  1  0  0  0  0", &
+      "M  CHG  1 5 1", &
+      "M  END", &
+      ">  <total energy / Eh>", &
+      "-18.421705869411", &
+      "", &
+      ">  <gradient norm / Eh/a0>", &
+      "0.000695317397", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_sdf(struc, unit, error)
+
+end subroutine test_invalid4_sdf
 
 
 end module test_read_ctfile

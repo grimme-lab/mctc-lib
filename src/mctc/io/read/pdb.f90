@@ -14,13 +14,14 @@
 
 module mctc_io_read_pdb
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type, fatal_error
+   use mctc_env_error, only : error_type
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
    use mctc_io_symbols, only : to_number, symbol_length
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : pdb_data, resize
-   use mctc_io_utils, only : getline
+   use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
+      read_token, to_string
    implicit none
    private
 
@@ -41,13 +42,12 @@ subroutine read_pdb(self, unit, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   character(len=*), parameter :: pdb_format = &
-      &  '(6x,i5,1x,a4,a1,a3,1x,a1,i4,a1,3x,3f8.3,2f6.2,6x,a4,a2,a2)'
    integer, parameter :: p_initial_size = 1000 ! this is going to be a proteine
 
-   integer :: iatom, jatom, iresidue, try, stat, atom_type
+   integer :: iatom, jatom, iresidue, try, stat, atom_type, pos, lnum
    real(wp) :: occ, temp, coords(3)
    real(wp), allocatable :: xyz(:,:)
+   type(token_type) :: token
    character(len=4) :: a_charge
    character(len=:), allocatable :: line
    character(len=symbol_length), allocatable :: sym(:)
@@ -62,7 +62,7 @@ subroutine read_pdb(self, unit, error)
 
    stat = 0
    do while(stat == 0)
-      call getline(unit, line, stat)
+      call next_line(unit, line, pos, lnum, stat)
       if (index(line, 'END') == 1) exit
       if (index(line, 'ATOM') == 1 .or. index(line, 'HETATM') == 1) then
          if (iatom >= size(xyz, 2)) call resize(xyz)
@@ -70,10 +70,69 @@ subroutine read_pdb(self, unit, error)
          if (iatom >= size(pdb)) call resize(pdb)
          iatom = iatom + 1
          pdb(iatom)%het = index(line, 'HETATM') == 1
-         read(line, pdb_format) &
-            & jatom, pdb(iatom)%name, pdb(iatom)%loc, pdb(iatom)%residue, &
-            & pdb(iatom)%chains, pdb(iatom)%residue_number, pdb(iatom)%code, &
-            & coords, occ, temp, pdb(iatom)%segid, sym(iatom), a_charge
+
+         if (len(line) >= 78) then
+            ! a4: 13:16, a1: 17:17, a3: 18:20, a1: 22:22
+            ! a1: 27:27, a4: 73:76, a2: 77:78, a2: 79:80
+            pdb(iatom)%name = line(13:16)
+            pdb(iatom)%loc = line(17:17)
+            pdb(iatom)%residue = line(18:20)
+            pdb(iatom)%chains = line(22:22)
+            pdb(iatom)%code = line(27:27)
+            pdb(iatom)%segid = line(72:74)
+            sym(iatom) = line(77:78)
+         else
+            token = token_type(len(line)+1, len(line)+1)
+            call io_error(error, "Too few entries provided in record", &
+               & line, token, filename(unit), lnum, "record too short")
+            return
+         end if
+         if (len(line) >= 80) then
+            a_charge = line(79:80)
+         else
+            a_charge = ""
+         end if
+         if (stat == 0) then
+            ! i5: 7-11
+            token = token_type(7, 11)
+            call read_token(line, token, jatom, stat)
+         end if
+         if (stat == 0) then
+            ! i4: 23-26
+            token = token_type(23, 26)
+            call read_token(line, token, pdb(iatom)%residue_number, stat)
+         end if
+         if (stat == 0) then
+            ! f8: 31-38
+            token = token_type(31, 38)
+            call read_token(line, token, coords(1), stat)
+         end if
+         if (stat == 0) then
+            ! f8: 39-46
+            token = token_type(39, 46)
+            call read_token(line, token, coords(2), stat)
+         end if
+         if (stat == 0) then
+            ! f8: 47-54
+            token = token_type(47, 54)
+            call read_token(line, token, coords(3), stat)
+         end if
+         if (stat == 0) then
+            ! f6: 55-60
+            token = token_type(55, 60)
+            call read_token(line, token, occ, stat)
+         end if
+         if (stat == 0) then
+            ! f6: 61-66
+            token = token_type(60, 66)
+            call read_token(line, token, temp, stat)
+         end if
+         if (stat /= 0) then
+            call io_error(error, "Cannot read coordinates from record", &
+               & line, token, filename(unit), lnum, "unexpected value")
+            return
+         end if
+
          xyz(:,iatom) = coords * aatoau
          atom_type = to_number(sym(iatom))
          if (atom_type == 0) then
@@ -88,28 +147,18 @@ subroutine read_pdb(self, unit, error)
             else
                if (a_charge(2:2) == '-') pdb(iatom)%charge = -pdb(iatom)%charge
             end if
-         end if         
+         end if
+         if (to_number(sym(iatom)) == 0) then
+            call io_error(error, "Cannot map symbol to atomic number", &
+               & line, token_type(77, 78), filename(unit), lnum, "unknown element")
+            return
+         end if
       end if
    end do
-   if (stat /= 0) then
-      call fatal_error(error, "could not read in coordinates, last line was: '"//line//"'")
-      return
-   end if
 
    call new(self, sym(:iatom), xyz(:, :iatom))
    self%pdb = pdb(:iatom)
    self%charge = sum(pdb(:iatom)%charge)
-
-   if (.not.all(self%num > 0)) then
-      call fatal_error(error, "invalid atom type found")
-      return
-   end if
-
-   ! since PDB is used for biomolecules, this is a sensible check (prevents GIGO)
-   if (.not.any(self%num == 1)) then
-      call fatal_error(error, "You get no calculation today, please add hydrogen atoms first")
-      return
-   end if
 
 end subroutine read_pdb
 

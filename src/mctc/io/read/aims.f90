@@ -20,7 +20,7 @@ module mctc_io_read_aims
    use mctc_io_symbols, only : symbol_length, to_number
    use mctc_io_structure, only : structure_type, new
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
-      read_token, to_string
+      read_next_token, to_string
    implicit none
    private
 
@@ -70,11 +70,11 @@ subroutine read_aims(mol, unit, error)
       select case(line(token%first:token%last))
       case("atom", "atom_frac")
          is_frac = token%last - token%first + 1 > 4
-         call read_token(line, pos, token, x, stat)
+         call read_next_token(line, pos, token, x, stat)
          if (stat == 0) &
-            call read_token(line, pos, token, y, stat)
+            call read_next_token(line, pos, token, y, stat)
          if (stat == 0) &
-            call read_token(line, pos, token, z, stat)
+            call read_next_token(line, pos, token, z, stat)
          if (stat == 0) &
             call next_token(line, pos, token)
          if (stat /= 0) then
@@ -84,11 +84,12 @@ subroutine read_aims(mol, unit, error)
          end if
 
          if (iat >= size(sym)) call resize(sym)
-         if (iat >= size(xyz)) call resize(xyz)
-         if (iat >= size(abc)) call resize(abc)
+         if (iat >= size(xyz, 2)) call resize(xyz)
+         if (iat >= size(abc, 2)) call resize(abc)
          if (iat >= size(frac)) call resize(frac)
          iat = iat + 1
 
+         token%last = min(token%last, token%first + symbol_length - 1)
          sym(iat) = line(token%first:token%last)
          if (to_number(sym(iat)) == 0) then
             call io_error(error, "Cannot map symbol to atomic number", &
@@ -109,11 +110,11 @@ subroutine read_aims(mol, unit, error)
                & line, token, filename(unit), lnum, "forth lattice vector found")
             exit
          end if
-         call read_token(line, pos, token, x, stat)
+         call read_next_token(line, pos, token, x, stat)
          if (stat == 0) &
-            call read_token(line, pos, token, y, stat)
+            call read_next_token(line, pos, token, y, stat)
          if (stat == 0) &
-            call read_token(line, pos, token, z, stat)
+            call read_next_token(line, pos, token, z, stat)
          if (stat /= 0) then
             call io_error(error, "Cannot read lattice vectors", &
                & line, token, filename(unit), lnum, "expected real value")
