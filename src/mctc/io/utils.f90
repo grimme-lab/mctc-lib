@@ -19,8 +19,8 @@ module mctc_io_utils
    private
 
    public :: getline, next_line
-   public :: token_type, next_token, read_token
-   public :: io_error
+   public :: token_type, next_token, read_token, read_next_token
+   public :: io_error, io2_error
    public :: filename, to_string
 
 
@@ -37,6 +37,11 @@ module mctc_io_utils
       module procedure :: read_token_int
       module procedure :: read_token_real
    end interface read_token
+
+   interface read_next_token
+      module procedure :: read_next_token_int
+      module procedure :: read_next_token_real
+   end interface read_next_token
 
 
 contains
@@ -200,7 +205,7 @@ subroutine io_error(error, message, source, token, filename, line, label)
 
    lnum = 1
    if (present(line)) lnum = line
-   offset = integer_width(line)
+   offset = integer_width(lnum)
    width = token%last - token%first + 1
 
    string = "Error: " // message
@@ -212,7 +217,8 @@ subroutine io_error(error, message, source, token, filename, line, label)
       string = string // ":" // to_string(lnum)
       if (token%first > 0 .and. token%last >= token%first) then
          string = string // &
-            ":"//to_string(token%first)//"-"//to_string(token%last)
+            ":"//to_string(token%first)
+         if (token%last > token%first) string = string//"-"//to_string(token%last)
       end if
    end if
 
@@ -230,6 +236,82 @@ subroutine io_error(error, message, source, token, filename, line, label)
 
    call fatal_error(error, string)
 end subroutine io_error
+
+
+!> Create new IO error
+subroutine io2_error(error, message, source1, source2, token1, token2, filename, &
+      & line1, line2, label1, label2)
+
+   !> Error handler
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Main error message
+   character(len=*), intent(in) :: message
+
+   !> String representing the offending input
+   character(len=*), intent(in) :: source1, source2
+
+   !> Last processed token
+   type(token_type), intent(in) :: token1, token2
+
+   !> Name of the input file
+   character(len=*), intent(in), optional :: filename
+
+   !> Line number
+   integer, intent(in), optional :: line1, line2
+
+   !> Label of the offending statement
+   character(len=*), intent(in), optional :: label1, label2
+
+   character(len=*), parameter :: nl = new_line('a')
+   integer :: offset, lnum1, lnum2, width1, width2
+   character(len=:), allocatable :: string
+
+   lnum1 = 1
+   lnum2 = 1
+   if (present(line1)) lnum1 = line1
+   if (present(line2)) lnum2 = line2
+   offset = integer_width(max(lnum1, lnum2))
+   width1 = token1%last - token1%first + 1
+   width2 = token2%last - token2%first + 1
+
+   string = "Error: " // message
+
+   if (present(filename)) then
+      string = string // nl // &
+         repeat(" ", offset)//"--> "//filename
+
+      string = string // ":" // to_string(lnum2)
+      if (token2%first > 0 .and. token2%last >= token2%first) then
+         string = string // &
+            ":"//to_string(token2%first)
+         if (token2%last > token2%first) string = string//"-"//to_string(token2%last)
+      end if
+   end if
+
+   string = string // nl //&
+      repeat(" ", offset+1)//"|"//nl//&
+      to_string(lnum1, offset)//" | "//source1//nl//&
+      repeat(" ", offset+1)//"|"//repeat(" ", token1%first)//repeat("-", width1)
+
+   if (present(label1)) then
+      string = string // " " // label1
+   end if
+
+   string = string // nl //&
+      repeat(" ", offset+1)//":"//nl//&
+      to_string(lnum2)//" | "//source2//nl//&
+      repeat(" ", offset+1)//"|"//repeat(" ", token2%first)//repeat("^", width2)
+
+   if (present(label2)) then
+      string = string // " " // label2
+   end if
+
+   string = string // nl //&
+      repeat(" ", offset+1)//"|"
+
+   call fatal_error(error, string)
+end subroutine io2_error
 
 
 pure function integer_width(input) result(width)
@@ -291,7 +373,7 @@ pure function to_string(val, width) result(string)
 end function to_string
 
 
-subroutine read_token_int(line, pos, token, val, iostat, iomsg)
+subroutine read_next_token_int(line, pos, token, val, iostat, iomsg)
    character(len=*), intent(in) :: line
    integer, intent(inout) :: pos
    type(token_type), intent(inout) :: token
@@ -302,6 +384,18 @@ subroutine read_token_int(line, pos, token, val, iostat, iomsg)
    character(len=512) :: msg
 
    call next_token(line, pos, token)
+   call read_token(line, token, val, iostat, iomsg)
+end subroutine read_next_token_int
+
+
+subroutine read_token_int(line, token, val, iostat, iomsg)
+   character(len=*), intent(in) :: line
+   type(token_type), intent(in) :: token
+   integer, intent(out) :: val
+   integer, intent(out) :: iostat
+   character(len=:), allocatable, intent(out), optional :: iomsg
+
+   character(len=512) :: msg
 
    if (token%first > 0 .and. token%last <= len(line)) then
       read(line(token%first:token%last), *, iostat=iostat, iomsg=msg) val
@@ -313,7 +407,7 @@ subroutine read_token_int(line, pos, token, val, iostat, iomsg)
 end subroutine read_token_int
 
 
-subroutine read_token_real(line, pos, token, val, iostat, iomsg)
+subroutine read_next_token_real(line, pos, token, val, iostat, iomsg)
    character(len=*), intent(in) :: line
    integer, intent(inout) :: pos
    type(token_type), intent(inout) :: token
@@ -321,9 +415,19 @@ subroutine read_token_real(line, pos, token, val, iostat, iomsg)
    integer, intent(out) :: iostat
    character(len=:), allocatable, intent(out), optional :: iomsg
 
-   character(len=512) :: msg
-
    call next_token(line, pos, token)
+   call read_token(line, token, val, iostat, iomsg)
+end subroutine read_next_token_real
+
+
+subroutine read_token_real(line, token, val, iostat, iomsg)
+   character(len=*), intent(in) :: line
+   type(token_type), intent(in) :: token
+   real(wp), intent(out) :: val
+   integer, intent(out) :: iostat
+   character(len=:), allocatable, intent(out), optional :: iomsg
+
+   character(len=512) :: msg
 
    if (token%first > 0 .and. token%last <= len(line)) then
       read(line(token%first:token%last), *, iostat=iostat, iomsg=msg) val

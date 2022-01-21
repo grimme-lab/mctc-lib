@@ -21,7 +21,7 @@ module mctc_io_read_vasp
    use mctc_io_structure_info, only : structure_info
    use mctc_io_symbols, only : to_number, symbol_length
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
-      read_token, to_string
+      read_next_token, to_string
    implicit none
    private
 
@@ -77,7 +77,7 @@ subroutine read_vasp(self, unit, error)
       call fatal_error(error, "Unexpected end of input encountered")
       return
    end if
-   call read_token(line, pos, token, ddum, stat)
+   call read_next_token(line, pos, token, ddum, stat)
    if (stat /= 0) then
       call io_error(error, "Cannot read scaling factor", &
          & line, token, filename(unit), lnum, "expected real value")
@@ -93,11 +93,11 @@ subroutine read_vasp(self, unit, error)
          call fatal_error(error, "Unexpected end of lattice vectors encountered")
          return
       end if
-      call read_token(line, pos, token, latvec(1), stat)
+      call read_next_token(line, pos, token, latvec(1), stat)
       if (stat == 0) &
-         call read_token(line, pos, token, latvec(2), stat)
+         call read_next_token(line, pos, token, latvec(2), stat)
       if (stat == 0) &
-         call read_token(line, pos, token, latvec(3), stat)
+         call read_next_token(line, pos, token, latvec(3), stat)
       if (stat /= 0) then
          call io_error(error, "Cannot read lattice vectors from input", &
             & line, token, filename(unit), lnum, "expected real value")
@@ -181,11 +181,11 @@ subroutine read_vasp(self, unit, error)
          call fatal_error(error, "Unexpected end of geometry encountered")
          return
       end if
-      call read_token(line, pos, token, coord(1), stat)
+      call read_next_token(line, pos, token, coord(1), stat)
       if (stat == 0) &
-         call read_token(line, pos, token, coord(2), stat)
+         call read_next_token(line, pos, token, coord(2), stat)
       if (stat == 0) &
-         call read_token(line, pos, token, coord(3), stat)
+         call read_next_token(line, pos, token, coord(3), stat)
       if (stat /= 0) then
          call io_error(error, "Cannot read geometry from input", &
             & line, token, filename(unit), lnum, "expected real value")

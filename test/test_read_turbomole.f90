@@ -48,7 +48,16 @@ subroutine collect_read_turbomole(testsuite)
       & new_unittest("invalid4-coord", test_invalid4_coord, should_fail=.true.), &
       & new_unittest("invalid5-coord", test_invalid5_coord, should_fail=.true.), &
       & new_unittest("invalid6-coord", test_invalid6_coord, should_fail=.true.), &
-      & new_unittest("invalid7-coord", test_invalid7_coord, should_fail=.true.) &
+      & new_unittest("invalid7-coord", test_invalid7_coord, should_fail=.true.), &
+      & new_unittest("invalid8-coord", test_invalid8_coord, should_fail=.true.), &
+      & new_unittest("invalid9-coord", test_invalid9_coord, should_fail=.true.), &
+      & new_unittest("invalid10-coord", test_invalid10_coord, should_fail=.true.), &
+      & new_unittest("invalid11-coord", test_invalid11_coord, should_fail=.true.), &
+      & new_unittest("invalid12-coord", test_invalid12_coord, should_fail=.true.), &
+      & new_unittest("invalid13-coord", test_invalid13_coord, should_fail=.true.), &
+      & new_unittest("invalid14-coord", test_invalid14_coord, should_fail=.true.), &
+      & new_unittest("invalid15-coord", test_invalid15_coord, should_fail=.true.), &
+      & new_unittest("invalid16-coord", test_invalid16_coord, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_turbomole
@@ -508,7 +517,7 @@ subroutine test_invalid4_coord(error)
    open(status='scratch', newunit=unit)
    write(unit, '(a)') &
       "$coord angs", &
-      "-1.1469443  0.0697649  1.1470196 ***", &
+      "-1.1469443  0.0697649  1.1470196 --->o", &
       "-1.2798308 -0.5232169  1.8902833 H", &
       "-1.0641398 -0.4956693  0.3569250 H", &
       "$end"
@@ -631,6 +640,285 @@ subroutine test_invalid7_coord(error)
    if (allocated(error)) return
 
 end subroutine test_invalid7_coord
+
+
+subroutine test_invalid8_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$coord angs", &
+      " 1.1847029  1.1150792 -0.0344641 O", &
+      " 0.4939088  0.9563767  0.6340089 H", &
+      " 2.0242676  1.0811246  0.4301417 H", &
+      "-1.1469443  abcd.efgh  1.1470196 O", &
+      "-1.2798308 -0.5232169  1.8902833 H", &
+      "-1.0641398 -0.4956693  0.3569250 H", &
+      "-0.1633508 -1.0289346 -1.2401808 O", &
+      " 0.4914771 -0.3248733 -1.0784838 H", &
+      "-0.5400907 -0.8496512 -2.1052499 H", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+end subroutine test_invalid8_coord
+
+
+subroutine test_invalid9_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$cell", &
+      "  4.766080896955 4.766080896955 4.766080896955 60. 60. 60.", &
+      "$coord", &
+      "    0.00000000000000      0.00000000000000      0.00000000000000      c", &
+      "    2.38304045219106      1.39084904447079      0.97287218605834      c", &
+      "$periodic 4", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid9_coord
+
+
+subroutine test_invalid10_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$coord", &
+      "    4.82824919102333E-02    5.71831000079710E-02    1.73514614763116E-01      C", &
+      "    4.82824919102333E-02    5.71831000079710E-02    2.78568246476372E+00      N", &
+      "    2.46093310136750E+00    5.71831000079710E-02    3.59954953387915E+00      C", &
+      "    3.99138416000780E+00   -2.21116805417472E-01    1.58364683739854E+00      N", &
+      "    2.54075511539052E+00   -1.18599185608072E-01   -5.86344093538442E-01      C", &
+      "   -2.06104824371096E+00    8.28021114689117E-01    4.40357113204146E+00      C", &
+      "    6.72173545596011E+00    2.10496546922931E-01    1.72565972456309E+00      C", &
+      "    3.05878562448454E+00    7.09403031823937E-02    5.55721088395376E+00      H", &
+      "    3.36822820962351E+00   -2.07680855613880E-01   -2.46191575873710E+00      H", &
+      "   -1.68465267663933E+00    1.48551338123814E-01   -9.21486948343917E-01      H", &
+      "   -3.83682349412373E+00    3.78984491295393E-01    3.43261116458953E+00      H", &
+      "   -1.96215889726624E+00   -2.17412943024358E-01    6.19219651728748E+00      H", &
+      "   -1.85966017471395E+00    2.87036107386343E+00    4.74746341688781E+00      H", &
+      "    7.49947096948557E+00   -8.77758695396645E-01    3.31081834253025E+00      H", &
+      "    7.58490546886959E+00   -4.29156708916399E-01   -4.73754235690626E-02      H", &
+      "    7.00829346274163E+00    2.24769645216395E+00    2.03795579552532E+00      H", &
+      "$eht charge=one unpaired=0", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid10_coord
+
+
+subroutine test_invalid11_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$coord", &
+      "    4.82824919102333E-02    5.71831000079710E-02    1.73514614763116E-01      C", &
+      "    4.82824919102333E-02    5.71831000079710E-02    2.78568246476372E+00      N", &
+      "    2.46093310136750E+00    5.71831000079710E-02    3.59954953387915E+00      C", &
+      "    3.99138416000780E+00   -2.21116805417472E-01    1.58364683739854E+00      N", &
+      "    2.54075511539052E+00   -1.18599185608072E-01   -5.86344093538442E-01      C", &
+      "   -2.06104824371096E+00    8.28021114689117E-01    4.40357113204146E+00      C", &
+      "    6.72173545596011E+00    2.10496546922931E-01    1.72565972456309E+00      C", &
+      "    3.05878562448454E+00    7.09403031823937E-02    5.55721088395376E+00      H", &
+      "    3.36822820962351E+00   -2.07680855613880E-01   -2.46191575873710E+00      H", &
+      "   -1.68465267663933E+00    1.48551338123814E-01   -9.21486948343917E-01      H", &
+      "   -3.83682349412373E+00    3.78984491295393E-01    3.43261116458953E+00      H", &
+      "   -1.96215889726624E+00   -2.17412943024358E-01    6.19219651728748E+00      H", &
+      "   -1.85966017471395E+00    2.87036107386343E+00    4.74746341688781E+00      H", &
+      "    7.49947096948557E+00   -8.77758695396645E-01    3.31081834253025E+00      H", &
+      "    7.58490546886959E+00   -4.29156708916399E-01   -4.73754235690626E-02      H", &
+      "    7.00829346274163E+00    2.24769645216395E+00    2.03795579552532E+00      H", &
+      "$eht unpaired=", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid11_coord
+
+
+subroutine test_invalid12_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$coord", &
+      "   -0.12918412100093      0.06210659750976     -2.13384498734326  c", &
+      "    0.12856915667443     -0.07403227791901      4.02358027265954  c", &
+      "$eht unpaired=0 charge=0", &
+      "$periodic 2", &
+      "$cell  angs", &
+      "    2.4809835980     2.4811430162   120.2612191150", &
+      "$coord", &
+      "   -0.12317720857511      2.75170732207802     -2.13345350602279  c", &
+      "    2.44816466162280      1.28612566399214      4.02317048854901  c", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid12_coord
+
+
+subroutine test_invalid13_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$coord", &
+      "   -0.12918412100093      0.06210659750976     -2.13384498734326  c", &
+      "    0.12856915667443     -0.07403227791901      4.02358027265954  c", &
+      "   -0.12317720857511      2.75170732207802     -2.13345350602279  c", &
+      "    2.44816466162280      1.28612566399214      4.02317048854901  c", &
+      "$cell  angs", &
+      "    2.4809835980     2.4811430162   120.2612191150", &
+      "$eht unpaired=0 charge=0", &
+      "$periodic 2", &
+      "$cell  angs", &
+      "    2.4809835980     2.4811430162   120.2612191150", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid13_coord
+
+
+subroutine test_invalid14_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$coord", &
+      "   -0.12918412100093      0.06210659750976     -2.13384498734326  c", &
+      "    0.12856915667443     -0.07403227791901      4.02358027265954  c", &
+      "   -0.12317720857511      2.75170732207802     -2.13345350602279  c", &
+      "    2.44816466162280      1.28612566399214      4.02317048854901  c", &
+      "$eht unpaired=0 charge=0", &
+      "$periodic 2", &
+      "$cell  angs", &
+      "    2.4809835980     2.4811430162   120.2612191150", &
+      "$periodic 2", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid14_coord
+
+
+subroutine test_invalid15_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$eht charge=0", &
+      "$coord", &
+      "   -0.12918412100093      0.06210659750976     -2.13384498734326  c", &
+      "    0.12856915667443     -0.07403227791901      4.02358027265954  c", &
+      "   -0.12317720857511      2.75170732207802     -2.13345350602279  c", &
+      "    2.44816466162280      1.28612566399214      4.02317048854901  c", &
+      "$eht unpaired=0", &
+      "$periodic 2", &
+      "$cell  angs", &
+      "    2.4809835980     2.4811430162   120.2612191150", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid15_coord
+
+
+subroutine test_invalid16_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$lattice angs", &
+      "       3.153833580475253       1.115048555743951       1.931320751454818", &
+      "       0.000000000000000       3.345145667231851       1.931320751454818", &
+      "       0.000000000000000       0.000000000000000       3.862641502909638", &
+      "$coord frac", &
+      "    0.25000000000000      0.25000000000000      0.25000000000000      f", &
+      "    0.75000000000000      0.75000000000000      0.75000000000000      f", &
+      "    0.00000000000000      0.00000000000000      0.00000000000000      ca", &
+      "$user-defined bonds", &
+      "$lattice angs", &
+      "       3.153833580475253       1.115048555743951       1.931320751454818", &
+      "       0.000000000000000       3.345145667231851       1.931320751454818", &
+      "       0.000000000000000       0.000000000000000       3.862641502909638", &
+      "$periodic 3", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid16_coord
 
 
 end module test_read_turbomole

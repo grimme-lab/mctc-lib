@@ -19,7 +19,7 @@ module mctc_io_read_xyz
    use mctc_io_structure, only : structure_type, new
    use mctc_io_symbols, only : to_number, to_symbol, symbol_length
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
-      read_token, to_string
+      read_next_token, to_string
    implicit none
    private
 
@@ -52,10 +52,10 @@ subroutine read_xyz(self, unit, error)
    lnum = 0
 
    call next_line(unit, fline, pos, lnum, stat)
-   call read_token(fline, pos, tnat, n, stat)
+   call read_next_token(fline, pos, tnat, n, stat)
    if (stat /= 0) then
       call io_error(error, "Could not read number of atoms", &
-         & fline, tnat, filename(unit), lnum, "expected integer vale")
+         & fline, tnat, filename(unit), lnum, "expected integer value")
       return
    end if
 
@@ -71,7 +71,8 @@ subroutine read_xyz(self, unit, error)
    ! next record is a comment
    call next_line(unit, comment, pos, lnum, stat)
    if (stat /= 0) then
-      call fatal_error(error, "Unexpected end of file")
+      call io_error(error, "Unexpected end of file", &
+         & "", token_type(0, 0), filename(unit), lnum+1, "expected value")
       return
    end if
 
@@ -80,16 +81,17 @@ subroutine read_xyz(self, unit, error)
       call next_line(unit, line, pos, lnum, stat)
       if (is_iostat_end(stat)) exit
       if (stat /= 0) then
-         call fatal_error(error, "Could not read geometry from xyz file")
+         call io_error(error, "Could not read geometry from xyz file", &
+            & "", token_type(0, 0), filename(unit), lnum+1, "expected value")
          return
       end if
       call next_token(line, pos, tsym)
       if (stat == 0) &
-         call read_token(line, pos, token, x, stat)
+         call read_next_token(line, pos, token, x, stat)
       if (stat == 0) &
-         call read_token(line, pos, token, y, stat)
+         call read_next_token(line, pos, token, y, stat)
       if (stat == 0) &
-         call read_token(line, pos, token, z, stat)
+         call read_next_token(line, pos, token, z, stat)
       if (stat /= 0) then
          call io_error(error, "Could not parse coordinates from xyz file", &
             & line, token, filename(unit), lnum, "expected real value")
