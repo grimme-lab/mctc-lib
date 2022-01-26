@@ -36,12 +36,17 @@ subroutine collect_read_genformat(testsuite)
       & new_unittest("valid2-gen", test_valid2_gen), &
       & new_unittest("valid3-gen", test_valid3_gen), &
       & new_unittest("valid4-gen", test_valid4_gen), &
+      & new_unittest("valid5-gen", test_valid5_gen), &
+      & new_unittest("valid6-gen", test_valid6_gen), &
       & new_unittest("invalid1-gen", test_invalid1_gen, should_fail=.true.), &
       & new_unittest("invalid2-gen", test_invalid2_gen, should_fail=.true.), &
       & new_unittest("invalid3-gen", test_invalid3_gen, should_fail=.true.), &
       & new_unittest("invalid4-gen", test_invalid4_gen, should_fail=.true.), &
       & new_unittest("invalid5-gen", test_invalid5_gen, should_fail=.true.), &
-      & new_unittest("invalid6-gen", test_invalid6_gen, should_fail=.true.) &
+      & new_unittest("invalid6-gen", test_invalid6_gen, should_fail=.true.), &
+      & new_unittest("invalid7-gen", test_invalid7_gen, should_fail=.true.), &
+      & new_unittest("invalid8-gen", test_invalid8_gen, should_fail=.true.), &
+      & new_unittest("invalid9-gen", test_invalid9_gen, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_genformat
@@ -182,6 +187,88 @@ subroutine test_valid4_gen(error)
 end subroutine test_valid4_gen
 
 
+subroutine test_valid5_gen(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "   20  H", &
+      "  C", &
+      "    1 1    0.2756230044E+01    0.2849950460E+01    0.1794011798E+01", &
+      "    2 1    0.2656226397E+01    0.2949964389E+01    0.3569110265E+00", &
+      "    3 1    0.4149823216E+00    0.3947943175E+01    0.1774023191E+01", &
+      "    4 1   -0.1984731085E+01    0.3437783679E+01    0.1784008240E+01", &
+      "    5 1   -0.3626350732E+01    0.1614594006E+01    0.1784022394E+01", &
+      "    6 1   -0.3882893767E+01   -0.8252790149E+00    0.1784006601E+01", &
+      "    7 1   -0.2656230041E+01   -0.2949950471E+01    0.1784011798E+01", &
+      "    8 1   -0.4149823216E+00   -0.3947943175E+01    0.1784023191E+01", &
+      "    9 1    0.1984731085E+01   -0.3437783679E+01    0.1784008240E+01", &
+      "   10 1    0.3626350732E+01   -0.1614594006E+01    0.1784022394E+01", &
+      "   11 1    0.3882893767E+01    0.8252790258E+00    0.1784006601E+01", &
+      "   12 1    0.4149905833E+00    0.3947943870E+01    0.3569255177E+00", &
+      "   13 1   -0.1984725150E+01    0.3437762712E+01    0.3569151866E+00", &
+      "   14 1   -0.3626358050E+01    0.1614595957E+01    0.3569260541E+00", &
+      "   15 1   -0.3882900023E+01   -0.8252696970E+00    0.3569133218E+00", &
+      "   16 1   -0.2656226396E+01   -0.2949964400E+01    0.3569110265E+00", &
+      "   17 1   -0.4149905833E+00   -0.3947943870E+01    0.3569255177E+00", &
+      "   18 1    0.1984725150E+01   -0.3437762712E+01    0.3569151866E+00", &
+      "   19 1    0.3626358050E+01   -0.1614595957E+01    0.3569260541E+00", &
+      "   20 1    0.3882900026E+01    0.8252697074E+00    0.3569133218E+00", &
+      "    0 0 0", &
+      "    0.2140932670E+01   18.0 1"
+   rewind(unit)
+
+   call read_genformat(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, count(struc%periodic), 1, "Incorrect periodicity")
+   if (allocated(error)) return
+   call check(error, struc%nat, 20, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 1, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid5_gen
+
+
+subroutine test_valid6_gen(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "    2  H", &
+      "  C", &
+      "    1 1    0.0 0.0 1.4271041431", &
+      "    2 1    0.0 0.0 0.0", &
+      "   -0.2703556133E+01  -0.2906666140E+01 -0.3618948259E+00", &
+      "    0.2140932670E+01   18.00000000 10"
+   rewind(unit)
+
+   call read_genformat(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, count(struc%periodic), 1, "Incorrect periodicity")
+   if (allocated(error)) return
+   call check(error, struc%nat, 2, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 1, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid6_gen
+
+
 subroutine test_invalid1_gen(error)
 
    !> Error handling
@@ -204,7 +291,6 @@ subroutine test_invalid1_gen(error)
 
    call read_genformat(struc, unit, error)
    close(unit)
-   if (allocated(error)) return
 
 end subroutine test_invalid1_gen
 
@@ -231,7 +317,6 @@ subroutine test_invalid2_gen(error)
 
    call read_genformat(struc, unit, error)
    close(unit)
-   if (allocated(error)) return
 
 end subroutine test_invalid2_gen
 
@@ -258,7 +343,6 @@ subroutine test_invalid3_gen(error)
 
    call read_genformat(struc, unit, error)
    close(unit)
-   if (allocated(error)) return
 
 end subroutine test_invalid3_gen
 
@@ -279,7 +363,6 @@ subroutine test_invalid4_gen(error)
 
    call read_genformat(struc, unit, error)
    close(unit)
-   if (allocated(error)) return
 
 end subroutine test_invalid4_gen
 
@@ -302,7 +385,6 @@ subroutine test_invalid5_gen(error)
 
    call read_genformat(struc, unit, error)
    close(unit)
-   if (allocated(error)) return
 
 end subroutine test_invalid5_gen
 
@@ -329,9 +411,92 @@ subroutine test_invalid6_gen(error)
 
    call read_genformat(struc, unit, error)
    close(unit)
-   if (allocated(error)) return
 
 end subroutine test_invalid6_gen
+
+
+subroutine test_invalid7_gen(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "12 H", &
+      " C H ", &
+      " 1 1   1.39792890   0.00000000  -0.00000000", &
+      " 2 2   2.49455487  -0.00000000   0.00000000", &
+      " 3 1   0.69896445   1.21064194  -0.00000000", &
+      " 4 2   1.24727743   2.16034789   0.00000000", &
+      " 5 1  -0.69896445   1.21064194  -0.00000000", &
+      " 6 2  -1.24727743   2.16034789   0.00000000", &
+      " 7 1  -1.39792890  -0.00000000  -0.00000000", &
+      " 8 2  -2.49455487   0.00000000   0.00000000", &
+      " 9 1  -0.69896445  -1.21064194  -0.00000000", &
+      "10 2  -1.24727743  -2.16034789   0.00000000", &
+      "11 1   0.69896445  -1.21064194  -0.00000000", &
+      "12 2   1.24727743  -2.16034789   0.00000000", &
+      "  0 0 0", &
+      "  3.0 ***** 1"
+   rewind(unit)
+
+   call read_genformat(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid7_gen
+
+
+subroutine test_invalid8_gen(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "   2  H", &
+      "  C", &
+      "    1 1    0.2756230044E+01    0.2849950460E+01    0.1794011798E+01", &
+      "    2 1    0.2656226397E+01    0.2949964389E+01    0.3569110265E+00", &
+      "    0 0 0", &
+      "    0.2140932670E+01 18.0 -10"
+   rewind(unit)
+
+   call read_genformat(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid8_gen
+
+
+subroutine test_invalid9_gen(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "    2  S", &
+      "  C", &
+      "    1 1    0.0000000000E+00    0.0000000000E+00    0.0000000000E+00", &
+      "    2 1    1.5000000000E+00    0.0000000000E+00    0.0000000000E+00", &
+      "    0.0000000000E+00    0.0000000000E+00", &
+      "    0.2000000000E+01    0.0000000000E+00    0.0000000000E+00", &
+      "    0.0000000000E+00    0.1000000000E+03    0.0000000000E+00", &
+      "    0.0000000000E+00    0.0000000000E+00    0.1000000000E+03"
+   rewind(unit)
+
+   call read_genformat(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid9_gen
 
 
 end module test_read_genformat

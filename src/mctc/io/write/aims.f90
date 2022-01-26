@@ -48,9 +48,12 @@ subroutine write_aims(self, unit)
    end if
 
    if (any(self%periodic)) then
-      do ilt = 1, size(self%lattice, 2)
-         write(unit, '(a, 1x, 3f24.14)') &
-            "lattice_vector", self%lattice(:, ilt) * autoaa
+      if (size(self%lattice, 2) /= 3) return
+      do ilt = 1, 3
+         if (self%periodic(ilt)) then
+            write(unit, '(a, 1x, 3f24.14)') &
+               "lattice_vector", self%lattice(:, ilt) * autoaa
+         end if
       end do
    end if
 

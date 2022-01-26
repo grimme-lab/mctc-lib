@@ -42,6 +42,8 @@ subroutine collect_read_turbomole(testsuite)
       & new_unittest("valid7-coord", test_valid7_coord), &
       & new_unittest("valid8-coord", test_valid8_coord), &
       & new_unittest("valid9-coord", test_valid9_coord), &
+      & new_unittest("valid10-coord", test_valid10_coord), &
+      & new_unittest("valid11-coord", test_valid11_coord), &
       & new_unittest("invalid1-coord", test_invalid1_coord, should_fail=.true.), &
       & new_unittest("invalid2-coord", test_invalid2_coord, should_fail=.true.), &
       & new_unittest("invalid3-coord", test_invalid3_coord, should_fail=.true.), &
@@ -420,6 +422,102 @@ subroutine test_valid9_coord(error)
    if (allocated(error)) return
 
 end subroutine test_valid9_coord
+
+
+subroutine test_valid10_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$cell", &
+      " 8.00000006 ", &
+      "$periodic 1", &
+      "$coord", &
+      "   -2.00000001000000      3.50586945000000      0.00000000000000      b", &
+      "   -2.00000001000000      2.98408124000000      2.61870552000000      n", &
+      "   -2.00000001000000      1.49889804000000     -1.76123460000000      n", &
+      "   -2.00000001000000      5.56753332000000     -0.69908457400000      h", &
+      "   -2.00000001000000      0.45532164600000      3.47617645000000      b", &
+      "   -2.00000001000000     -1.02986157000000     -0.90376369200000      b", &
+      "   -2.00000001000000     -1.55164977000000      1.71494186000000      n", &
+      "   -2.00000001000000      0.02991464770000      5.61117202000000      h", &
+      "   -2.00000001000000     -2.66611845000000     -2.33967477000000      h", &
+      "   -2.00000001000000      4.53085539000000      3.97609015000000      h", &
+      "   -2.00000001000000     -3.50056641000000      2.37579525000000      h", &
+      "   -2.00000001000000      1.90104056000000     -3.77947261000000      h", &
+      "    2.00000001000000      1.55164977000000     -1.71494183000000      b", &
+      "    2.00000001000000      1.02986156000000      0.90376368700000      n", &
+      "    2.00000001000000     -0.45532163900000     -3.47617644000000      n", &
+      "    2.00000001000000      3.61331364000000     -2.41402641000000      h", &
+      "    2.00000001000000     -1.49889804000000      1.76123461000000      b", &
+      "    2.00000001000000     -2.98408125000000     -2.61870553000000      b", &
+      "    2.00000001000000     -3.50586946000000      0.00000002473480      n", &
+      "    2.00000001000000     -1.92430504000000      3.89623019000000      h", &
+      "    2.00000001000000     -4.62033813000000     -4.05461660000000      h", &
+      "    2.00000001000000      2.57663570000000      2.26114832000000      h", &
+      "    2.00000001000000     -5.45478609000000      0.66085341700000      h", &
+      "    2.00000001000000     -0.05317912580000     -5.49441445000000      h", &
+      "$user-defined bonds", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 24, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 3, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, count(struc%periodic), 1, "Periodic of system does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid10_coord
+
+
+subroutine test_valid11_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$coord frac", &
+      "    0.00000000000000      0.00000000000000      0.00000000000000      mg", &
+      "    0.50000000000000      0.00000000000000      0.00000000000000      o", &
+      "    0.00000000000000      0.50000000000000      0.00000000000000      o", &
+      "    0.00000000000000      0.00000000000000      3.97881835572287      o", &
+      "    0.50000000000000      0.50000000000000      0.00000000000000      mg", &
+      "    0.50000000000000      0.00000000000000      3.97881835572287      mg", &
+      "    0.00000000000000      0.50000000000000      3.97881835572287      mg", &
+      "    0.50000000000000      0.50000000000000      3.97881835572287      o", &
+      "$periodic 2", &
+      "$lattice", &
+      " 5.626898880882 -5.626898880882", &
+      " 5.626898880882  5.626898880882", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 8, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, count(struc%periodic), 2, "Periodic of system does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid11_coord
 
 
 subroutine test_invalid1_coord(error)

@@ -47,7 +47,7 @@ subroutine read_aims(mol, unit, error)
    real(wp) :: x, y, z
    character(len=symbol_length), allocatable :: sym(:)
    real(wp), allocatable :: xyz(:, :), abc(:, :), lattice(:, :)
-   logical :: is_frac
+   logical :: is_frac, periodic(3)
    logical, allocatable :: frac(:)
 
    allocate(sym(initial_size), source=repeat(' ', symbol_length))
@@ -57,6 +57,7 @@ subroutine read_aims(mol, unit, error)
 
    iat = 0
    ilt = 0
+   periodic(:) = .false.
 
    lnum = 0
    stat = 0
@@ -99,7 +100,9 @@ subroutine read_aims(mol, unit, error)
          frac(iat) = is_frac
          if (frac(iat)) then
             abc(:, iat) = [x, y, z]
+            xyz(:, iat) = 0.0_wp
          else
+            abc(:, iat) = 0.0_wp
             xyz(:, iat) = [x, y, z] * aatoau
          end if
 
@@ -141,14 +144,12 @@ subroutine read_aims(mol, unit, error)
    end if
 
    if (allocated(lattice)) then
-      if (ilt /= 3) then
-         call fatal_error(error, "Not enough lattice vectors provided")
-         return
-      end if
-      xyz(:, :iat) = xyz(:, :iat) + matmul(lattice, abc(:, :iat))
+      xyz(ilt+1:3, :iat) = xyz(ilt+1:3, :iat) + abc(ilt+1:3, :iat) * aatoau
+      xyz(:ilt, :iat) = xyz(:ilt, :iat) + matmul(lattice(:ilt, :ilt), abc(:ilt, :iat))
+      periodic(:ilt) = .true.
    end if
 
-   call new(mol, sym(:iat), xyz, lattice=lattice)
+   call new(mol, sym(:iat), xyz, lattice=lattice, periodic=periodic)
 
 end subroutine read_aims
 

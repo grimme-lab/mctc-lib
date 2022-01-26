@@ -14,6 +14,7 @@
 
 module mctc_io_write_genformat
    use mctc_env_accuracy, only : wp
+   use mctc_io_constants, only : pi
    use mctc_io_convert, only : autoaa
    use mctc_io_math, only : matinv_3x3
    use mctc_io_symbols, only : to_symbol
@@ -34,16 +35,23 @@ subroutine write_genformat(mol, unit)
    real(wp), parameter :: zero3(3) = 0.0_wp
    real(wp), allocatable :: inv_lat(:, :)
    real(wp), allocatable :: abc(:, :)
+   logical :: helical
 
+   helical = .false.
    write(unit, '(i0, 1x)', advance='no') mol%nat
    if (.not.any(mol%periodic)) then
       write(unit, '("C")') ! cluster
    else
-      if (mol%info%cartesian) then
-         write(unit, '("S")') ! supercell
+      helical = count(mol%periodic) == 1 .and. mol%periodic(3) .and. size(mol%lattice, 2) == 1
+      if (helical) then
+         write(unit, '("H")') ! helical
       else
-         write(unit, '("F")') ! fractional
-      endif
+         if (mol%info%cartesian) then
+            write(unit, '("S")') ! supercell
+         else
+            write(unit, '("F")') ! fractional
+         endif
+      end if
    endif
 
    do izp = 1, mol%nid
@@ -66,10 +74,14 @@ subroutine write_genformat(mol, unit)
    endif
 
    if (any(mol%periodic)) then
-      ! scaling factor for lattice parameters is always one
       write(unit, '(3f20.14)') zero3
       ! write the lattice parameters
-      write(unit, '(3f20.14)') mol%lattice(:, :)*autoaa
+      if (helical) then
+         write(unit, '(2f20.14,1x,i0)') &
+            & mol%lattice(1, 1)*autoaa, mol%lattice(2, 1)*180.0_wp/pi, nint(mol%lattice(3, 1))
+      else
+         write(unit, '(3f20.14)') mol%lattice(:, :)*autoaa
+      end if
    endif
 
 end subroutine write_genformat

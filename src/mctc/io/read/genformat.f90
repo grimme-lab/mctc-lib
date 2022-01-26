@@ -15,6 +15,7 @@
 module mctc_io_read_genformat
    use mctc_env_accuracy, only : wp
    use mctc_env_error, only : error_type
+   use mctc_io_constants, only : pi
    use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : structure_info
@@ -43,12 +44,12 @@ subroutine read_genformat(mol, unit, error)
 
    character(len=:), allocatable :: line
    integer :: natoms, nspecies, iatom, dummy, isp, ilat, stat, istart, iend
-   logical :: cartesian, periodic
-   real(wp) :: coord(3), lattice(3, 3)
+   logical :: cartesian, periodic(3)
+   real(wp) :: coord(3), origin(3)
    character(len=1) :: variant
    type(token_type) :: token
    character(len=symbol_length), allocatable :: species(:), sym(:)
-   real(wp), allocatable :: xyz(:, :), abc(:, :)
+   real(wp), allocatable :: xyz(:, :), abc(:, :), lattice(:, :)
    type(structure_info) :: info
    integer :: pos, lnum
 
@@ -74,14 +75,20 @@ subroutine read_genformat(mol, unit, error)
    case('s', 'S')
       cartesian = .true.
       periodic = .true.
+      allocate(lattice(3, 3), source=0.0_wp)
    case('f', 'F')
       cartesian = .false.
       periodic = .true.
+      allocate(lattice(3, 3), source=0.0_wp)
+   case('h', 'H')
+      cartesian = .true.
+      periodic = [.false., .false., .true.]
+      allocate(lattice(3, 1), source=0.0_wp)
    case default
       call io_error(error, "Invalid input version found", &
          & line, token, filename(unit), lnum, "unknown identifier")
       return
-   endselect
+   end select
 
    call advance_line(unit, line, pos, lnum, stat)
    isp = 0
@@ -124,13 +131,27 @@ subroutine read_genformat(mol, unit, error)
       end if
    end do
 
-   if (periodic) then
+   if (any(periodic)) then
       call advance_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
          call io_error(error, "Unexpected end of file", &
             & line, token_type(0, 0), filename(unit), lnum, "missing lattice information")
          return
       end if
+      if (stat == 0) &
+         call read_next_token(line, pos, token, origin(1), stat)
+      if (stat == 0) &
+         call read_next_token(line, pos, token, origin(2), stat)
+      if (stat == 0) &
+         call read_next_token(line, pos, token, origin(3), stat)
+      if (stat /= 0) then
+         call io_error(error, "Cannot read origin", &
+            & line, token, filename(unit), lnum, "expected real value")
+         return
+         end if
+   end if
+
+   if (all(periodic)) then
       do ilat = 1, 3
          call advance_line(unit, line, pos, lnum, stat)
          if (stat == 0) &
@@ -149,12 +170,38 @@ subroutine read_genformat(mol, unit, error)
       if (.not.cartesian) then
          xyz = matmul(lattice, abc)
       end if
-      info = structure_info(cartesian=cartesian)
-      call new(mol, sym, xyz, lattice=lattice, info=info)
-   else
-      call new(mol, sym, xyz)
    end if
 
+   if (count(periodic) == 1) then
+      call advance_line(unit, line, pos, lnum, stat)
+      if (stat == 0) &
+         call read_next_token(line, pos, token, coord(1), stat)
+      if (stat == 0) &
+         call read_next_token(line, pos, token, coord(2), stat)
+      if (stat == 0) &
+         call read_next_token(line, pos, token, coord(3), stat)
+      if (stat /= 0) then
+         call io_error(error, "Cannot read lattice vector", &
+            & line, token, filename(unit), lnum, "expected real value")
+         return
+      end if
+      if (coord(3) < 1) then
+         call io_error(error, "Invalid helical axis rotation order", &
+            & line, token, filename(unit), lnum, "expected positive value")
+         return
+      end if
+
+      ! Store helical axis in *first* lattice vector, however it is not an actual
+      ! lattice vector as on would expect but a screw axis
+      lattice(:, 1) = [coord(1) * aatoau, coord(2) * pi / 180.0_wp, coord(3)]
+   end if
+
+   if (any(periodic)) then
+      xyz(:, :) = xyz - spread(origin, 2, natoms)
+   end if
+
+   info = structure_info(cartesian=cartesian)
+   call new(mol, sym, xyz, lattice=lattice, periodic=periodic, info=info)
 
 contains
 

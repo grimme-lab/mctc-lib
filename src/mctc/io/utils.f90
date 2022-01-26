@@ -130,6 +130,11 @@ subroutine next_token(string, pos, token)
 
    integer :: start
 
+   if (pos >= len(string)) then
+      token = token_type(len(string)+1, len(string)+1)
+      return
+   end if
+
    do while(pos < len(string))
       pos = pos + 1
       select case(string(pos:pos))
