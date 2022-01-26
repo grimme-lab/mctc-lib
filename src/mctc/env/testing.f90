@@ -181,7 +181,7 @@ contains
 
 
 !> Driver for testsuite
-subroutine run_testsuite(collect, unit, stat)
+subroutine run_testsuite(collect, unit, stat, parallel)
 
    !> Collect tests
    procedure(collect_interface) :: collect
@@ -192,12 +192,19 @@ subroutine run_testsuite(collect, unit, stat)
    !> Number of failed tests
    integer, intent(inout) :: stat
 
+   !> Run tests in parallel
+   logical, intent(in), optional :: parallel
+
    type(unittest_type), allocatable :: testsuite(:)
+   logical :: parallelize
    integer :: ii
+
+   parallelize = .false.
+   if (present(parallel)) parallelize = parallel
 
    call collect(testsuite)
 
-   !$omp parallel do shared(testsuite, unit) reduction(+:stat)
+   !$omp parallel do shared(testsuite, unit) reduction(+:stat) if(parallelize)
    do ii = 1, size(testsuite)
       !$omp critical(mctc_env_testsuite)
       write(unit, '(1x, 3(1x, a), 1x, "(", i0, "/", i0, ")")') &
