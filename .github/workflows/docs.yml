@@ -11,7 +11,7 @@ jobs:
       with:
         python-version: '3.x'
     - name: Install dependencies
-      run: pip install ford
+      run: pip install ford==6.1.6
     - name: Build Documentation
       run: ford docs.md
     - uses: JamesIves/github-pages-deploy-action@3.7.1
