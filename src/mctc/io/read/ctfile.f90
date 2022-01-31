@@ -115,6 +115,22 @@ subroutine read_molfile(self, unit, error)
          & line, token, filename(unit), lnum, "expected integer value")
       return
    end if
+   token = token_type(35, 39)
+   stat = 1
+   if (len(line) >= 39) then
+      if (line(35:39) == 'V2000') stat = 0
+   end if
+
+   if (stat /= 0) then
+      call io_error(error, "Format version not supported", &
+         & line, token, filename(unit), lnum, "invalid format version")
+      return
+   end if
+   if (number_of_atoms < 1) then
+      call io_error(error, "Invalid number of atoms", &
+         & line, token_type(1, 3), filename(unit), lnum, "expected positive integer")
+      return
+   end if
 
    allocate(sdf(number_of_atoms))
    allocate(xyz(3, number_of_atoms))

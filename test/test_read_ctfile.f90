@@ -38,12 +38,14 @@ subroutine collect_read_ctfile(testsuite)
       & new_unittest("invalid2-mol", test_invalid2_mol, should_fail=.true.), &
       & new_unittest("invalid3-mol", test_invalid3_mol, should_fail=.true.), &
       & new_unittest("invalid4-mol", test_invalid4_mol, should_fail=.true.), &
+      & new_unittest("invalid5-mol", test_invalid5_mol, should_fail=.true.), &
       & new_unittest("valid1-sdf", test_valid1_sdf), &
       & new_unittest("valid2-sdf", test_valid2_sdf), &
       & new_unittest("invalid1-sdf", test_invalid1_sdf, should_fail=.true.), &
       & new_unittest("invalid2-sdf", test_invalid2_sdf, should_fail=.true.), &
       & new_unittest("invalid3-sdf", test_invalid3_sdf, should_fail=.true.), &
-      & new_unittest("invalid4-sdf", test_invalid4_sdf, should_fail=.true.) &
+      & new_unittest("invalid4-sdf", test_invalid4_sdf, should_fail=.true.), &
+      & new_unittest("unsupported1-sdf", test_unsupported1_sdf, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_ctfile
@@ -356,6 +358,41 @@ subroutine test_invalid4_mol(error)
    close(unit)
 
 end subroutine test_invalid4_mol
+
+
+subroutine test_invalid5_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "", &
+      "  Mrv1823 10191918163D          ", &
+      "", &
+      "  0 12  0  0  0  0            999 V2000", &
+      "  2  1  4  0  0  0  0", &
+      "  3  1  4  0  0  0  0", &
+      "  4  2  4  0  0  0  0", &
+      "  5  3  4  0  0  0  0", &
+      "  6  4  4  0  0  0  0", &
+      "  6  5  4  0  0  0  0", &
+      "  1  7  1  0  0  0  0", &
+      "  2  8  1  0  0  0  0", &
+      "  3  9  1  0  0  0  0", &
+      "  4 10  1  0  0  0  0", &
+      "  5 11  1  0  0  0  0", &
+      "  6 12  1  0  0  0  0", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid5_mol
 
 
 subroutine test_valid1_sdf(error)
@@ -701,5 +738,73 @@ subroutine test_invalid4_sdf(error)
 
 end subroutine test_invalid4_sdf
 
+
+subroutine test_unsupported1_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0 CFG=1", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 C 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN COLLECTION", &
+      "M  V30 MDLV30/STERAC1 ATOMS=(1 4)", &
+      "M  V30 END COLLECTION", &
+      "M  V30 END CTAB", &
+      "M  END", &
+      ">  <smiles>  (1) ", &
+      "NC(CC=C)C(=O)O", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_sdf(struc, unit, error)
+
+end subroutine test_unsupported1_sdf
 
 end module test_read_ctfile
