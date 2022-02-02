@@ -47,8 +47,8 @@ subroutine write_vasp(self, unit, comment_line)
          j = j+1
          izp = self%id(i)
          species(j) = self%id(i)
-      endif
-   enddo
+      end if
+   end do
 
    ! use vasp 5.x format
    if (present(comment_line)) then
@@ -65,22 +65,24 @@ subroutine write_vasp(self, unit, comment_line)
    write(unit, '(f20.14)') self%info%scale
    ! write the lattice parameters
    if (any(self%periodic)) then
-      do i = 1, size(self%lattice, 2)
-         write(unit, '(3f20.14)') self%lattice(:, i)*autoaa/self%info%scale
-      enddo
+      if (size(self%lattice, 2) == 3) then
+         write(unit, '(3f20.14)') self%lattice
+      else
+         write(unit, '(3f20.14)') spread(0.0_wp, 1, 9)
+      end if
    else
       write(unit, '(3f20.14)') spread(0.0_wp, 1, 9)
    end if
 
    do i = 1, j
       write(unit, '(1x, a)', advance='no') self%sym(species(i))
-   enddo
+   end do
    write(unit, '(a)')
 
    ! write the count of the consequtive atom types
    do i = 1, j
       write(unit, '(1x, i0)', advance='no') kinds(i)
-   enddo
+   end do
    write(unit, '(a)')
    deallocate(kinds, species)
 
@@ -93,7 +95,7 @@ subroutine write_vasp(self, unit, comment_line)
       ! now write the cartesian coordinates
       do i = 1, self%nat
          write(unit, '(3f20.14)') self%xyz(:, i)*autoaa/self%info%scale
-      enddo
+      end do
    else
       write(unit, '("Direct")')
       inv_lat = matinv_3x3(self%lattice)
@@ -102,8 +104,8 @@ subroutine write_vasp(self, unit, comment_line)
       ! now write the fractional coordinates
       do i = 1, self%nat
          write(unit, '(3f20.14)') abc(:, i)
-      enddo
-   endif
+      end do
+   end if
 
 end subroutine write_vasp
 

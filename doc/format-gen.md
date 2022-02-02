@@ -98,9 +98,7 @@ No extension implemented to the original format.
 
 ## Missing Features
 
-The following features are currently not supported:
-
-- Helical boundary conditions
+The implementation of this format is (to our knowledge) feature-complete.
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.

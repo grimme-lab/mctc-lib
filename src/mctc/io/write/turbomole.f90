@@ -27,19 +27,24 @@ contains
 subroutine write_coord(mol, unit)
    class(structure_type), intent(in) :: mol
    integer, intent(in) :: unit
-   integer :: iat
+   integer :: iat, ilt, npbc
 
    write(unit, '(a)') "$coord"
    do iat = 1, mol%nat
       write(unit, '(3es24.14, 6x, a)') mol%xyz(:, iat), trim(mol%sym(mol%id(iat)))
-   enddo
+   end do
    write(unit, '(a, *(1x, a, "=", i0))') &
       "$eht", "charge", nint(mol%charge), "unpaired", mol%uhf
    write(unit, '(a, 1x, i0)') "$periodic", count(mol%periodic)
    if (any(mol%periodic)) then
-      write(unit, '(a)') "$lattice bohr"
-      write(unit, '(3f20.14)') mol%lattice
-   endif
+      npbc = count(mol%periodic)
+      if (size(mol%lattice, 2) == 3) then
+         write(unit, '(a)') "$lattice bohr"
+         do ilt = 1, npbc
+            write(unit, '(3f20.14)') mol%lattice(:npbc, ilt)
+         end do
+      end if
+   end if
    write(unit, '(a)') "$end"
 
 end subroutine write_coord

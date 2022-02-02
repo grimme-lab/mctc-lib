@@ -78,18 +78,19 @@ subroutine read_coord(mol, unit, error)
    cartesian = .true.
    coord_in_bohr = .true.
    lattice_in_bohr = .true.
-   lattice = 0.0_wp
-   pbc = .false.
+   lattice(:, :) = 0.0_wp
+   pbc(:) = .false.
 
    stat = 0
    call next_line(unit, line, pos, lnum, stat)
    do while(stat == 0)
       if (index(line, flag) == 1) then
          call next_token(line, pos, token)
-         if (index(line, 'end') == 2) then
+         select case(line(token%first:token%last))
+         case('$end')
             exit
 
-         else if (index(line, 'eht') == 2) then
+         case('$eht')
             if (has_eht) then
                pos = 0
                call next_token(line_eht, pos, token2)
@@ -120,7 +121,7 @@ subroutine read_coord(mol, unit, error)
                return
             end if
 
-         else if (index(line, 'coord') == 2) then
+         case('$coord')
             if (has_coord) then
                pos = 0
                call next_token(line_coord, pos, token2)
@@ -164,7 +165,7 @@ subroutine read_coord(mol, unit, error)
             end do coord_group
             cycle
 
-         else if (index(line, 'periodic') == 2) then
+         case('$periodic')
             if (has_periodic) then
                pos = 0
                call next_token(line_periodic, pos, token2)
@@ -185,7 +186,7 @@ subroutine read_coord(mol, unit, error)
                return
             end if
 
-         else if (index(line, 'lattice') == 2) then
+         case('$lattice')
             if (has_lattice) then
                pos = 0
                call next_token(line_lattice, pos, token2)
@@ -210,7 +211,7 @@ subroutine read_coord(mol, unit, error)
             end do lattice_group
             cycle
 
-         else if (index(line, 'cell') == 2) then
+         case('$cell')
             if (has_cell) then
                pos = 0
                call next_token(line_cell, pos, token2)
@@ -228,7 +229,7 @@ subroutine read_coord(mol, unit, error)
             call next_line(unit, cell_string, pos, lnum, stat)
             if (debug) print*, cell_string
 
-         end if
+         end select
       end if
       token = token_type(0, 0)
       call next_line(unit, line, pos, lnum, stat)
@@ -358,7 +359,10 @@ subroutine read_coord(mol, unit, error)
       end if
       xyz(:, :) = coord(:, :natoms) * conv
    else
-      xyz = matmul(lattice, coord)
+      ! Non-periodic coordinates are in Bohr
+      xyz(periodic+1:3, :) = coord(periodic+1:3, :natoms)
+      ! Periodic coordinates must still be transformed with lattice
+      xyz(:periodic, :) = matmul(lattice(:periodic, :periodic), coord(:periodic, :natoms))
    end if
 
    ! save data on input format
@@ -387,7 +391,7 @@ pure subroutine cell_to_dlat(cellpar, lattice)
    real(wp), intent(in)  :: cellpar(6)
 
    !> Direct lattice
-   real(wp), intent(out) :: lattice(3, 3)
+   real(wp), intent(out) :: lattice(:, :)
 
    real(wp) :: dvol
 

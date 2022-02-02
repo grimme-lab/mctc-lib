@@ -13,6 +13,7 @@
 ! limitations under the License.
 
 module test_read_aims
+   use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_read_aims
    use mctc_io_structure
@@ -37,6 +38,8 @@ subroutine collect_read_aims(testsuite)
       & new_unittest("valid3-aims", test_valid3_aims), &
       & new_unittest("valid4-aims", test_valid4_aims), &
       & new_unittest("valid5-aims", test_valid5_aims), &
+      & new_unittest("valid6-aims", test_valid6_aims), &
+      & new_unittest("valid7-aims", test_valid7_aims), &
       & new_unittest("invalid1-aims", test_invalid1_aims, should_fail=.true.), &
       & new_unittest("invalid2-aims", test_invalid2_aims, should_fail=.true.), &
       & new_unittest("invalid3-aims", test_invalid3_aims, should_fail=.true.), &
@@ -248,6 +251,108 @@ subroutine test_valid5_aims(error)
    if (allocated(error)) return
 
 end subroutine test_valid5_aims
+
+
+subroutine test_valid6_aims(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc1, struc2
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "atom            0.00000000000000   0.00000000000000   0.00000000000000 Mg", &
+      "atom            1.48881365396205  -1.48881365396205   0.00000000000000 O", &
+      "atom            1.48881365396205   1.48881365396205   0.00000000000000 O", &
+      "atom            0.00000000000000   0.00000000000000   2.10550046127949 O", &
+      "atom            2.97762730792410   0.00000000000000   0.00000000000000 Mg", &
+      "atom            1.48881365396205  -1.48881365396205   2.10550046127949 Mg", &
+      "atom            1.48881365396205   1.48881365396205   2.10550046127949 Mg", &
+      "atom            2.97762730792410   0.00000000000000   2.10550046127949 O", &
+      "lattice_vector  2.97762730792410  -2.97762730792410   0.00000000000000", &
+      "lattice_vector  2.97762730792410   2.97762730792410   0.00000000000000"
+   rewind(unit)
+
+   call read_aims(struc1, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "atom_frac       0.00000000000000   0.00000000000000   0.00000000000000 Mg", &
+      "atom_frac       0.50000000000000   0.00000000000000   0.00000000000000 O", &
+      "atom_frac       0.00000000000000   0.50000000000000   0.00000000000000 O", &
+      "atom_frac       0.00000000000000   0.00000000000000   2.10550046127949 O", &
+      "atom_frac       0.50000000000000   0.50000000000000   0.00000000000000 Mg", &
+      "atom_frac       0.50000000000000   0.00000000000000   2.10550046127949 Mg", &
+      "atom_frac       0.00000000000000   0.50000000000000   2.10550046127949 Mg", &
+      "atom_frac       0.50000000000000   0.50000000000000   2.10550046127949 O", &
+      "lattice_vector  2.97762730792410  -2.97762730792410   0.00000000000000", &
+      "lattice_vector  2.97762730792410   2.97762730792410   0.00000000000000"
+   rewind(unit)
+
+   call read_aims(struc2, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, norm2(struc1%xyz - struc2%xyz), 0.0_wp, "Coordinates do not match")
+   if (allocated(error)) return
+
+end subroutine test_valid6_aims
+
+
+subroutine test_valid7_aims(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "atom             -1.05835465887935   1.85522662363901   0.00000000000000 B", &
+      "atom             -1.05835465887935   1.57910813351869   1.38575958673374 N", &
+      "atom             -1.05835465887935   0.79318285794365  -0.93200541748473 N", &
+      "atom             -1.05835465887935   2.94621239911295  -0.36993970607209 H", &
+      "atom             -1.05835465887935   0.24094589146163   1.83951376127452 B", &
+      "atom             -1.05835465887935  -0.54497939258025  -0.47825125458585 B", &
+      "atom             -1.05835465887935  -0.82109787740880   0.90750834908157 N", &
+      "atom             -1.05835465887935   0.01583015330186   2.96930500972370 H", &
+      "atom             -1.05835465887935  -1.41084943428660  -1.23810284035547 H", &
+      "atom             -1.05835465887935   2.39762594336943   2.10405675666812 H", &
+      "atom             -1.05835465887935  -1.85242037510793   1.25721697940438 H", &
+      "atom             -1.05835465887935   1.00598756166737  -2.00001121245014 H", &
+      "atom              1.05835465887935   0.82109787740880  -0.90750833320625 B", &
+      "atom              1.05835465887935   0.54497938728848   0.47825125193996 N", &
+      "atom              1.05835465887935  -0.24094588775739  -1.83951375598275 N", &
+      "atom              1.05835465887935   1.91208365288273  -1.27744804245341 H", &
+      "atom              1.05835465887935  -0.79318285794365   0.93200542277650 B", &
+      "atom              1.05835465887935  -1.57910813881047  -1.38575959202551 B", &
+      "atom              1.05835465887935  -1.85522662893078   0.00000001308910 N", &
+      "atom              1.05835465887935  -1.01829859700301   2.06179667651746 H", &
+      "atom              1.05835465887935  -2.44497818051681  -2.14561117356172 H", &
+      "atom              1.05835465887935   1.36349719184744   1.19654842346187 H", &
+      "atom              1.05835465887935  -2.88654912133814   0.34970864461060 H", &
+      "atom              1.05835465887935  -0.02814118763207  -2.90751955094817 H", &
+      "lattice_vector    4.23341864610095   0.00000000000000   0.00000000000000"
+   rewind(unit)
+
+   call read_aims(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 24, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 3, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, count(struc%periodic), 1, "Periodicity does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid7_aims
+
 
 
 subroutine test_invalid1_aims(error)
