@@ -20,6 +20,7 @@ list(
   "${dir}/ctfile.f90"
   "${dir}/gaussian.f90"
   "${dir}/genformat.f90"
+  "${dir}/qchem.f90"
   "${dir}/qcschema.F90"
   "${dir}/pdb.f90"
   "${dir}/turbomole.f90"

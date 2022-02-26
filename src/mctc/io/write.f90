@@ -20,6 +20,7 @@ module mctc_io_write
    use mctc_io_write_gaussian, only : write_gaussian_external
    use mctc_io_write_genformat, only : write_genformat
    use mctc_io_write_pdb, only : write_pdb
+   use mctc_io_write_qchem, only : write_qchem
    use mctc_io_write_qcschema, only : write_qcschema
    use mctc_io_write_turbomole, only : write_coord
    use mctc_io_write_vasp, only : write_vasp
@@ -69,7 +70,7 @@ subroutine write_structure_to_file(self, file, error, format)
    end if
 
    ! Unknown file type is inacceptable in this situation,
-   ! try to figure something at least something out
+   ! try to figure at least something out
    if (ftype == filetype%unknown) then
       if (any(self%periodic)) then
          ftype = filetype%vasp
@@ -135,6 +136,9 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
 
    case(filetype%aims)
       call write_aims(self, unit)
+
+   case(filetype%qchem)
+      call write_qchem(self, unit)
 
    end select
 

@@ -39,8 +39,9 @@ subroutine collect_write(testsuite)
       & new_unittest("valid-mol", test_mol), &
       & new_unittest("valid-sdf", test_sdf), &
       & new_unittest("valid-gen", test_gen), &
-      & new_unittest("valid-qcschema", test_qcschema, should_fail=.not.get_mctc_feature("json")), &
       & new_unittest("valid-pdb", test_pdb), &
+      & new_unittest("valid-qchem", test_qchem), &
+      & new_unittest("valid-qcschema", test_qcschema, should_fail=.not.get_mctc_feature("json")), &
       & new_unittest("valid-vasp", test_vasp), &
       & new_unittest("valid-coord", test_coord), &
       & new_unittest("valid-xyz", test_xyz) &
@@ -119,6 +120,30 @@ subroutine test_pdb(error)
    close(unit, status='delete')
 
 end subroutine test_pdb
+
+
+subroutine test_qchem(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   character(len=:), allocatable :: name
+   integer :: unit
+
+   name = get_name() // ".qchem"
+
+   call get_structure(struc, "mindless04")
+
+   call write_structure(struc, name, error)
+   if (.not.allocated(error)) then
+      call read_structure(struc, name, error)
+   end if
+
+   open(file=name, newunit=unit)
+   close(unit, status='delete')
+
+end subroutine test_qchem
 
 
 subroutine test_gen(error)

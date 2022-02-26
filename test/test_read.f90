@@ -38,8 +38,9 @@ subroutine collect_read(testsuite)
       & new_unittest("valid-mol", test_mol), &
       & new_unittest("valid-sdf", test_sdf), &
       & new_unittest("valid-gen", test_gen), &
-      & new_unittest("valid-qcschema", test_qcschema, should_fail=.not.get_mctc_feature("json")), &
       & new_unittest("valid-pdb", test_pdb), &
+      & new_unittest("valid-qchem", test_qchem), &
+      & new_unittest("valid-qcschema", test_qcschema, should_fail=.not.get_mctc_feature("json")), &
       & new_unittest("valid-vasp", test_vasp), &
       & new_unittest("valid-coord", test_coord), &
       & new_unittest("valid-xyz", test_xyz) &
@@ -227,6 +228,50 @@ subroutine test_pdb(error)
    close(unit, status='delete')
 
 end subroutine test_pdb
+
+
+subroutine test_qchem(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   character(len=:), allocatable :: name
+   integer :: unit
+
+   name = get_name() // ".qchem"
+
+   open(file=name, newunit=unit)
+   write(unit, '(a)') &
+      "$molecule", &
+      " 0 1", &
+      "O    -4.900  22.628  -5.720", &
+      "O    -3.391  28.399  -5.286", &
+      "O    -1.344  27.910  -2.140", &
+      "O    -3.412  29.606  -2.541", &
+      "O    -1.321  28.109  -8.687", &
+      "O    -3.810  29.129  -8.232", &
+      "H    -4.922  23.438  -5.175", &
+      "H    -5.691  22.647  -6.276", &
+      "H    -2.824  28.827  -5.944", &
+      "H    -4.277  28.836  -5.406", &
+      "H    -1.979  28.651  -2.242", &
+      "H    -1.885  27.145  -2.375", &
+      "H    -3.380  30.352  -3.142", &
+      "H    -4.045  28.971  -2.911", &
+      "H    -0.902  28.921  -8.995", &
+      "H    -2.254  28.344  -8.517", &
+      "H    -4.487  29.278  -7.546", &
+      "H    -3.960  29.804  -8.896", &
+      "$end"
+   close(unit)
+
+   call read_structure(struc, name, error)
+
+   open(file=name, newunit=unit)
+   close(unit, status='delete')
+
+end subroutine test_qchem
 
 
 subroutine test_gen(error)

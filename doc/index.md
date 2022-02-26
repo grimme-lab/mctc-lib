@@ -13,3 +13,4 @@ This library supports reading and writing of the following formats:
 - [Gaussian external format](./format-ein.html)
 - [QCSchema JSON format](./format-qcschema.html)
 - [FHI-aims geometry.in](./format-aims.html)
+- [Q-Chem molecule format](./format-qchem.html)
