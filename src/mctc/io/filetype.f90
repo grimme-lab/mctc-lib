@@ -56,6 +56,9 @@ module mctc_io_filetype
       !> FHI-aims geometry.in format
       integer :: aims = 10
 
+      !> Q-Chem molecule format
+      integer :: qchem = 11
+
    end type enum_filetype
 
    !> File type enumerator
@@ -99,6 +102,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%gaussian
       case('json')
          ftype = filetype%qcschema
+      case('qchem')
+         ftype = filetype%qchem
       end select
       if (ftype /= filetype%unknown) return
    else

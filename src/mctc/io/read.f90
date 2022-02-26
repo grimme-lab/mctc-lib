@@ -19,6 +19,7 @@ module mctc_io_read
    use mctc_io_read_ctfile, only : read_molfile, read_sdf
    use mctc_io_read_gaussian, only : read_gaussian_external
    use mctc_io_read_genformat, only : read_genformat
+   use mctc_io_read_qchem, only : read_qchem
    use mctc_io_read_qcschema, only : read_qcschema
    use mctc_io_read_pdb, only : read_pdb
    use mctc_io_read_turbomole, only : read_coord
@@ -168,6 +169,9 @@ subroutine get_structure_reader(reader, ftype)
 
    case(filetype%aims)
       reader => read_aims
+
+   case(filetype%qchem)
+      reader => read_qchem
 
    end select
 

@@ -28,6 +28,7 @@ Supported formats:
 - Gaussian's external program input (ein)
 - JSON input with `qcschema_molecule` or `qcschema_input` structure (json)
 - FHI-AIMS' input files (geometry.in)
+- Q-Chem molecule block inputs (qchem)
 
 
 == Options
