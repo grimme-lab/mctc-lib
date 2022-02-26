@@ -8,6 +8,7 @@ title: Connection table format
 
 The molfile is identified by the extension ``mol`` and the structure data format
 is identified by ``sdf``.
+Both V2000 and V3000 connection tables can be read.
 
 ## Example
 
@@ -55,6 +56,7 @@ The following features are currently not supported:
 
 - Not all modifiers are supported for the connection table
 - SDF key-value pair annotations are dropped
+- continuation lines in V3000 format are not supported
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.

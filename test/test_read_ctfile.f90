@@ -34,18 +34,30 @@ subroutine collect_read_ctfile(testsuite)
    testsuite = [ &
       & new_unittest("valid1-mol", test_valid1_mol), &
       & new_unittest("valid2-mol", test_valid2_mol), &
+      & new_unittest("valid3-mol", test_valid3_mol), &
+      & new_unittest("valid4-mol", test_valid4_mol), &
       & new_unittest("invalid1-mol", test_invalid1_mol, should_fail=.true.), &
       & new_unittest("invalid2-mol", test_invalid2_mol, should_fail=.true.), &
       & new_unittest("invalid3-mol", test_invalid3_mol, should_fail=.true.), &
       & new_unittest("invalid4-mol", test_invalid4_mol, should_fail=.true.), &
       & new_unittest("invalid5-mol", test_invalid5_mol, should_fail=.true.), &
+      & new_unittest("invalid6-mol", test_invalid6_mol, should_fail=.true.), &
+      & new_unittest("invalid7-mol", test_invalid7_mol, should_fail=.true.), &
+      & new_unittest("invalid8-mol", test_invalid8_mol, should_fail=.true.), &
+      & new_unittest("invalid9-mol", test_invalid9_mol, should_fail=.true.), &
       & new_unittest("valid1-sdf", test_valid1_sdf), &
       & new_unittest("valid2-sdf", test_valid2_sdf), &
+      & new_unittest("valid3-sdf", test_valid3_sdf), &
       & new_unittest("invalid1-sdf", test_invalid1_sdf, should_fail=.true.), &
       & new_unittest("invalid2-sdf", test_invalid2_sdf, should_fail=.true.), &
       & new_unittest("invalid3-sdf", test_invalid3_sdf, should_fail=.true.), &
       & new_unittest("invalid4-sdf", test_invalid4_sdf, should_fail=.true.), &
-      & new_unittest("unsupported1-sdf", test_unsupported1_sdf, should_fail=.true.) &
+      & new_unittest("invalid5-sdf", test_invalid5_sdf, should_fail=.true.), &
+      & new_unittest("invalid6-sdf", test_invalid6_sdf, should_fail=.true.), &
+      & new_unittest("invalid7-sdf", test_invalid7_sdf, should_fail=.true.), &
+      & new_unittest("unsupported1-sdf", test_unsupported1_sdf, should_fail=.true.), &
+      & new_unittest("unsupported2-sdf", test_unsupported2_sdf, should_fail=.true.), &
+      & new_unittest("unsupported3-sdf", test_unsupported3_sdf, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_ctfile
@@ -188,6 +200,189 @@ subroutine test_valid2_mol(error)
    if (allocated(error)) return
 
 end subroutine test_valid2_mol
+
+
+subroutine test_valid3_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 1017", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 28 29 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -0.139802 -1.830034 0.709675 0", &
+      "M  V30 2 C -0.316756 -0.419558 0.542247 0 CFG=2", &
+      "M  V30 3 C -1.799960 -0.109911 0.488996 0", &
+      "M  V30 4 C 0.386061 0.062191 -0.739099 0", &
+      "M  V30 5 C -2.697868 -0.951923 -0.184715 0", &
+      "M  V30 6 C -2.294606 1.060665 1.085325 0", &
+      "M  V30 7 C 1.894644 0.013015 -0.632932 0", &
+      "M  V30 8 C -4.055760 -0.636028 -0.254512 0", &
+      "M  V30 9 C -3.653160 1.375870 1.014385 0", &
+      "M  V30 10 N 2.442088 -0.971958 0.125897 0", &
+      "M  V30 11 C 2.672560 0.914435 -1.356061 0", &
+      "M  V30 12 C -4.532743 0.527936 0.344354 0", &
+      "M  V30 13 C 3.791786 -1.035730 0.183623 0", &
+      "M  V30 14 C 4.059439 0.822550 -1.276192 0", &
+      "M  V30 15 C 4.633339 -0.168766 -0.490541 0", &
+      "M  V30 16 H 0.832285 -1.959785 0.673224 0", &
+      "M  V30 17 H 0.117435 0.060361 1.428520 0", &
+      "M  V30 18 H 0.082070 1.094331 -0.955596 0", &
+      "M  V30 19 H 0.094415 -0.560551 -1.594197 0", &
+      "M  V30 20 H -2.337706 -1.867971 -0.649441 0", &
+      "M  V30 21 H -1.623344 1.733954 1.613637 0", &
+      "M  V30 22 H -4.740022 -1.302611 -0.772469 0", &
+      "M  V30 23 H -4.025651 2.281920 1.484883 0", &
+      "M  V30 24 H 2.212518 1.677511 -1.976085 0", &
+      "M  V30 25 H -5.590493 0.771200 0.292658 0", &
+      "M  V30 26 H 4.192367 -1.831268 0.805865 0", &
+      "M  V30 27 H 4.686889 1.517092 -1.827730 0", &
+      "M  V30 28 H 5.709975 -0.266939 -0.409811 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 1 2 1", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 2 4", &
+      "M  V30 4 2 3 5", &
+      "M  V30 5 1 3 6", &
+      "M  V30 6 1 4 7", &
+      "M  V30 7 1 5 8", &
+      "M  V30 8 2 6 9", &
+      "M  V30 9 2 7 10", &
+      "M  V30 10 1 7 11", &
+      "M  V30 11 2 8 12", &
+      "M  V30 12 1 10 13", &
+      "M  V30 13 2 11 14", &
+      "M  V30 14 2 13 15", &
+      "M  V30 15 1 9 12", &
+      "M  V30 16 1 14 15", &
+      "M  V30 17 1 1 16", &
+      "M  V30 18 1 2 17 CFG=1", &
+      "M  V30 19 1 4 18", &
+      "M  V30 20 1 4 19", &
+      "M  V30 21 1 5 20", &
+      "M  V30 22 1 6 21", &
+      "M  V30 23 1 8 22", &
+      "M  V30 24 1 9 23", &
+      "M  V30 25 1 11 24", &
+      "M  V30 26 1 12 25", &
+      "M  V30 27 1 13 26", &
+      "M  V30 28 1 14 27", &
+      "M  V30 29 1 15 28", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN COLLECTION", &
+      "M  V30 MDLV30/STERAC1 ATOMS=(1 2)", &
+      "M  V30 END COLLECTION", &
+      "M  V30 END CTAB", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   if (allocated(error)) return
+   call check(error, struc%nat, 28, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 4, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 29, "Number of bonds does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid3_mol
+
+
+subroutine test_valid4_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 1016", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 21 21 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -1.686687 0.989923 -1.309588 0", &
+      "M  V30 2 C -1.641906 0.550463 0.052070 0 CFG=2", &
+      "M  V30 3 C -0.870884 -0.770712 0.137052 0", &
+      "M  V30 4 C -3.076970 0.377330 0.535110 0", &
+      "M  V30 5 C 0.620384 -0.546719 0.078757 0", &
+      "M  V30 6 N 1.280723 -0.500634 1.262879 0", &
+      "M  V30 7 C 1.265020 -0.375370 -1.143956 0", &
+      "M  V30 8 C 2.615192 -0.292093 1.219648 0", &
+      "M  V30 9 C 2.639873 -0.159926 -1.155509 0", &
+      "M  V30 10 C 3.332076 -0.118715 0.048112 0", &
+      "M  V30 11 H -2.097713 1.871989 -1.311606 0", &
+      "M  V30 12 H -1.148607 1.330233 0.644439 0", &
+      "M  V30 13 H -1.164397 -1.449978 -0.672900 0", &
+      "M  V30 14 H -1.097610 -1.279061 1.082626 0", &
+      "M  V30 15 H -3.629187 1.318763 0.441977 0", &
+      "M  V30 16 H -3.109338 0.058726 1.581416 0", &
+      "M  V30 17 H -3.609000 -0.361105 -0.074891 0", &
+      "M  V30 18 H 0.702849 -0.400424 -2.072665 0", &
+      "M  V30 19 H 3.109786 -0.266610 2.186219 0", &
+      "M  V30 20 H 3.163550 -0.022841 -2.096933 0", &
+      "M  V30 21 H 4.402843 0.046761 0.073357 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 1 2 1", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 2 4", &
+      "M  V30 4 1 3 5", &
+      "M  V30 5 2 5 6", &
+      "M  V30 6 1 5 7", &
+      "M  V30 7 1 6 8", &
+      "M  V30 8 2 7 9", &
+      "M  V30 9 2 8 10", &
+      "M  V30 10 1 9 10", &
+      "M  V30 11 1 1 11", &
+      "M  V30 12 1 2 12 CFG=1", &
+      "M  V30 13 1 3 13", &
+      "M  V30 14 1 3 14", &
+      "M  V30 15 1 4 15", &
+      "M  V30 16 1 4 16", &
+      "M  V30 17 1 4 17", &
+      "M  V30 18 1 7 18", &
+      "M  V30 19 1 8 19", &
+      "M  V30 20 1 9 20", &
+      "M  V30 21 1 10 21", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN COLLECTION", &
+      "M  V30 MDLV30/STERAC1 ATOMS=(1 2)", &
+      "M  V30 END COLLECTION", &
+      "M  V30 END CTAB", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   if (allocated(error)) return
+   call check(error, struc%nat, 21, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 4, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 21, "Number of bonds does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid4_mol
 
 
 subroutine test_invalid1_mol(error)
@@ -395,6 +590,259 @@ subroutine test_invalid5_mol(error)
 end subroutine test_invalid5_mol
 
 
+subroutine test_invalid6_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 16 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 C 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 END CTAB", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid6_mol
+
+
+subroutine test_invalid7_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 C 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN INVALID", &
+      "M  V30 END INVALID", &
+      "M  V30 END CTAB", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid7_mol
+
+
+subroutine test_invalid8_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 15 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 C 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 END CTAB", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid8_mol
+
+
+subroutine test_invalid9_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 C 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid9_mol
+
+
 subroutine test_valid1_sdf(error)
 
    !> Error handling
@@ -527,6 +975,85 @@ subroutine test_valid2_sdf(error)
    if (allocated(error)) return
 
 end subroutine test_valid2_sdf
+
+
+subroutine test_valid3_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0 CFG=1", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 C 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN COLLECTION", &
+      "M  V30 MDLV30/STERAC1 ATOMS=(1 4)", &
+      "M  V30 END COLLECTION", &
+      "M  V30 END CTAB", &
+      "M  END", &
+      ">  <smiles>  (1) ", &
+      "NC(CC=C)C(=O)O", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   if (allocated(error)) return
+   call check(error, struc%nat, 17, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 4, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 16, "Number of bonds does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid3_sdf
 
 
 subroutine test_invalid1_sdf(error)
@@ -739,7 +1266,7 @@ subroutine test_invalid4_sdf(error)
 end subroutine test_invalid4_sdf
 
 
-subroutine test_unsupported1_sdf(error)
+subroutine test_invalid5_sdf(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -755,6 +1282,146 @@ subroutine test_unsupported1_sdf(error)
       "  0  0  0  0  0  0  0  0  0  0999 V3000", &
       "M  V30 BEGIN CTAB", &
       "M  V30 COUNTS 17 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0 CFG=1", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0 CHG=b", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 C 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN COLLECTION", &
+      "M  V30 MDLV30/STERAC1 ATOMS=(1 4)", &
+      "M  V30 END COLLECTION", &
+      "M  V30 END CTAB", &
+      "M  END", &
+      ">  <smiles>  (1) ", &
+      "NC(CC=C)C(=O)O", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid5_sdf
+
+
+subroutine test_invalid6_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 0", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0 CFG=1", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 * 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN COLLECTION", &
+      "M  V30 MDLV30/STERAC1 ATOMS=(1 4)", &
+      "M  V30 END COLLECTION", &
+      "M  V30 END CTAB", &
+      "M  END", &
+      ">  <smiles>  (1) ", &
+      "NC(CC=C)C(=O)O", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid6_sdf
+
+
+subroutine test_invalid7_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 16 a 0 0", &
       "M  V30 BEGIN ATOM", &
       "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
       "M  V30 2 C -2.076407 0.000289 0.175864 0", &
@@ -803,8 +1470,136 @@ subroutine test_unsupported1_sdf(error)
       "$$$$"
    rewind(unit)
 
-   call read_sdf(struc, unit, error)
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid7_sdf
+
+
+subroutine test_unsupported1_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 17 16 0 0 0", &
+      "M  V30 BEGIN ATOM", &
+      "M  V30 1 O -2.821131 -0.276238 -0.753131 0", &
+      "M  V30 2 C -2.076407 0.000289 0.175864 0", &
+      "M  V30 3 O -2.469860 0.872693 1.126516 1", &
+      "M  V30 4 C -0.648307 -0.508439 0.384207 0 CFG=1", &
+      "M  V30 5 N -0.553725 -1.908221 -0.092137 0", &
+      "M  V30 6 C 0.306640 0.448659 -0.352110 0", &
+      "M  V30 7 C 1.764852 0.167437 -0.097096 0", &
+      "M  V30 8 * 2.575104 0.984442 0.587951 0", &
+      "M  V30 9 H -3.391314 1.091514 0.873612 0", &
+      "M  V30 10 H -0.438887 -0.513473 1.460318 0", &
+      "M  V30 11 H 0.421206 -2.197466 -0.111774 0", &
+      "M  V30 12 H -0.893195 -1.946576 -1.055443 0", &
+      "M  V30 13 H 0.073377 1.483235 -0.066299 0", &
+      "M  V30 14 H 0.129860 0.396798 -1.434760 0", &
+      "M  V30 15 H 2.179323 -0.745345 -0.519251 0", &
+      "M  V30 16 H 2.219589 1.914253 1.021797 0", &
+      "M  V30 17 H 3.622875 0.736438 0.730780 0", &
+      "M  V30 END ATOM", &
+      "M  V30 BEGIN BOND", &
+      "M  V30 1 2 1 2", &
+      "M  V30 2 1 2 3", &
+      "M  V30 3 1 4 2", &
+      "M  V30 4 1 4 5", &
+      "M  V30 5 1 4 6", &
+      "M  V30 6 1 6 7", &
+      "M  V30 7 2 7 8 CFG=2", &
+      "M  V30 8 1 3 9", &
+      "M  V30 9 1 4 10 CFG=1", &
+      "M  V30 10 1 5 11", &
+      "M  V30 11 1 5 12", &
+      "M  V30 12 1 6 13", &
+      "M  V30 13 1 6 14", &
+      "M  V30 14 1 7 15", &
+      "M  V30 15 1 8 16", &
+      "M  V30 16 1 8 17", &
+      "M  V30 END BOND", &
+      "M  V30 BEGIN COLLECTION", &
+      "M  V30 MDLV30/STERAC1 ATOMS=(1 4)", &
+      "M  V30 END COLLECTION", &
+      "M  V30 END CTAB", &
+      "M  END", &
+      ">  <smiles>  (1) ", &
+      "NC(CC=C)C(=O)O", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
 
 end subroutine test_unsupported1_sdf
+
+
+subroutine test_unsupported2_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  V30 BEGIN CTAB", &
+      "M  V30 COUNTS 0 0 0 0 0", &
+      "M  V30 END CTAB", &
+      "M  END", &
+      ">  <smiles>  (1) ", &
+      "NC(CC=C)C(=O)O", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_unsupported2_sdf
+
+
+subroutine test_unsupported3_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "Compound 11", &
+      "     RDKit          3D", &
+      "", &
+      "  0  0  0  0  0  0  0  0  0  0999 V3000", &
+      "M  END", &
+      ">  <smiles>  (1) ", &
+      "NC(CC=C)C(=O)O", &
+      "", &
+      "$$$$"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+
+end subroutine test_unsupported3_sdf
 
 end module test_read_ctfile
