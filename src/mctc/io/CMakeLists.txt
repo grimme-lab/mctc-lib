@@ -20,6 +20,7 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
+  "${dir}/codata2018.f90"
   "${dir}/constants.f90"
   "${dir}/convert.f90"
   "${dir}/filetype.f90"

@@ -17,6 +17,7 @@ subdir('structure')
 subdir('write')
 
 srcs += files(
+  'codata2018.f90',
   'constants.f90',
   'convert.f90',
   'filetype.f90',
