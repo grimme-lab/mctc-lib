@@ -52,9 +52,8 @@ subroutine read_coord(mol, unit, error)
 
    logical :: has_coord, has_periodic, has_lattice, has_cell, has_eht
    logical :: cartesian, coord_in_bohr, lattice_in_bohr, pbc(3)
-   integer :: stat, iatom, i, j, natoms, periodic, cell_vectors, icharge
+   integer :: stat, iatom, i, j, natoms, periodic, cell_vectors, icharge, unpaired
    integer :: lnum, pos, lcell, llattice, lperiodic, lcoord, leht
-   integer, allocatable :: unpaired
    type(token_type) :: token, token2
    real(wp) :: latvec(9), conv, cellpar(6), lattice(3, 3)
    real(wp), allocatable :: coord(:, :), xyz(:, :), charge
@@ -80,6 +79,8 @@ subroutine read_coord(mol, unit, error)
    lattice_in_bohr = .true.
    lattice(:, :) = 0.0_wp
    pbc(:) = .false.
+   charge = 0.0_wp
+   unpaired = 0
 
    stat = 0
    call next_line(unit, line, pos, lnum, stat)
@@ -111,7 +112,6 @@ subroutine read_coord(mol, unit, error)
             end if
             j = index(line, 'unpaired=')
             if (j > 0 .and. stat == 0) then
-               allocate(unpaired)
                pos = j + 8
                call read_next_token(line, pos, token, unpaired, stat)
             end if
