@@ -15,6 +15,9 @@
 !> Numerical constants
 module mctc_io_constants
    use mctc_env_accuracy, only : wp
+   use mctc_io_codata2018, only : planck_constant, speed_of_light_in_vacuum, &
+      & boltzmann_constant, avogadro_constant, elementary_charge, fine_structure_constant, &
+      & electron_mass
    implicit none
    private
 
@@ -29,25 +32,25 @@ module mctc_io_constants
    type :: enum_codata
 
       !> Planck's constant
-      real(wp) :: h = 6.6260715e-34_wp ! J·s = kg·m²·s⁻¹
+      real(wp) :: h = planck_constant
 
       !> Speed of light in vacuum
-      real(wp) :: c = 299792458.0_wp ! m·s⁻¹
+      real(wp) :: c = speed_of_light_in_vacuum
 
       !> Boltzmann's constant
-      real(wp) :: kb = 1.380649e-23_wp ! J·K⁻¹ = kg·m²·s⁻²·K⁻¹
+      real(wp) :: kb = boltzmann_constant
 
       !> Avogadro's number
-      real(wp) :: NA = 6.02214076e23_wp ! mol⁻¹
+      real(wp) :: NA = avogadro_constant
 
       !> Elementary charge
-      real(wp) :: e = 1.602176634e-19_wp ! C
+      real(wp) :: e = elementary_charge
 
       !> fine structure constant (CODATA2018)
-      real(wp) :: alpha = 1.0_wp/137.035999046_wp ! dimensionless
+      real(wp) :: alpha = fine_structure_constant
 
       !> electron rest mass
-      real(wp) :: me = 9.10938356e-31_wp ! kg
+      real(wp) :: me = electron_mass
 
    end type enum_codata
 
