@@ -37,15 +37,16 @@ program main
    implicit none
    character(len=*), parameter :: prog_name = "mctc-convert"
 
-   character(len=:), allocatable :: input, output, template
+   character(len=:), allocatable :: input, output, template, filename
    integer, allocatable :: input_format, output_format, template_format
    type(structure_type) :: mol
    type(structure_type), allocatable :: mol_template
    type(error_type), allocatable :: error
-   logical :: normalize
+   logical :: normalize, read_dot_files
+   integer :: charge, unpaired
 
    call get_arguments(input, input_format, output, output_format, normalize, &
-      & template, template_format, error)
+      & template, template_format, read_dot_files, error)
    if (allocated(error)) then
       write(error_unit, '(a)') error%message
       error stop
@@ -72,6 +73,22 @@ program main
       call read_structure(mol, input_unit, input_format, error)
    else
       call read_structure(mol, input, error, input_format)
+
+      if (read_dot_files) then
+         charge = nint(mol%charge)
+         if (.not.allocated(error)) then
+            filename = join(dirname(input), ".CHRG")
+            if (exists(filename)) call read_file(filename, charge, error)
+         end if
+         mol%charge = charge
+
+         unpaired = mol%uhf
+         if (.not.allocated(error)) then
+            filename = join(dirname(input), ".UHF")
+            if (exists(filename)) call read_file(filename, unpaired, error)
+         end if
+         mol%uhf = unpaired
+      end if
    end if
    if (allocated(error)) then
       write(error_unit, '(a)') error%message
@@ -132,6 +149,7 @@ subroutine help(unit)
       "--template <file>", "File to use as template to fill in meta data", &
       "", "(useful to add back SDF or PDB annotions)", &
       "--template-format <format>", "", "", "Hint for the format of the template file", &
+      "--ignore-dot-files", "Do not read charge and spin from .CHRG and .UHF files", &
       "--version", "Print program version and exit", &
       "--help", "Show this help message"
 
@@ -152,7 +170,7 @@ end subroutine version
 
 
 subroutine get_arguments(input, input_format, output, output_format, normalize, &
-      & template, template_format, error)
+      & template, template_format, read_dot_files, error)
 
    !> Input file name
    character(len=:), allocatable :: input
@@ -175,6 +193,9 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
    !> Normalize element symbols
    logical, intent(out) :: normalize
 
+   !> Read information from .CHRG and .UHF files
+   logical, intent(out) :: read_dot_files
+
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
@@ -182,6 +203,7 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
    character(len=:), allocatable :: arg
 
    normalize = .false.
+   read_dot_files = .true.
    iarg = 0
    narg = command_argument_count()
    do while(iarg < narg)
@@ -239,6 +261,8 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
             exit
          end if
          template_format = get_filetype("."//arg)
+      case("--ignore-dot-files")
+         read_dot_files = .false.
       end select
    end do
 
@@ -250,6 +274,73 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
    end if
 
 end subroutine get_arguments
+
+
+!> Extract dirname from path
+function dirname(filename)
+   character(len=*), intent(in) :: filename
+   character(len=:), allocatable :: dirname
+
+   dirname = filename(1:scan(filename, "/\", back=.true.))
+   if (len_trim(dirname) == 0) dirname = "."
+end function dirname
+
+
+!> Construct path by joining strings with os file separator
+function join(a1, a2) result(path)
+   use mctc_env_system, only : is_windows
+   character(len=*), intent(in) :: a1, a2
+   character(len=:), allocatable :: path
+   character :: filesep
+
+   if (is_windows()) then
+      filesep = '\'
+   else
+      filesep = '/'
+   end if
+
+   path = a1 // filesep // a2
+end function join
+
+
+!> test if pathname already exists
+function exists(filename)
+    character(len=*), intent(in) :: filename
+    logical :: exists
+    inquire(file=filename, exist=exists)
+end function exists
+
+
+subroutine read_file(filename, val, error)
+   use mctc_io_utils, only : next_line, read_next_token, io_error, token_type
+   character(len=*), intent(in) :: filename
+   integer, intent(out) :: val
+   type(error_type), allocatable, intent(out) :: error
+
+   integer :: io, stat, lnum, pos
+   type(token_type) :: token
+   character(len=:), allocatable :: line
+
+   lnum = 0
+
+   open(file=filename, newunit=io, status='old', iostat=stat)
+   if (stat /= 0) then
+      call fatal_error(error, "Error: Could not open file '"//filename//"'")
+      return
+   end if
+
+   call next_line(io, line, pos, lnum, stat)
+   if (stat == 0) &
+      call read_next_token(line, pos, token, val, stat)
+   if (stat /= 0) then
+      call io_error(error, "Cannot read value from file", line, token, &
+         filename, lnum, "expected integer value")
+      return
+   end if
+
+   close(io, iostat=stat)
+
+end subroutine read_file
 
 
 end program main

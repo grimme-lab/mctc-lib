@@ -52,6 +52,9 @@ be read _before_ the input structure.
 *--template-format* _format_::
 Hint for the format of the template file (only used if template file name is provided)
 
+*--ignore-dot-files*::
+Do not read charge and spin from .CHRG and .UHF files
+
 *--version*::
 Print program version and exit
 
