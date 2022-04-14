@@ -28,15 +28,25 @@ subroutine write_coord(mol, unit)
    class(structure_type), intent(in) :: mol
    integer, intent(in) :: unit
    integer :: iat, ilt, npbc
+   logical :: expo
 
    write(unit, '(a)') "$coord"
-   do iat = 1, mol%nat
-      write(unit, '(3es24.14, 6x, a)') mol%xyz(:, iat), trim(mol%sym(mol%id(iat)))
-   end do
-   write(unit, '(a, *(1x, a, "=", i0))') &
-      "$eht", "charge", nint(mol%charge), "unpaired", mol%uhf
-   write(unit, '(a, 1x, i0)') "$periodic", count(mol%periodic)
+   expo = maxval(mol%xyz) > 1.0e+5 .or. minval(mol%xyz) < -1.0e+5
+   if (expo) then
+      do iat = 1, mol%nat
+         write(unit, '(3es24.14, 6x, a)') mol%xyz(:, iat), trim(mol%sym(mol%id(iat)))
+      end do
+   else
+      do iat = 1, mol%nat
+         write(unit, '(3f24.14, 6x, a)') mol%xyz(:, iat), trim(mol%sym(mol%id(iat)))
+      end do
+   end if
+   if (any([nint(mol%charge), mol%uhf] /= 0)) then
+      write(unit, '(a, *(1x, a, "=", i0))') &
+         "$eht", "charge", nint(mol%charge), "unpaired", mol%uhf
+   end if
    if (any(mol%periodic)) then
+      write(unit, '(a, 1x, i0)') "$periodic", count(mol%periodic)
       npbc = count(mol%periodic)
       if (size(mol%lattice, 2) == 3) then
          write(unit, '(a)') "$lattice bohr"
