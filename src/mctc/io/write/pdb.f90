@@ -52,6 +52,7 @@ subroutine write_pdb(mol, unit, number)
             write(unit, '("TER   ",i5,6x,a3,1x,a1,i4)') iat + offset, &
                &  mol%pdb(iat-1)%residue, last_chain, mol%pdb(iat)%residue_number
             last_het = .not.last_het
+            last_chain = mol%pdb(iat)%chains
             offset = offset+1
          else if (mol%pdb(iat)%chains /= last_chain) then
             write(unit, '("TER   ",i5,6x,a3,1x,a1,i4)') iat + offset, &
