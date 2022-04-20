@@ -18,8 +18,14 @@ option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP
 option(WITH_JSON "Enable support for JSON parsing via json-fortran" FALSE)
 
 set(
-  module-dir
+  "${PROJECT_NAME}-module-dir"
   "${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
+  CACHE STRING
+  "Subdirectory to install generated module files to"
+)
+set(
+  module-dir
+  "${${PROJECT_NAME}-module-dir}"
 )
 set(module-dir "${module-dir}" PARENT_SCOPE)
 
