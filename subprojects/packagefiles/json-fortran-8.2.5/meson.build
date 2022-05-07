@@ -4,6 +4,14 @@ project(
   version: files('.VERSION'),
 )
 
+fc = meson.get_compiler('fortran')
+if fc.get_id() == 'intel-cl'
+  add_project_arguments(
+    '-fpp',
+    language: 'fortran',
+  )
+endif
+
 jsonfortran_lib = library(
   meson.project_name(),
   sources: files(
