@@ -96,14 +96,10 @@ install(
   "${PROJECT_NAME}::"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
-set(
-  module-id
-  "${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
-)
 install(
   DIRECTORY
   "${PROJECT_BINARY_DIR}/include/"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${module-id}"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
 )
 # Package license files
 install(
