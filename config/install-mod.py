@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This file is part of mctc-lib.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
