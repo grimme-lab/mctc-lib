@@ -38,7 +38,10 @@ subroutine collect_read_cjson(testsuite)
 
    testsuite = [ &
       & new_unittest("valid1-cjson", test_valid1_cjson, should_fail=.not.with_json), &
-      & new_unittest("valid2-cjson", test_valid2_cjson, should_fail=.not.with_json) &
+      & new_unittest("valid2-cjson", test_valid2_cjson, should_fail=.not.with_json), &
+      & new_unittest("invalid1-cjson", test_invalid1_cjson, should_fail=.true.), &
+      & new_unittest("invalid2-cjson", test_invalid2_cjson, should_fail=.true.), &
+      & new_unittest("invalid3-cjson", test_invalid3_cjson, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_cjson
@@ -106,6 +109,8 @@ subroutine test_valid1_cjson(error)
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
    if (allocated(error)) return
+   call check(error, struc%nbd, 7, "Number of bonds does not match")
+   if (allocated(error)) return
 
 end subroutine test_valid1_cjson
 
@@ -162,6 +167,110 @@ subroutine test_valid2_cjson(error)
    if (allocated(error)) return
 
 end subroutine test_valid2_cjson
+
+
+subroutine test_invalid1_cjson(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "chemicalJson": -1,', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [  1,   6,   1,   1,   6,   1,   1,   1 ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": [  1.185080, -0.003838,  0.987524,', &
+      '               0.751621, -0.022441, -0.020839,', &
+      '               1.166929,  0.833015, -0.569312,', &
+      '               1.115519, -0.932892, -0.514525,', &
+      '              -0.751587,  0.022496,  0.020891,', &
+      '              -1.166882, -0.833372,  0.568699,', &
+      '              -1.115691,  0.932608,  0.515082,', &
+      '              -1.184988,  0.004424, -0.987522 ]', &
+      '    }', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+end subroutine test_invalid1_cjson
+
+
+subroutine test_invalid2_cjson(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "chemicalJson": 1,', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [  1,   6,   1,   1,   6,   1,   1 ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": [  1.185080, -0.003838,  0.987524,', &
+      '               0.751621, -0.022441, -0.020839,', &
+      '               1.166929,  0.833015, -0.569312,', &
+      '               1.115519, -0.932892, -0.514525,', &
+      '              -0.751587,  0.022496,  0.020891,', &
+      '              -1.166882, -0.833372,  0.568699,', &
+      '              -1.115691,  0.932608,  0.515082,', &
+      '              -1.184988,  0.004424, -0.987522 ]', &
+      '    }', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+end subroutine test_invalid2_cjson
+
+
+subroutine test_invalid3_cjson(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "chemicalJson": 1,', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [  1,   6,   1,   1,   6,   1,   1,   1 ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": null,', &
+      '    }', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+end subroutine test_invalid3_cjson
 
 
 end module test_read_cjson

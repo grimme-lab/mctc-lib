@@ -18,6 +18,7 @@ module mctc_io_read_cjson
    use mctc_env_accuracy, only : wp
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_constants, only : pi
+   use mctc_io_convert, only : aatoau
    use mctc_io_structure, only : structure_type, new
    use mctc_io_symbols, only : to_number, symbol_length
    use mctc_io_utils, only : getline
@@ -48,11 +49,10 @@ subroutine read_cjson(self, unit, error)
    type(json_core) :: json
    type(json_value), pointer :: root, val, child, array
 
-   logical :: cartesian
-   integer :: stat, schema_version, charge, multiplicity, ibond
-   character(len=:), allocatable :: input, line, message, schema_name, comment
-   integer, allocatable :: num(:)
-   integer, allocatable :: bond(:, :), list(:)
+   logical :: cartesian, found
+   integer :: stat, schema_version, charge, ibond
+   character(len=:), allocatable :: input, line, message, comment
+   integer, allocatable :: num(:), bond(:, :), list(:), order(:)
    real(wp) :: cellpar(6)
    real(wp), allocatable :: lattice(:, :)
    real(wp), allocatable, target :: geo(:)
@@ -113,6 +113,7 @@ subroutine read_cjson(self, unit, error)
          call json%destroy(root)
          return
       end if
+      cellpar(1:3) = cellpar(1:3) * aatoau
       cellpar(4:6) = cellpar(4:6) * (pi / 180)
       allocate(lattice(3, 3))
       call cell_to_dlat(cellpar, lattice)
@@ -136,7 +137,28 @@ subroutine read_cjson(self, unit, error)
       return
    end if
 
+   call json%get(val, "bonds.connections.index", list, found=found)
+   call json%get(val, "bonds.order", order, found=found)
+   if (.not.allocated(order) .and. allocated(list)) &
+      allocate(order(size(list)/2), source=1)
+
+   if (json%failed()) then
+      call fatal_error(error, "Cannot read entries from 'bonds'")
+      call json%destroy(root)
+      return
+   end if
+
+   if (allocated(list)) then
+      allocate(bond(3, size(list)/2))
+      do ibond = 1, size(bond, 2)
+         bond(:, ibond) = [list(2*ibond-1) + 1, list(2*ibond) + 1, order(ibond)]
+      end do
+   end if
+
    call json%get(val, "name", comment, default="")
+   call json%get(val, "atoms.formalCharges", list, found=found)
+   charge  = 0
+   if (allocated(list)) charge = sum(list)
 
    if (json%failed()) then
       call json%check_for_errors(error_msg=message)
@@ -146,10 +168,11 @@ subroutine read_cjson(self, unit, error)
    end if
 
    xyz(1:3, 1:size(geo)/3) => geo
+   xyz(:, :) = xyz * aatoau
    if (.not.cartesian) then
       xyz(:, :) = matmul(lattice, xyz(:, :))
    end if
-   call new(self, num, xyz, lattice=lattice) !, charge=real(charge, wp), uhf=multiplicity-1)
+   call new(self, num, xyz, lattice=lattice, charge=real(charge, wp))
    if (len(comment) > 0) self%comment = comment
    if (allocated(bond)) then
       self%nbd = size(bond, 2)
