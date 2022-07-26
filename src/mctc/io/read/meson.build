@@ -14,6 +14,7 @@
 
 srcs += files(
   'aims.f90',
+  'cjson.F90',
   'ctfile.f90',
   'gaussian.f90',
   'genformat.f90',
