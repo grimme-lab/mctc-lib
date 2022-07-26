@@ -16,6 +16,7 @@ tests = [
   'math',
   'read',
   'read-aims',
+  'read-cjson',
   'read-ctfile',
   'read-gaussian',
   'read-genformat',

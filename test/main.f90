@@ -21,6 +21,7 @@ program tester
    use test_math, only : collect_math
    use test_read, only : collect_read
    use test_read_aims, only : collect_read_aims
+   use test_read_cjson, only : collect_read_cjson
    use test_read_ctfile, only : collect_read_ctfile
    use test_read_gaussian, only : collect_read_gaussian
    use test_read_genformat, only : collect_read_genformat
@@ -54,6 +55,7 @@ program tester
       & new_testsuite("symbols", collect_symbols), &
       & new_testsuite("read", collect_read), &
       & new_testsuite("read-aims", collect_read_aims), &
+      & new_testsuite("read-cjson", collect_read_cjson), &
       & new_testsuite("read-ctfile", collect_read_ctfile), &
       & new_testsuite("read-gaussian", collect_read_gaussian), &
       & new_testsuite("read-genformat", collect_read_genformat), &

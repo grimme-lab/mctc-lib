@@ -16,6 +16,7 @@ module mctc_io_read
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_filetype, only : filetype, get_filetype
    use mctc_io_read_aims, only : read_aims
+   use mctc_io_read_cjson, only : read_cjson
    use mctc_io_read_ctfile, only : read_molfile, read_sdf
    use mctc_io_read_gaussian, only : read_gaussian_external
    use mctc_io_read_genformat, only : read_genformat
@@ -148,6 +149,9 @@ subroutine get_structure_reader(reader, ftype)
 
    case(filetype%qcschema)
       reader => read_qcschema
+
+   case(filetype%cjson)
+      reader => read_cjson
 
    case(filetype%pdb)
       reader => read_pdb
