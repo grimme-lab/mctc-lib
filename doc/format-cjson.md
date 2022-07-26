@@ -17,7 +17,7 @@ Caffeine molecule in ``qcschema_molecule`` format.
 
 ```json
 {
-  "chemical json": 1,
+  "chemicalJson": 1,
   "atoms": {
     "elements": {
       "number": [

@@ -59,7 +59,7 @@ pure function json_string(mol, indent) result(string)
 
    string = "{"
    if (present(indent)) string = string // nl // indent
-   string = string // json_key("chemical json", indent) // json_value(1)
+   string = string // json_key("chemicalJson", indent) // json_value(1)
 
    if (allocated(mol%comment)) then
       string = string // ","
@@ -87,7 +87,7 @@ pure function json_string(mol, indent) result(string)
    else
       inv_lat = matinv_3x3(mol%lattice)
       abc = matmul(inv_lat, mol%xyz)
-      string = string // json_key("3d fractional", indent) // json_array([abc], 3, indent)
+      string = string // json_key("3dFractional", indent) // json_array([abc], 3, indent)
    end if
    if (present(indent)) string = string // nl // repeat(indent, 2)
    string = string // "}"
@@ -122,7 +122,7 @@ pure function json_string(mol, indent) result(string)
 
       string = string // ","
       if (present(indent)) string = string // nl // indent
-      string = string // json_key("unit cell", indent) // "{"
+      string = string // json_key("unitCell", indent) // "{"
       if (present(indent)) string = string // nl // repeat(indent, 2)
       string = string // json_key("a", indent) // json_value(cellpar(1), "(es23.16)")
       string = string // ","

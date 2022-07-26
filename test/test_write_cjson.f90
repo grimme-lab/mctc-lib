@@ -18,6 +18,7 @@ module test_write_cjson
    use mctc_io_write_cjson
    use mctc_io_read_cjson
    use mctc_io_structure
+   use mctc_version, only : get_mctc_feature
    implicit none
    private
 
@@ -33,9 +34,13 @@ subroutine collect_write_cjson(testsuite)
    !> Collection of tests
    type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
+   logical :: with_json
+
+   with_json = get_mctc_feature("json")
+
    testsuite = [ &
-      & new_unittest("valid1-cjson", test_valid1_cjson), &
-      & new_unittest("valid2-cjson", test_valid2_cjson) &
+      & new_unittest("valid1-cjson", test_valid1_cjson, should_fail=.not.with_json), &
+      & new_unittest("valid2-cjson", test_valid2_cjson, should_fail=.not.with_json) &
       & ]
 
 end subroutine collect_write_cjson
