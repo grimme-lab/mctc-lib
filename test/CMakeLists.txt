@@ -31,6 +31,7 @@ set(
   "symbols"
   "write"
   "write-aims"
+  "write-cjson"
   "write-ctfile"
   "write-gaussian"
   "write-genformat"
