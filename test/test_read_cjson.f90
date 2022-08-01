@@ -40,7 +40,9 @@ subroutine collect_read_cjson(testsuite)
       & new_unittest("valid1-cjson", test_valid1_cjson, should_fail=.not.with_json), &
       & new_unittest("valid2-cjson", test_valid2_cjson, should_fail=.not.with_json), &
       & new_unittest("valid3-cjson", test_valid3_cjson, should_fail=.not.with_json), &
-      & new_unittest("valid4-cjson", test_valid3_cjson, should_fail=.not.with_json), &
+      & new_unittest("valid4-cjson", test_valid4_cjson, should_fail=.not.with_json), &
+      & new_unittest("valid5-cjson", test_valid5_cjson, should_fail=.not.with_json), &
+      & new_unittest("valid6-cjson", test_valid6_cjson, should_fail=.not.with_json), &
       & new_unittest("invalid1-cjson", test_invalid1_cjson, should_fail=.true.), &
       & new_unittest("invalid2-cjson", test_invalid2_cjson, should_fail=.true.), &
       & new_unittest("invalid3-cjson", test_invalid3_cjson, should_fail=.true.), &
@@ -332,10 +334,110 @@ subroutine test_valid4_cjson(error)
    if (allocated(error)) return
    call check(error, struc%nid, 4, "Number of species does not match")
    if (allocated(error)) return
-   call check(error, struc%nbd, 23, "Number of bonds does not match")
+   call check(error, struc%nbd, 25, "Number of bonds does not match")
    if (allocated(error)) return
 
 end subroutine test_valid4_cjson
+
+
+subroutine test_valid5_cjson(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "chemicalJson": 1,', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [', &
+      '        8,', &
+      '        1', &
+      '      ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": [', &
+      '         1.2358341722502633E+00,', &
+      '        -9.1774253284895344E-02,', &
+      '        -6.7936144993384059E-02,', &
+      '         1.5475582000473165E+00,', &
+      '         5.7192830956765273E-01,', &
+      '         5.5691301045614838E-01', &
+      '      ]', &
+      '    },', &
+      '    "formalCharges": [ -1, 0 ]', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+   call check(error, struc%nat, 2, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, nint(struc%charge), -1, "Total charge does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid5_cjson
+
+
+subroutine test_valid6_cjson(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "chemicalJson": 1,', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [', &
+      '        7,', &
+      '        7,', &
+      '        7', &
+      '      ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": [', &
+      '         3.6361808414857721E-01,', &
+      '         1.9287266130863627E+00,', &
+      '        -1.7850498831821635E+00,', &
+      '         8.2217629145179161E-01,', &
+      '         2.4066501990670561E+00,', &
+      '        -2.7896663819784173E+00,', &
+      '        -9.4568423260748616E-02,', &
+      '         1.4516946870018026E+00,', &
+      '        -7.7682289506097102E-01', &
+      '      ]', &
+      '    }', &
+      '  },', &
+      '  "properties": {', &
+      '    "totalCharge": -1', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+   call check(error, struc%nat, 3, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 1, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, nint(struc%charge), -1, "Total charge does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid6_cjson
 
 
 subroutine test_invalid1_cjson(error)
