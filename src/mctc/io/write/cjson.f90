@@ -95,6 +95,19 @@ pure function json_string(mol, indent) result(string)
    if (present(indent)) string = string // nl // indent
    string = string // "}"
 
+   string = string // ","
+   if (present(indent)) string = string // nl // indent
+   string = string // json_key("properties", indent) // "{"
+   if (present(indent)) string = string // nl // repeat(indent, 2)
+   string = string // json_key("totalCharge", indent) // json_value(nint(mol%charge))
+   if (mol%uhf > 0) then
+      string = string // ","
+      if (present(indent)) string = string // nl // repeat(indent, 2)
+      string = string // json_key("totalSpinMultiplicity", indent) // json_value(mol%uhf + 1)
+   end if
+   if (present(indent)) string = string // nl // indent
+   string = string // "}"
+
    if (allocated(mol%bond)) then
       string = string // ","
       if (present(indent)) string = string // nl // indent

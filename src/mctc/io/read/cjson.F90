@@ -50,7 +50,7 @@ subroutine read_cjson(self, unit, error)
    type(json_value), pointer :: root, val, child, array
 
    logical :: cartesian, found
-   integer :: stat, schema_version, charge, ibond
+   integer :: stat, schema_version, charge, multiplicity, ibond
    character(len=:), allocatable :: input, line, message, comment
    integer, allocatable :: num(:), bond(:, :), list(:), order(:)
    real(wp) :: cellpar(6)
@@ -156,9 +156,14 @@ subroutine read_cjson(self, unit, error)
    end if
 
    call json%get(val, "name", comment, default="")
-   call json%get(val, "atoms.formalCharges", list, found=found)
-   charge  = 0
-   if (allocated(list)) charge = sum(list)
+   call json%get(val, "properties.totalCharge", charge, found=found)
+   if (.not.found) then
+      call json%get(val, "atoms.formalCharges", list, found=found)
+      charge  = 0
+      if (allocated(list)) charge = sum(list)
+   end if
+   call json%get(val, "properties.totalSpinMultiplicity", multiplicity, found=found)
+   if (.not.found) multiplicity = 1
 
    if (json%failed()) then
       call json%check_for_errors(error_msg=message)
@@ -172,7 +177,7 @@ subroutine read_cjson(self, unit, error)
    if (.not.cartesian) then
       xyz(:, :) = matmul(lattice, xyz(:, :))
    end if
-   call new(self, num, xyz, lattice=lattice, charge=real(charge, wp))
+   call new(self, num, xyz, lattice=lattice, charge=real(charge, wp), uhf=multiplicity - 1)
    if (len(comment) > 0) self%comment = comment
    if (allocated(bond)) then
       self%nbd = size(bond, 2)
