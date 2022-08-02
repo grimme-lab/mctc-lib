@@ -9,3 +9,6 @@ keywords = ["computational-chemistry", "io"]
 
 [dependencies]
 json-fortran.git = "https://github.com/jacobwilliams/json-fortran.git"
+
+[[executable]]
+name = "mctc-convert"
