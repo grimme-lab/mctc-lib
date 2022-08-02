@@ -42,6 +42,7 @@ $molecule
  H         4.40230000000000       -5.15920000000000        0.82840000000000
  H         4.40020000000000       -5.16930000000000       -0.94780000000000
 $end
+```
 
 
 ## Missing Features
@@ -53,4 +54,3 @@ Following features are missing
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
-```

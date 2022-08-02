@@ -73,10 +73,10 @@ module mctc_io_structure_info
       !> SDF hydrogen query present or PDB without hydrogen atoms found
       logical :: missing_hydrogen = .false.
 
-      !> Periodic coordinates should use preferrably cartesian coordinates
+      !> Periodic coordinates should use preferably cartesian coordinates
       logical :: cartesian = .true.
 
-      !> Lattice information should use preferrably lattice vectors
+      !> Lattice information should use preferably lattice vectors
       logical :: lattice = .true.
 
       !> Unit of the lattice vectors should be in Angstrom if possible

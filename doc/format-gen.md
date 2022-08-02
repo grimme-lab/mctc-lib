@@ -20,12 +20,12 @@ of the atomic coordinates by this index rather than their element symbol.
 
 The following lines are specified as two integers and three reals separated by
 spaces. The first integer is currently ignored. The second integer references
-the the element symbol in the second line.
+the element symbol in the second line.
 The atomic coordinates are given in Ångström for cluster, supercell and helical,
 while they are given as fraction of the lattice vector for fractional input types.
 
 For supercell and fractional input the next lines contains three reals containing
-the origin of the stucture, followed by three lines of each three reals for the
+the origin of the structure, followed by three lines of each three reals for the
 lattice vectors.
 
 Lines starting with the ``#`` are comments and are ignored while parsing.

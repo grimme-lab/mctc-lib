@@ -58,7 +58,7 @@ pure function matinv_3x3(a) result(b)
 end function matinv_3x3
 
 
-!> Determinat of 3×3 matrix
+!> Determinant of 3×3 matrix
 pure function matdet_3x3(a) result (det)
 
    !> Matrix

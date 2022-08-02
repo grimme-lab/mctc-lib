@@ -42,7 +42,7 @@ subroutine read_pdb(self, unit, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer, parameter :: p_initial_size = 1000 ! this is going to be a proteine
+   integer, parameter :: p_initial_size = 1000 ! this is going to be a protein
 
    integer :: iatom, jatom, iresidue, try, stat, atom_type, pos, lnum
    real(wp) :: occ, temp, coords(3)

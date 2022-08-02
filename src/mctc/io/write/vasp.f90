@@ -79,7 +79,7 @@ subroutine write_vasp(self, unit, comment_line)
    end do
    write(unit, '(a)')
 
-   ! write the count of the consequtive atom types
+   ! write the count of the consecutive atom types
    do i = 1, j
       write(unit, '(1x, i0)', advance='no') kinds(i)
    end do
