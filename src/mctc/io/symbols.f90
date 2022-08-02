@@ -339,7 +339,7 @@ pure function find_number(list, number) result(position)
 end function find_number
 
 
-!> Append an element symbol to an unsorted list, to ensure no dublicates search
+!> Append an element symbol to an unsorted list, to ensure no duplicates search
 !> for the element symbol first
 pure subroutine append_symbol(list, nlist, symbol)
 
@@ -362,7 +362,7 @@ pure subroutine append_symbol(list, nlist, symbol)
 end subroutine append_symbol
 
 
-!> Append an atomic number to an unsorted list, to ensure no dublicates search
+!> Append an atomic number to an unsorted list, to ensure no duplicates search
 !> for the atomic number first
 pure subroutine append_number(list, nlist, number)
 

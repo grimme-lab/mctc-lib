@@ -70,7 +70,7 @@ subroutine write_structure_to_file(self, file, error, format)
       ftype = get_filetype(file)
    end if
 
-   ! Unknown file type is inacceptable in this situation,
+   ! Unknown file type is unacceptable in this situation,
    ! try to figure at least something out
    if (ftype == filetype%unknown) then
       if (any(self%periodic)) then

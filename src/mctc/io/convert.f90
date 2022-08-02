@@ -19,7 +19,7 @@ module mctc_io_convert
    implicit none
    private
 
-   !> Reducted Planck's constant
+   !> Reduced Planck's constant
    real(wp), parameter :: hbar = codata%h/(2.0_wp*pi) ! J·s = kg·m²·s⁻¹
 
    !> Bohr radius
@@ -40,10 +40,10 @@ module mctc_io_convert
    !> Conversion factor from electron volts to hartree
    real(wp), public, parameter :: evtoau = 1.0_wp/autoev
 
-   !> Coversion factor between calorine and joule
+   !> Conversion factor between calorie and joule
    real(wp), public, parameter :: caltoj = 4.184_wp
 
-   !> Coversion factor between joule and calorine
+   !> Conversion factor between joule and calorie
    real(wp), public, parameter :: jtocal = 1.0_wp/caltoj
 
    !> Conversion from hartree to kJ/mol

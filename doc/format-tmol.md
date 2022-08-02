@@ -36,7 +36,7 @@ $end
 The ``coord`` data group contains the cartesian coordinates of all atoms and
 their element symbols at the end of each line.
 Atomic coordinates can either be specified in Bohr, by default or with the ``bohr``
-modifier on the ``coord`` data group, in Ångström with the modifer ``angs`` or
+modifier on the ``coord`` data group, in Ångström with the modifier ``angs`` or
 as fractions of the lattice vectors with the modifier ``frac``.
 Fractional coordinates can only be present for periodicities greater than zero.
 
@@ -44,7 +44,7 @@ The periodicity of the system is specified as modifier to the ``periodic`` data
 group, the group itself is empty.
 
 The lattice parameters can either be specified in the ``lattice`` or the ``cell``
-data group, which requre different amounts of entries depending on the systems
+data group, which require different amounts of entries depending on the systems
 periodicity. Both data groups are either given in atomic units (Bohr) or in
 Ångström with the ``angs`` modifier.
 

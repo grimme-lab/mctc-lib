@@ -214,7 +214,7 @@ Error: Cannot read charges
    |
 ```
 
-4. Turbomole input with confliciting data groups
+4. Turbomole input with conflicting data groups
 
 ```
 Error: Conflicting lattice and cell groups
