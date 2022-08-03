@@ -19,7 +19,7 @@ option(WITH_JSON "Enable support for JSON parsing via json-fortran" FALSE)
 
 set(
   "${PROJECT_NAME}-module-dir"
-  "${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
+  "${PROJECT_NAME}/modules"
   CACHE STRING
   "Subdirectory to install generated module files to"
 )
