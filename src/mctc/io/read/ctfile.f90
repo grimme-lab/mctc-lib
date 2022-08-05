@@ -196,7 +196,7 @@ subroutine read_molfile_v2k(self, unit, number_of_atoms, number_of_bonds, error)
          token = token_type(35, 36)
          call read_token(line, token, list12(1), stat)
       end if
-      line12(:) = 0
+      list12(:) = 0
       do i = 1, 11
          if (stat == 0) then
             if ((36+i*3) > len(line)) exit
@@ -226,7 +226,7 @@ subroutine read_molfile_v2k(self, unit, number_of_atoms, number_of_bonds, error)
    allocate(bond(3, number_of_bonds))
    do ibond = 1, number_of_bonds
       call next_line(unit, line, pos, lnum, stat)
-      line7(:) = 0
+      list7(:) = 0
       do i = 1, 7
          if (stat == 0) then
             if ((i*3) > len(line)) exit
