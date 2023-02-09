@@ -75,6 +75,10 @@ module mctc_io_structure
       !> PDB atomic data annotations
       type(pdb_data), allocatable :: pdb(:)
 
+      contains
+      procedure :: copy_structure_type
+      generic,public :: assignment(=) => copy_structure_type
+
    end type structure_type
 
 
@@ -278,5 +282,37 @@ subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, &
 
 end subroutine new_structure_sym
 
+subroutine copy_structure_type(self,from)
+   class(structure_type),intent(inout) :: self
+   class(structure_type),intent(in) :: from
+
+   self%nat = from%nat
+   self%nid = from%nid
+   self%nbd = from%nbd
+   self%charge = from%charge
+   self%uhf = from%uhf
+   
+   allocate(self%id(from%nat))
+   allocate(self%xyz(3, from%nat))
+   allocate(self%num(size(from%num)))
+   allocate(self%sym(size(from%sym)))
+   
+   self%id = from%id
+   self%xyz(:, :) = from%xyz(:, :)
+   self%num = from%num
+   self%sym = from%sym
+   
+   allocate(self%lattice(size(from%lattice)))
+   allocate(self%periodic(size(from%periodic)))
+   allocate(self%bond(size(from%bond)))
+
+   self%lattice = from%lattice
+   self%periodic = from%periodic
+   self%bond = from%bond
+   
+   self%comment = from%comment
+   self%info = from%info
+
+end subroutine copy_structure_type
 
 end module mctc_io_structure
