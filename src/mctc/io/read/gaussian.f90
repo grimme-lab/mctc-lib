@@ -93,15 +93,15 @@ subroutine read_gaussian_external(self, unit, error)
          call read_token(line, token, coord(1), stat)
       end if
       if (stat == 0) then
-         token = token_type(31, 40)
+         token = token_type(31, 50)
          call read_token(line, token, coord(2), stat)
       end if
       if (stat == 0) then
-         token = token_type(41, 60)
+         token = token_type(51, 70)
          call read_token(line, token, coord(3), stat)
       end if
       if (stat == 0) then
-         token = token_type(61, 80)
+         token = token_type(71, 90)
          call read_token(line, token, q, stat)
       end if
       if (stat /= 0) then
