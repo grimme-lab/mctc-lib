@@ -81,107 +81,144 @@
 
     <div class="container">
   <div class="row">
-    <h1>main    <small>Program</small>
+    <h1>main      <small>Program</small>
+      
     </h1>
-    <div class="row">
-  <div class="col-lg-12">
-<div class="well well-sm">
-  <ul class="list-inline" style="margin-bottom:0px;display:inline">
-     <li><i class="fa fa-list-ol"></i>
-       <a data-toggle="tooltip"
-    data-placement="bottom" data-html="true"
-    title="100.0% of total for programs.">225 statements</a>
-     </li> 
-    <li><i class="fa fa-code"></i><a href="../src/main.f90"> Source File</a></li>
-  </ul>
-  <ol class="breadcrumb in-well text-right">
-     <li><a href='../sourcefile/main.f90.html'>main.f90</a></li>
-     <li class="active">main</li>
-  </ol>
-</div>
-</div>
-</div>
-<script>
-  $(function () {
-  $('[data-toggle="tooltip"]').tooltip()
-  })
-</script>
+      <div class="row" id="info-bar">
+    <div class="col-lg-12">
+      <div class="well well-sm">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+          <li id="statements"><i class="fa fa-list-ol"></i>
+            <a data-toggle="tooltip"
+               data-placement="bottom" data-html="true"
+               title="100.0% of total for programs.">225 statements</a>
+          </li>
+
+            <li id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/main.f90"> Source File</a>
+            </li>
+        </ul>
+        <ol class="breadcrumb in-well text-right">
+              <li><a href='../sourcefile/main.f90.html'>main.f90</a></li>
+          <li class="active">main</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <script>
+    $(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+    })
+  </script>
 
   </div>
   
   <div class="row">
     <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
-    <div id="sidebar">
-  <h3>Contents</h3>
- 
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#vars-0">Variables</a></h3></div>
-  <div id="vars-0" class="panel-collapse collapse">
-    <div class="list-group">
-      <a class="list-group-item" href="../program/main.html#variable-charge~4">charge</a>
-      <a class="list-group-item" href="../program/main.html#variable-error~21">error</a>
-      <a class="list-group-item" href="../program/main.html#variable-filename~7">filename</a>
-      <a class="list-group-item" href="../program/main.html#variable-input~2">input</a>
-      <a class="list-group-item" href="../program/main.html#variable-input_format~2">input_format</a>
-      <a class="list-group-item" href="../program/main.html#variable-mol~11">mol</a>
-      <a class="list-group-item" href="../program/main.html#variable-mol_template">mol_template</a>
-      <a class="list-group-item" href="../program/main.html#variable-normalize~2">normalize</a>
-      <a class="list-group-item" href="../program/main.html#variable-output~2">output</a>
-      <a class="list-group-item" href="../program/main.html#variable-output_format~2">output_format</a>
-      <a class="list-group-item" href="../program/main.html#variable-prog_name">prog_name</a>
-      <a class="list-group-item" href="../program/main.html#variable-read_dot_files~2">read_dot_files</a>
-      <a class="list-group-item" href="../program/main.html#variable-template~2">template</a>
-      <a class="list-group-item" href="../program/main.html#variable-template_format~2">template_format</a>
-      <a class="list-group-item" href="../program/main.html#variable-unpaired">unpaired</a>
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="panel panel-primary">
+      <div class="panel-heading text-left">
+        <h3 class="panel-title">
+          <a data-toggle="collapse" href="#vars-0">Variables</a>
+        </h3>
+      </div>
+      <div id="vars-0" class="panel-collapse collapse">
+        <div class="list-group">
+            <a class="list-group-item" href="../program/main.html#variable-charge~7">charge</a>
+            <a class="list-group-item" href="../program/main.html#variable-error~37">error</a>
+            <a class="list-group-item" href="../program/main.html#variable-filename~7">filename</a>
+            <a class="list-group-item" href="../program/main.html#variable-input~2">input</a>
+            <a class="list-group-item" href="../program/main.html#variable-input_format~2">input_format</a>
+            <a class="list-group-item" href="../program/main.html#variable-mol~11">mol</a>
+            <a class="list-group-item" href="../program/main.html#variable-mol_template">mol_template</a>
+            <a class="list-group-item" href="../program/main.html#variable-normalize~2">normalize</a>
+            <a class="list-group-item" href="../program/main.html#variable-output~2">output</a>
+            <a class="list-group-item" href="../program/main.html#variable-output_format~2">output_format</a>
+            <a class="list-group-item" href="../program/main.html#variable-prog_name">prog_name</a>
+            <a class="list-group-item" href="../program/main.html#variable-read_dot_files~2">read_dot_files</a>
+            <a class="list-group-item" href="../program/main.html#variable-template~2">template</a>
+            <a class="list-group-item" href="../program/main.html#variable-template_format~2">template_format</a>
+            <a class="list-group-item" href="../program/main.html#variable-unpaired">unpaired</a>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#funcs-0">Functions</a></h3></div>
-  <div id="funcs-0" class="panel-collapse collapse">
-    <div class="list-group">
-      <a class="list-group-item" href="../program/main.html#proc-dirname">dirname</a>
-      <a class="list-group-item" href="../program/main.html#proc-exists">exists</a>
-      <a class="list-group-item" href="../program/main.html#proc-join">join</a>
-    </div>
-  </div>
-</div>
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-0">Subroutines</a></h3></div>
-  <div class="list-group">
-    <div id="subs-0" class="panel-collapse collapse">
-      <a class="list-group-item" href="../program/main.html#proc-get_arguments">get_arguments</a>
-      <a class="list-group-item" href="../program/main.html#proc-help">help</a>
-      <a class="list-group-item" href="../program/main.html#proc-read_file">read_file</a>
-      <a class="list-group-item" href="../program/main.html#proc-version">version</a>
-    </div>
-  </div>
-</div>
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
-  <div class="list-group">
-    <a class="list-group-item" href="../program/main.html#src">main</a>
-  </div>
-</div>
 
-</div>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="panel panel-primary">
+      <div class="panel-heading text-left">
+        <h3 class="panel-title">
+          <a data-toggle="collapse" href="#funcs-0">Functions</a>
+        </h3>
+      </div>
+      <div id="funcs-0" class="panel-collapse collapse">
+        <div class="list-group">
+            <a class="list-group-item" href="../program/main.html#proc-dirname">dirname</a>
+            <a class="list-group-item" href="../program/main.html#proc-exists">exists</a>
+            <a class="list-group-item" href="../program/main.html#proc-join">join</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="panel panel-primary">
+      <div class="panel-heading text-left">
+        <h3 class="panel-title">
+          <a data-toggle="collapse" href="#subs-0">Subroutines</a>
+        </h3>
+      </div>
+      <div id="subs-0" class="panel-collapse collapse">
+        <div class="list-group">
+            <a class="list-group-item" href="../program/main.html#proc-get_arguments">get_arguments</a>
+            <a class="list-group-item" href="../program/main.html#proc-help">help</a>
+            <a class="list-group-item" href="../program/main.html#proc-read_file">read_file</a>
+            <a class="list-group-item" href="../program/main.html#proc-version">version</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+    <div class="panel panel-primary">
+      <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../program/main.html#src">main</a>
+      </div>
+    </div>
+
+
+  </div>
 
     </div>
     
     <div class="col-md-9" id='text'>
         <div class="panel panel-default">
       <div class="panel-heading">
-  <h3 class="panel-title">Uses</h3>
+        <h3 class="panel-title">Uses</h3>
       </div>
       <ul class="list-group">
-      <li class="list-group-item">
-  <ul class="list-inline">
-    <li><a href='../module/mctc_version.html'>mctc_version</a></li>
-    <li><a href='../module/mctc_io.html'>mctc_io</a></li>
-    <li><a href='../module/mctc_env.html'>mctc_env</a></li>
-    <li><a href="https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html">iso_fortran_env</a></li>
-  </ul>
-      </li>
+          <li class="list-group-item">
+            <ul class="list-inline">
+                <li><a href='../module/mctc_io.html'>mctc_io</a></li>
+                <li><a href='../module/mctc_version.html'>mctc_version</a></li>
+                <li><a href='../module/mctc_env.html'>mctc_env</a></li>
+                <li><a href="https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html">iso_fortran_env</a></li>
+            </ul>
+          </li>
       </ul>
     </div>
 
@@ -200,57 +237,88 @@ like folding back to central cells or removing lattice vector could be added
 in a similar manner.</p>
 <br>
      <section class="visible-xs visible-sm hidden-md">
-       <h3>Contents</h3>
- 
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#vars-1">Variables</a></h3></div>
-  <div id="vars-1" class="panel-collapse collapse">
-    <div class="list-group">
-      <a class="list-group-item" href="../program/main.html#variable-charge~4">charge</a>
-      <a class="list-group-item" href="../program/main.html#variable-error~21">error</a>
-      <a class="list-group-item" href="../program/main.html#variable-filename~7">filename</a>
-      <a class="list-group-item" href="../program/main.html#variable-input~2">input</a>
-      <a class="list-group-item" href="../program/main.html#variable-input_format~2">input_format</a>
-      <a class="list-group-item" href="../program/main.html#variable-mol~11">mol</a>
-      <a class="list-group-item" href="../program/main.html#variable-mol_template">mol_template</a>
-      <a class="list-group-item" href="../program/main.html#variable-normalize~2">normalize</a>
-      <a class="list-group-item" href="../program/main.html#variable-output~2">output</a>
-      <a class="list-group-item" href="../program/main.html#variable-output_format~2">output_format</a>
-      <a class="list-group-item" href="../program/main.html#variable-prog_name">prog_name</a>
-      <a class="list-group-item" href="../program/main.html#variable-read_dot_files~2">read_dot_files</a>
-      <a class="list-group-item" href="../program/main.html#variable-template~2">template</a>
-      <a class="list-group-item" href="../program/main.html#variable-template_format~2">template_format</a>
-      <a class="list-group-item" href="../program/main.html#variable-unpaired">unpaired</a>
+         <h3>Contents</h3>
+  
+      <div class="panel panel-primary">
+      <div class="panel-heading text-left">
+        <h3 class="panel-title">
+          <a data-toggle="collapse" href="#vars-1">Variables</a>
+        </h3>
+      </div>
+      <div id="vars-1" class="panel-collapse collapse">
+        <div class="list-group">
+            <a class="list-group-item" href="../program/main.html#variable-charge~7">charge</a>
+            <a class="list-group-item" href="../program/main.html#variable-error~37">error</a>
+            <a class="list-group-item" href="../program/main.html#variable-filename~7">filename</a>
+            <a class="list-group-item" href="../program/main.html#variable-input~2">input</a>
+            <a class="list-group-item" href="../program/main.html#variable-input_format~2">input_format</a>
+            <a class="list-group-item" href="../program/main.html#variable-mol~11">mol</a>
+            <a class="list-group-item" href="../program/main.html#variable-mol_template">mol_template</a>
+            <a class="list-group-item" href="../program/main.html#variable-normalize~2">normalize</a>
+            <a class="list-group-item" href="../program/main.html#variable-output~2">output</a>
+            <a class="list-group-item" href="../program/main.html#variable-output_format~2">output_format</a>
+            <a class="list-group-item" href="../program/main.html#variable-prog_name">prog_name</a>
+            <a class="list-group-item" href="../program/main.html#variable-read_dot_files~2">read_dot_files</a>
+            <a class="list-group-item" href="../program/main.html#variable-template~2">template</a>
+            <a class="list-group-item" href="../program/main.html#variable-template_format~2">template_format</a>
+            <a class="list-group-item" href="../program/main.html#variable-unpaired">unpaired</a>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#funcs-1">Functions</a></h3></div>
-  <div id="funcs-1" class="panel-collapse collapse">
-    <div class="list-group">
-      <a class="list-group-item" href="../program/main.html#proc-dirname">dirname</a>
-      <a class="list-group-item" href="../program/main.html#proc-exists">exists</a>
-      <a class="list-group-item" href="../program/main.html#proc-join">join</a>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="panel panel-primary">
+      <div class="panel-heading text-left">
+        <h3 class="panel-title">
+          <a data-toggle="collapse" href="#funcs-1">Functions</a>
+        </h3>
+      </div>
+      <div id="funcs-1" class="panel-collapse collapse">
+        <div class="list-group">
+            <a class="list-group-item" href="../program/main.html#proc-dirname">dirname</a>
+            <a class="list-group-item" href="../program/main.html#proc-exists">exists</a>
+            <a class="list-group-item" href="../program/main.html#proc-join">join</a>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title"><a data-toggle="collapse" href="#subs-1">Subroutines</a></h3></div>
-  <div class="list-group">
-    <div id="subs-1" class="panel-collapse collapse">
-      <a class="list-group-item" href="../program/main.html#proc-get_arguments">get_arguments</a>
-      <a class="list-group-item" href="../program/main.html#proc-help">help</a>
-      <a class="list-group-item" href="../program/main.html#proc-read_file">read_file</a>
-      <a class="list-group-item" href="../program/main.html#proc-version">version</a>
+
+      <div class="panel panel-primary">
+      <div class="panel-heading text-left">
+        <h3 class="panel-title">
+          <a data-toggle="collapse" href="#subs-1">Subroutines</a>
+        </h3>
+      </div>
+      <div id="subs-1" class="panel-collapse collapse">
+        <div class="list-group">
+            <a class="list-group-item" href="../program/main.html#proc-get_arguments">get_arguments</a>
+            <a class="list-group-item" href="../program/main.html#proc-help">help</a>
+            <a class="list-group-item" href="../program/main.html#proc-read_file">read_file</a>
+            <a class="list-group-item" href="../program/main.html#proc-version">version</a>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-<div class="panel panel-primary">
-  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
-  <div class="list-group">
-    <a class="list-group-item" href="../program/main.html#src">main</a>
-  </div>
-</div>
+
+  
+  
+  
+  
+  
+  
+    <div class="panel panel-primary">
+      <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../program/main.html#src">main</a>
+      </div>
+    </div>
+
 
      </section>
      <br class="visible-xs visible-sm hidden-md">
@@ -258,86 +326,258 @@ in a similar manner.</p>
 
     <section>
     <h2>Variables</h2>
-    <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Attributes</th><th></th><th>Name</th><th></th><th>Initial</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" id="variable-charge~4"></span>integer</td>
-  <td></td><td>::</td>
-  <td><strong>charge</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-error~21"></span>type(<a href='../type/error_type.html'>error_type</a>),</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>error</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-filename~7"></span>character(len=:),</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>filename</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-input~2"></span>character(len=:),</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>input</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-input_format~2"></span>integer,</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>input_format</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-mol~11"></span>type(<a href='../type/structure_type.html'>structure_type</a>)</td>
-  <td></td><td>::</td>
-  <td><strong>mol</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-mol_template"></span>type(<a href='../type/structure_type.html'>structure_type</a>),</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>mol_template</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-normalize~2"></span>logical</td>
-  <td></td><td>::</td>
-  <td><strong>normalize</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-output~2"></span>character(len=:),</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>output</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-output_format~2"></span>integer,</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>output_format</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-prog_name"></span>character(len=*),</td>
-  <td>parameter</td><td>::</td>
-  <td><strong>prog_name</strong></td><td> =</td><td>"mctc-convert"</td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-read_dot_files~2"></span>logical</td>
-  <td></td><td>::</td>
-  <td><strong>read_dot_files</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-template~2"></span>character(len=:),</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>template</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-template_format~2"></span>integer,</td>
-  <td>allocatable</td><td>::</td>
-  <td><strong>template_format</strong></td><td></td><td></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" id="variable-unpaired"></span>integer</td>
-  <td></td><td>::</td>
-  <td><strong>unpaired</strong></td><td></td><td></td><td></td>
-</tr>
-</tbody>
-</table>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+<th></th><th>Initial</th>        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-charge~7"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>charge</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error~37"></span>
+              type(<a href='../type/error_type.html'>error_type</a>),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>error</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-filename~7"></span>
+              character(len=:),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>filename</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-input~2"></span>
+              character(len=:),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>input</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-input_format~2"></span>
+              integer,
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>input_format</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mol~11"></span>
+              type(<a href='../type/structure_type.html'>structure_type</a>)
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>mol</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-mol_template"></span>
+              type(<a href='../type/structure_type.html'>structure_type</a>),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>mol_template</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-normalize~2"></span>
+              logical
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>normalize</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-output~2"></span>
+              character(len=:),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>output</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-output_format~2"></span>
+              integer,
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>output_format</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-prog_name"></span>
+              character(len=*),
+            </td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>prog_name</strong></td>
+<td> =</td>
+                <td>"mctc-convert"</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-read_dot_files~2"></span>
+              logical
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>read_dot_files</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-template~2"></span>
+              character(len=:),
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>template</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-template_format~2"></span>
+              integer,
+            </td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>template_format</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-unpaired"></span>
+              integer
+            </td>
+            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>unpaired</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
 
     </section>
     <br>
@@ -350,78 +590,153 @@ in a similar manner.</p>
     <section>
     <h2>Functions</h2>
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-dirname"></span><h3>function <a href='../proc/dirname.html'>dirname</a>(filename)</h3></div>
-  <div class="panel-body">
-       
-<p>Extract dirname from path</p>
-    
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>character(len=*),</td>
+    <div class="panel-heading codesum"><span class="anchor" id="proc-dirname"></span><h3> function <a href='../proc/dirname.html'>dirname</a>(filename)  
+</h3></div>
+    <div class="panel-body">
+          
+  <p>Extract dirname from path</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=*),
+            </td>
 <td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>filename</strong></td><td></td>
-</tr>
-</tbody>
-</table>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>filename</strong></td>
+            <td>
 
-<h4>Return Value <small>character(len=:),allocatable</small></h4>  
+            </td>
+        </tr>
+    </tbody>
+  </table>
 
-  </div>
+    <h4>
+    Return Value
+    <small>character(len=:), allocatable</small>
+    </h4>
+    
+
+    </div>
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-exists"></span><h3>function <a href='../proc/exists.html'>exists</a>(filename)</h3></div>
-  <div class="panel-body">
-       
-<p>test if pathname already exists</p>
-    
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>character(len=*),</td>
+    <div class="panel-heading codesum"><span class="anchor" id="proc-exists"></span><h3> function <a href='../proc/exists.html'>exists</a>(filename)  
+</h3></div>
+    <div class="panel-body">
+          
+  <p>test if pathname already exists</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=*),
+            </td>
 <td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>filename</strong></td><td></td>
-</tr>
-</tbody>
-</table>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>filename</strong></td>
+            <td>
 
-<h4>Return Value <small>logical</small></h4>  
+            </td>
+        </tr>
+    </tbody>
+  </table>
 
-  </div>
+    <h4>
+    Return Value
+    <small>logical</small>
+    </h4>
+    
+
+    </div>
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-join"></span><h3>function <a href='../proc/join.html'>join</a>(a1, a2) result(path)</h3></div>
-  <div class="panel-body">
-       
-<p>Construct path by joining strings with os file separator</p>
+    <div class="panel-heading codesum"><span class="anchor" id="proc-join"></span><h3> function <a href='../proc/join.html'>join</a>(a1, a2) result(path)  
+</h3></div>
+    <div class="panel-body">
+          
+  <p>Construct path by joining strings with os file separator</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>a1</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>a2</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>character(len=:), allocatable</small>
+    </h4>
     
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>character(len=*),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>a1</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>character(len=*),</td>
-<td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>a2</strong></td><td></td>
-</tr>
-</tbody>
-</table>
 
-<h4>Return Value <small>character(len=:),allocatable</small></h4>  
-
-  </div>
+    </div>
   </div>
 
     </section>
@@ -431,143 +746,313 @@ in a similar manner.</p>
     <section>
     <h2>Subroutines</h2>
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-get_arguments"></span><h3>subroutine <a href='../proc/get_arguments.html'>get_arguments</a>(input, input_format, output, output_format, normalize, template, template_format, read_dot_files, error)</h3></div>
-  <div class="panel-body">
-           
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>character(len=:),</td>
+    <div class="panel-heading codesum"><span class="anchor" id="proc-get_arguments"></span><h3> subroutine <a href='../proc/get_arguments.html'>get_arguments</a>(input, input_format, output, output_format, normalize, template, template_format, read_dot_files, error)  
+</h3></div>
+    <div class="panel-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=:),
+            </td>
 <td></td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>input</strong></td><td><p>Input file name</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>integer,</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>input</strong></td>
+            <td>
+<p>Input file name</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
 <td>intent(out),</td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>input_format</strong></td><td><p>Input file format</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>character(len=:),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>input_format</strong></td>
+            <td>
+<p>Input file format</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=:),
+            </td>
 <td></td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>output</strong></td><td><p>Output file name</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>integer,</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>output</strong></td>
+            <td>
+<p>Output file name</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
 <td>intent(out),</td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>output_format</strong></td><td><p>Output file format</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>logical,</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>output_format</strong></td>
+            <td>
+<p>Output file format</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              logical,
+            </td>
 <td>intent(out)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>normalize</strong></td><td><p>Normalize element symbols</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>character(len=:),</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>normalize</strong></td>
+            <td>
+<p>Normalize element symbols</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=:),
+            </td>
 <td></td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>template</strong></td><td><p>Template file name</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>integer,</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>template</strong></td>
+            <td>
+<p>Template file name</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
 <td>intent(out),</td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>template_format</strong></td><td><p>Template file format</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>logical,</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>template_format</strong></td>
+            <td>
+<p>Template file format</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              logical,
+            </td>
 <td>intent(out)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>read_dot_files</strong></td><td><p>Read information from .CHRG and .UHF files</p></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>type(<a href='../type/error_type.html'>error_type</a>),</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>read_dot_files</strong></td>
+            <td>
+<p>Read information from .CHRG and .UHF files</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/error_type.html'>error_type</a>),
+            </td>
 <td>intent(out),</td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>error</strong></td><td><p>Error handling</p></td>
-</tr>
-</tbody>
-</table>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>error</strong></td>
+            <td>
+<p>Error handling</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
 
 
-  </div>
+    </div>
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-help"></span><h3>subroutine <a href='../proc/help.html'>help</a>(unit)</h3></div>
-  <div class="panel-body">
-           
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>integer,</td>
+    <div class="panel-heading codesum"><span class="anchor" id="proc-help"></span><h3> subroutine <a href='../proc/help.html'>help</a>(unit)  
+</h3></div>
+    <div class="panel-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
 <td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>unit</strong></td><td></td>
-</tr>
-</tbody>
-</table>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>unit</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
 
 
-  </div>
+    </div>
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-read_file"></span><h3>subroutine <a href='../proc/read_file.html'>read_file</a>(filename, val, error)</h3></div>
-  <div class="panel-body">
-           
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>character(len=*),</td>
+    <div class="panel-heading codesum"><span class="anchor" id="proc-read_file"></span><h3> subroutine <a href='../proc/read_file.html'>read_file</a>(filename, val, error)  
+</h3></div>
+    <div class="panel-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              character(len=*),
+            </td>
 <td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>filename</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>integer,</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>filename</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
 <td>intent(out)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>val</strong></td><td></td>
-</tr>
-<tr>
-  <td><span class="anchor" ></span>type(<a href='../type/error_type.html'>error_type</a>),</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>val</strong></td>
+            <td>
+
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              type(<a href='../type/error_type.html'>error_type</a>),
+            </td>
 <td>intent(out),</td>
-  <td></td>  <td>allocatable</td><td>::</td>
-  <td><strong>error</strong></td><td></td>
-</tr>
-</tbody>
-</table>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>error</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
 
 
-  </div>
+    </div>
   </div>
 
       <div class="panel panel-default">
-  <div class="panel-heading codesum"><span class="anchor" id="proc-version"></span><h3>subroutine <a href='../proc/version.html'>version</a>(unit)</h3></div>
-  <div class="panel-body">
-           
-<h4>Arguments</h4>      <table class="table table-striped varlist">
-<thead><tr><th>Type</th><th>Intent</th><th>Optional</th><th>Attributes</th><th></th><th>Name</th><th></th></thead>
-<tbody>
-<tr>
-  <td><span class="anchor" ></span>integer,</td>
+    <div class="panel-heading codesum"><span class="anchor" id="proc-version"></span><h3> subroutine <a href='../proc/version.html'>version</a>(unit)  
+</h3></div>
+    <div class="panel-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th>Type</th>
+<th>Intent</th><th>Optional</th>        <th>Attributes</th>
+        <th></th>
+        <th>Name</th>
+        <th></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" ></span>
+              integer,
+            </td>
 <td>intent(in)</td>
-  <td></td>  <td></td><td>::</td>
-  <td><strong>unit</strong></td><td></td>
-</tr>
-</tbody>
-</table>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>unit</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
 
 
-  </div>
+    </div>
   </div>
 
     </section>    
@@ -902,14 +1387,14 @@ in a similar manner.</p>
     <footer>
       <div class="container">
       <div class="row">
-        <div class="col-xs-6 col-md-6"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2022 
+        <div class="col-xs-6 col-md-6"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2023 
 </p>
         </div>
         <div class="col-xs-6 col-md-6">
           <p class="text-right">
             Documentation generated by 
             <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2022-08-05 17:51            </p>
+ on 2023-03-07 22:21            </p>
         </div>
       </div>
       <br>
