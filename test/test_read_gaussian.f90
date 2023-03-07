@@ -44,6 +44,7 @@ end subroutine collect_read_gaussian
 
 subroutine test_valid1_ein(error)
 
+   use mctc_env_accuracy, only : wp
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
@@ -71,6 +72,15 @@ subroutine test_valid1_ein(error)
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
    if (allocated(error)) return
+   
+   call check(error, struc%xyz(1,1), 0.000000000000_wp, thr=1.0e-10_wp, message="Coordinates do not match")
+   if (allocated(error)) return
+  
+   call check(error, struc%xyz(3,2), 0.528409372569_wp, thr=1.0e-10_wp,message="Coordinates do not match")
+   if (allocated(error)) return
+   
+   call check(error, struc%xyz(2,3), -1.573811509290_wp, thr=1.0e-10_wp, message="Coordinates do not match")
+  if (allocated(error)) return
 
 end subroutine test_valid1_ein
 
