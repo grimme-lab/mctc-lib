@@ -15,16 +15,26 @@
 module mctc_io_write_turbomole
    use mctc_env_accuracy, only : wp
    use mctc_io_structure, only : structure_type
+   use mctc_io_convert, only : autoaa
    implicit none
    private
 
    public :: write_coord
 
-
 contains
 
+subroutine write_coord(mol,unit)
+   class(structure_type), intent(in) :: mol
+   integer, intent(in) :: unit
 
-subroutine write_coord(mol, unit)
+   if (mol%info%angs_coord) then
+      call write_coord_angstrom(mol, unit)
+   else
+      call write_coord_bohr(mol, unit)
+   end if
+end subroutine write_coord
+
+subroutine write_coord_bohr(mol, unit)
    class(structure_type), intent(in) :: mol
    integer, intent(in) :: unit
    integer :: iat, ilt, npbc
@@ -57,7 +67,43 @@ subroutine write_coord(mol, unit)
    end if
    write(unit, '(a)') "$end"
 
-end subroutine write_coord
+end subroutine write_coord_bohr
 
+subroutine write_coord_angstrom(mol,unit)
+   class(structure_type), intent(in) :: mol
+   integer, intent(in) :: unit
+   integer :: iat, ilt, npbc
+   logical :: expo
+
+   write(unit, '(a)') "$coord angs"
+   expo = maxval(mol%xyz) > 1.0e+5 .or. minval(mol%xyz) < -1.0e+5
+   if (expo) then
+      do iat = 1, mol%nat
+         write(unit, '(3es24.14, 6x, a)') mol%xyz(:, iat) * autoaa, &
+            trim(mol%sym(mol%id(iat)))
+      end do
+   else
+      do iat = 1, mol%nat
+         write(unit, '(3f24.14, 6x, a)') mol%xyz(:, iat) * autoaa, &
+            trim(mol%sym(mol%id(iat)))
+      end do
+   end if
+   if (any([nint(mol%charge), mol%uhf] /= 0)) then
+      write(unit, '(a, *(1x, a, "=", i0))') &
+         "$eht", "charge", nint(mol%charge), "unpaired", mol%uhf
+   end if
+   if (any(mol%periodic)) then
+      write(unit, '(a, 1x, i0)') "$periodic", count(mol%periodic)
+      npbc = count(mol%periodic)
+      if (size(mol%lattice, 2) == 3) then
+         write(unit, '(a)') "$lattice angs"
+         do ilt = 1, npbc
+            write(unit, '(3f20.14)') mol%lattice(:npbc, ilt) * autoaa
+         end do
+      end if
+   end if
+   write(unit, '(a)') "$end"
+
+end subroutine write_coord_angstrom
 
 end module mctc_io_write_turbomole
