@@ -46,6 +46,14 @@ target_compile_definitions(
   PRIVATE
   "WITH_JSON=$<BOOL:${WITH_JSON}>"
 )
+if(WITH_OpenMP)
+  find_package(OpenMP REQUIRED)
+  target_link_libraries(
+    "${PROJECT_NAME}-lib"
+    PRIVATE
+    OpenMP::OpenMP_Fortran
+  )
+endif()
 if(WITH_JSON)
   target_link_libraries(
     "${PROJECT_NAME}-lib"
