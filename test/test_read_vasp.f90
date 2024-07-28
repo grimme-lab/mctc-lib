@@ -44,7 +44,8 @@ subroutine collect_read_vasp(testsuite)
       & new_unittest("invalid4-poscar", test_invalid4_poscar, should_fail=.true.), &
       & new_unittest("invalid5-poscar", test_invalid5_poscar, should_fail=.true.), &
       & new_unittest("invalid6-poscar", test_invalid6_poscar, should_fail=.true.), &
-      & new_unittest("invalid7-poscar", test_invalid7_poscar, should_fail=.true.) &
+      & new_unittest("invalid7-poscar", test_invalid7_poscar, should_fail=.true.), &
+      & new_unittest("issue60", test_issue60) &
       & ]
 
 end subroutine collect_read_vasp
@@ -474,6 +475,39 @@ subroutine test_invalid7_poscar(error)
    if (allocated(error)) return
 
 end subroutine test_invalid7_poscar
+
+
+subroutine test_issue60(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "POSCAR", &
+      "3.0", &
+      "1.0  0.0  0.0", &
+      "0.0  1.0  0.0", &
+      "0.0  0.0  1.0", &
+      "S", &
+      "1", &
+      "direct", &
+      "0.0  0.0  0.0"
+   rewind(unit)
+
+   call read_vasp(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 1, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 1, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_issue60
 
 
 end module test_read_vasp

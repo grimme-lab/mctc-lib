@@ -68,7 +68,7 @@ subroutine read_vasp(self, unit, error)
       return
    end if
 
-   call parse_line(line, args, ntype)
+   call parse_line(" " // line, args, ntype)
    call move_alloc(line, comment)
 
    ! this line contains the global scaling factor,
@@ -120,7 +120,7 @@ subroutine read_vasp(self, unit, error)
 
    ! CONTCAR files have additional Element line here since vasp.5.1
    if (verify(line(i:j), '1234567890') /= 0) then
-      call parse_line(line, args, ntype)
+      call parse_line(" " // line, args, ntype)
       call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
          call fatal_error(error, "Unexpected end of input encountered")
@@ -129,7 +129,7 @@ subroutine read_vasp(self, unit, error)
    else
       deallocate(comment)
    end if
-   call parse_line(line, args2, nn)
+   call parse_line(" " // line, args2, nn)
    if (nn /= ntype) then
       call fatal_error(error, 'Number of atom types mismatches the number of counts')
       return
