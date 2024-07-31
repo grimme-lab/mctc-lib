@@ -101,7 +101,7 @@ jobs:
 
     - name: Install fpm
       if: ${{ matrix.build == 'fpm' }}
-      - uses: fortran-lang/setup-fpm@v5
+      uses: fortran-lang/setup-fpm@v5
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -222,4 +222,3 @@ jobs:
     - name: Upload coverage report
       if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
       uses: codecov/codecov-action@v4
-
