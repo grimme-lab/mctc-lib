@@ -238,7 +238,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~5"></span>
+              <span class="anchor" id="variable-line~24"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -253,7 +253,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pos~5"></span>
+              <span class="anchor" id="variable-pos~23"></span>
               integer,
             </td>
 <td>intent(inout)</td>
@@ -268,7 +268,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~3"></span>
+              <span class="anchor" id="variable-token~15"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(inout)</td>
@@ -283,228 +283,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~7"></span>
-              integer,
-            </td>
-<td>intent(out)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>val</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-iostat~3"></span>
-              integer,
-            </td>
-<td>intent(out)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>iostat</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-iomsg~3"></span>
-              character(len=:),
-            </td>
-<td>intent(out),</td>
-              <td>optional,</td>            <td>
-              allocatable
-            </td>
-            <td>::</td>
-            <td><strong>iomsg</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-          </li>
-          <li class="list-group-item">
-                <h3>
-    private  subroutine read_next_token_real(line, pos, token, val, iostat, iomsg)  
-
-    </h3>
-  
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-line~7"></span>
-              character(len=*),
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>line</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-pos~6"></span>
-              integer,
-            </td>
-<td>intent(inout)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>pos</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-token~5"></span>
-              type(<a href='../type/token_type.html'>token_type</a>),
-            </td>
-<td>intent(inout)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>token</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-val~9"></span>
-              real(kind=wp),
-            </td>
-<td>intent(out)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>val</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-iostat~5"></span>
-              integer,
-            </td>
-<td>intent(out)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>iostat</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-iomsg~5"></span>
-              character(len=:),
-            </td>
-<td>intent(out),</td>
-              <td>optional,</td>            <td>
-              allocatable
-            </td>
-            <td>::</td>
-            <td><strong>iomsg</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-          </li>
-    </ul>
-  </div>
-
-              <div class="card">
-    <div class="card-header bg-light codesum">
-      <span class="anchor" id="interface-read_token"></span>
-      <h3>public        interface <a href='../interface/read_token.html'>read_token</a> 
-      </h3>
-    </div>
-    <ul class="list-group">
-          <li class="list-group-item">
-                <h3>
-    private  subroutine read_token_int(line, token, val, iostat, iomsg)  
-
-    </h3>
-  
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-line~6"></span>
-              character(len=*),
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>line</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-token~4"></span>
-              type(<a href='../type/token_type.html'>token_type</a>),
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>token</strong></td>
-            <td>
-                
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-val~8"></span>
+              <span class="anchor" id="variable-val~14"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -554,7 +333,7 @@
           </li>
           <li class="list-group-item">
                 <h3>
-    private  subroutine read_token_real(line, token, val, iostat, iomsg)  
+    private  subroutine read_next_token_real(line, pos, token, val, iostat, iomsg)  
 
     </h3>
   
@@ -572,7 +351,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~8"></span>
+              <span class="anchor" id="variable-line~26"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -587,10 +366,25 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~6"></span>
+              <span class="anchor" id="variable-pos~24"></span>
+              integer,
+            </td>
+<td>intent(inout)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>pos</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-token~17"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
-<td>intent(in)</td>
+<td>intent(inout)</td>
               <td></td>            <td>
               
             </td>
@@ -602,7 +396,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~10"></span>
+              <span class="anchor" id="variable-val~16"></span>
               real(kind=wp),
             </td>
 <td>intent(out)</td>
@@ -633,6 +427,212 @@
         <tr>
             <td>
               <span class="anchor" id="variable-iomsg~6"></span>
+              character(len=:),
+            </td>
+<td>intent(out),</td>
+              <td>optional,</td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>iomsg</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+          </li>
+    </ul>
+  </div>
+
+              <div class="card">
+    <div class="card-header bg-light codesum">
+      <span class="anchor" id="interface-read_token"></span>
+      <h3>public        interface <a href='../interface/read_token.html'>read_token</a> 
+      </h3>
+    </div>
+    <ul class="list-group">
+          <li class="list-group-item">
+                <h3>
+    private  subroutine read_token_int(line, token, val, iostat, iomsg)  
+
+    </h3>
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-line~25"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>line</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-token~16"></span>
+              type(<a href='../type/token_type.html'>token_type</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>token</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-val~15"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>val</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-iostat~5"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>iostat</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-iomsg~5"></span>
+              character(len=:),
+            </td>
+<td>intent(out),</td>
+              <td>optional,</td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>iomsg</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+          </li>
+          <li class="list-group-item">
+                <h3>
+    private  subroutine read_token_real(line, token, val, iostat, iomsg)  
+
+    </h3>
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-line~27"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>line</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-token~18"></span>
+              type(<a href='../type/token_type.html'>token_type</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>token</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-val~17"></span>
+              real(kind=wp),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>val</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-iostat~7"></span>
+              integer,
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>iostat</strong></td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-iomsg~7"></span>
               character(len=:),
             </td>
 <td>intent(out),</td>
@@ -684,7 +684,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-first"></span>
+              <span class="anchor" id="variable-first~2"></span>
               integer,
             </td>
               <td>public</td>
@@ -701,7 +701,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-last"></span>
+              <span class="anchor" id="variable-last~2"></span>
               integer,
             </td>
               <td>public</td>
@@ -750,7 +750,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~11"></span>
+              <span class="anchor" id="variable-unit~40"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -795,7 +795,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~6"></span>
+              <span class="anchor" id="variable-val~13"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -860,7 +860,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~9"></span>
+              <span class="anchor" id="variable-unit~38"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -875,7 +875,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~2"></span>
+              <span class="anchor" id="variable-line~21"></span>
               character(len=:),
             </td>
 <td>intent(out),</td>
@@ -890,7 +890,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-iostat"></span>
+              <span class="anchor" id="variable-iostat~2"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -905,7 +905,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-iomsg"></span>
+              <span class="anchor" id="variable-iomsg~2"></span>
               character(len=:),
             </td>
 <td></td>
@@ -945,7 +945,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~5"></span>
+              <span class="anchor" id="variable-error~38"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -960,7 +960,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-message~2"></span>
+              <span class="anchor" id="variable-message~17"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -1020,7 +1020,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token2"></span>
+              <span class="anchor" id="variable-token2~2"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(in)</td>
@@ -1035,7 +1035,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-filename~3"></span>
+              <span class="anchor" id="variable-filename~7"></span>
               character(len=*),
             </td>
 <td>intent(in),</td>
@@ -1135,7 +1135,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~4"></span>
+              <span class="anchor" id="variable-error~37"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -1150,7 +1150,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-message"></span>
+              <span class="anchor" id="variable-message~16"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -1180,7 +1180,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~2"></span>
+              <span class="anchor" id="variable-token~14"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(in)</td>
@@ -1195,7 +1195,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-filename~2"></span>
+              <span class="anchor" id="variable-filename~6"></span>
               character(len=*),
             </td>
 <td>intent(in),</td>
@@ -1210,7 +1210,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~4"></span>
+              <span class="anchor" id="variable-line~23"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -1265,7 +1265,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~10"></span>
+              <span class="anchor" id="variable-unit~39"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -1280,7 +1280,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~3"></span>
+              <span class="anchor" id="variable-line~22"></span>
               character(len=:),
             </td>
 <td>intent(out),</td>
@@ -1295,7 +1295,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pos~2"></span>
+              <span class="anchor" id="variable-pos~20"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1310,7 +1310,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lnum"></span>
+              <span class="anchor" id="variable-lnum~15"></span>
               integer,
             </td>
 <td>intent(inout)</td>
@@ -1325,7 +1325,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-iostat~2"></span>
+              <span class="anchor" id="variable-iostat~3"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1340,7 +1340,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-iomsg~2"></span>
+              <span class="anchor" id="variable-iomsg~3"></span>
               character(len=:),
             </td>
 <td></td>
@@ -1380,7 +1380,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-string~8"></span>
+              <span class="anchor" id="variable-string~17"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -1395,7 +1395,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pos~3"></span>
+              <span class="anchor" id="variable-pos~21"></span>
               integer,
             </td>
 <td>intent(inout)</td>
@@ -1410,7 +1410,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token"></span>
+              <span class="anchor" id="variable-token~13"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(out)</td>
@@ -1453,7 +1453,7 @@
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2024-08-01 06:40              </p>
+ on 2024-08-01 08:54              </p>
           </div>
         </div>
         <br>
