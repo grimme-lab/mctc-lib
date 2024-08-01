@@ -92,7 +92,7 @@
       <div class="col">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb justify-content-end mb-0">
-                <li class="breadcrumb-item"><a href='../sourcefile/vasp.f90~2.html'>vasp.f90</a></li>
+                <li class="breadcrumb-item"><a href='../sourcefile/vasp.f90.html'>vasp.f90</a></li>
                 <li class="breadcrumb-item"><a href='../module/mctc_io_read_vasp.html'>mctc_io_read_vasp</a></li>
             <li class="breadcrumb-item active" aria-current="page">read_vasp</li>
           </ol>
@@ -164,7 +164,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~23"></span>
+              <span class="anchor" id="variable-self~21"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -179,7 +179,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~32"></span>
+              <span class="anchor" id="variable-unit~38"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -194,7 +194,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~34"></span>
+              <span class="anchor" id="variable-error~38"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -260,7 +260,7 @@
 <span class="w">      </span><span class="k">return</span>
 <span class="k">   end if</span>
 
-<span class="k">   call </span><span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">ntype</span><span class="p">)</span>
+<span class="k">   call </span><span class="n">parse_line</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">ntype</span><span class="p">)</span>
 <span class="w">   </span><span class="k">call </span><span class="nb">move_alloc</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">comment</span><span class="p">)</span>
 
 <span class="w">   </span><span class="c">! this line contains the global scaling factor,</span>
@@ -312,7 +312,7 @@
 
 <span class="w">   </span><span class="c">! CONTCAR files have additional Element line here since vasp.5.1</span>
 <span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">verify</span><span class="p">(</span><span class="n">line</span><span class="p">(</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">),</span><span class="w"> </span><span class="s1">&#39;1234567890&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
-<span class="k">      call </span><span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">ntype</span><span class="p">)</span>
+<span class="k">      call </span><span class="n">parse_line</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">,</span><span class="w"> </span><span class="n">ntype</span><span class="p">)</span>
 <span class="w">      </span><span class="k">call </span><span class="n">next_line</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span><span class="w"> </span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">pos</span><span class="p">,</span><span class="w"> </span><span class="n">lnum</span><span class="p">,</span><span class="w"> </span><span class="nb">stat</span><span class="p">)</span>
 <span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">stat</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
 <span class="k">         call </span><span class="n">fatal_error</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Unexpected end of input encountered&quot;</span><span class="p">)</span>
@@ -321,7 +321,7 @@
 <span class="k">   else</span>
 <span class="k">      deallocate</span><span class="p">(</span><span class="n">comment</span><span class="p">)</span>
 <span class="w">   </span><span class="k">end if</span>
-<span class="k">   call </span><span class="n">parse_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">args2</span><span class="p">,</span><span class="w"> </span><span class="n">nn</span><span class="p">)</span>
+<span class="k">   call </span><span class="n">parse_line</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">line</span><span class="p">,</span><span class="w"> </span><span class="n">args2</span><span class="p">,</span><span class="w"> </span><span class="n">nn</span><span class="p">)</span>
 <span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">nn</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="n">ntype</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
 <span class="k">      call </span><span class="n">fatal_error</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Number of atom types mismatches the number of counts&#39;</span><span class="p">)</span>
 <span class="w">      </span><span class="k">return</span>
@@ -421,7 +421,7 @@
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2024-08-01 08:54              </p>
+ on 2024-08-01 08:55              </p>
           </div>
         </div>
         <br>
