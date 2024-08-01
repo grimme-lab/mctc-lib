@@ -1,3 +1,5 @@
+<!-- -*- mode: jinja2 -*- -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,7 +19,8 @@
     <link href="../css/local.css" rel="stylesheet">
       <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
   </head>
 
   <body>
@@ -76,8 +79,7 @@
         <ul class="list-inline" style="margin-bottom:0px;display:inline">
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
-              <a data-bs-toggle="tooltip"
-                 data-bs-placement="bottom" data-html="true"
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
                  title="<p>29.0% of total for derived types.</p>Including implementation: 18 statements, 29.0% of total for derived types.">18 statements</a>
             </li>
 
@@ -118,22 +120,22 @@
       </a>
       <div id="vars-0" class="collapse">
         <div class="list-group list-group-flush">
-            <a class="list-group-item" href="../type/structure_type.html#variable-bond">bond</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-charge">charge</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-comment">comment</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-bond~5">bond</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-charge~10">charge</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-comment~5">comment</a>
             <a class="list-group-item" href="../type/structure_type.html#variable-id">id</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-info">info</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-lattice~2">lattice</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-nat">nat</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-info~6">info</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-lattice~11">lattice</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-nat~3">nat</a>
             <a class="list-group-item" href="../type/structure_type.html#variable-nbd">nbd</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-nid">nid</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-num">num</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-pdb">pdb</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-periodic">periodic</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-sdf">sdf</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-sym">sym</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-nid~3">nid</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-num~3">num</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-pdb~3">pdb</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-periodic~5">periodic</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-sdf~4">sdf</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-sym~10">sym</a>
             <a class="list-group-item" href="../type/structure_type.html#variable-uhf">uhf</a>
-            <a class="list-group-item" href="../type/structure_type.html#variable-xyz">xyz</a>
+            <a class="list-group-item" href="../type/structure_type.html#variable-xyz~12">xyz</a>
         </div>
       </div>
     </div>
@@ -169,7 +171,8 @@
     </div>
     
     <div class="col-md-9" id='text'>
-      <h2>type, public :: structure_type</h2>
+      <h2 id="type-def-statement">
+        type, public :: structure_type</h2>
     <p>Structure representation</p>
     <br>
 
@@ -187,7 +190,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond"></span>
+              <span class="anchor" id="variable-bond~5"></span>
               integer,
             </td>
               <td>public,</td>
@@ -204,7 +207,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge"></span>
+              <span class="anchor" id="variable-charge~10"></span>
               real(kind=wp),
             </td>
               <td>public</td>
@@ -221,7 +224,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-comment"></span>
+              <span class="anchor" id="variable-comment~5"></span>
               character(len=:),
             </td>
               <td>public,</td>
@@ -255,8 +258,8 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info"></span>
-              type(<a href='../type/structure_info.html'>structure_info</a>),
+              <span class="anchor" id="variable-info~6"></span>
+              type(<a href='structure_info.html'>structure_info</a>),
             </td>
               <td>public</td>
             <td>
@@ -272,7 +275,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lattice~2"></span>
+              <span class="anchor" id="variable-lattice~11"></span>
               real(kind=wp),
             </td>
               <td>public,</td>
@@ -289,7 +292,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-nat"></span>
+              <span class="anchor" id="variable-nat~3"></span>
               integer,
             </td>
               <td>public</td>
@@ -323,7 +326,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-nid"></span>
+              <span class="anchor" id="variable-nid~3"></span>
               integer,
             </td>
               <td>public</td>
@@ -340,7 +343,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-num"></span>
+              <span class="anchor" id="variable-num~3"></span>
               integer,
             </td>
               <td>public,</td>
@@ -357,8 +360,8 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pdb"></span>
-              type(<a href='../type/pdb_data.html'>pdb_data</a>),
+              <span class="anchor" id="variable-pdb~3"></span>
+              type(<a href='pdb_data.html'>pdb_data</a>),
             </td>
               <td>public,</td>
             <td>
@@ -374,7 +377,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-periodic"></span>
+              <span class="anchor" id="variable-periodic~5"></span>
               logical,
             </td>
               <td>public,</td>
@@ -391,8 +394,8 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sdf"></span>
-              type(<a href='../type/sdf_data.html'>sdf_data</a>),
+              <span class="anchor" id="variable-sdf~4"></span>
+              type(<a href='sdf_data.html'>sdf_data</a>),
             </td>
               <td>public,</td>
             <td>
@@ -408,7 +411,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sym"></span>
+              <span class="anchor" id="variable-sym~10"></span>
               character(len=symbol_length),
             </td>
               <td>public,</td>
@@ -442,7 +445,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz"></span>
+              <span class="anchor" id="variable-xyz~12"></span>
               real(kind=wp),
             </td>
               <td>public,</td>
@@ -531,14 +534,17 @@
     <footer>
       <div class="container">
         <div class="row justify-content-between">
-          <div class="col"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2023 
+          <div class="col">
+            <p>
+              MCTC-library
+ was developed by Grimme group, Bonn<br>              &copy; 2024 
 </p>
           </div>
           <div class="col">
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2023-12-04 16:35              </p>
+ on 2024-08-01 06:40              </p>
           </div>
         </div>
         <br>

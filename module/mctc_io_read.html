@@ -1,3 +1,5 @@
+<!-- -*- mode: jinja2 -*- -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,7 +19,8 @@
     <link href="../css/local.css" rel="stylesheet">
       <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
   </head>
 
   <body>
@@ -76,8 +79,7 @@
         <ul class="list-inline" style="margin-bottom:0px;display:inline">
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
-              <a data-bs-toggle="tooltip"
-                 data-bs-placement="bottom" data-html="true"
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
                  title=" 2.1% of total for modules and submodules.">102 statements</a>
             </li>
 
@@ -176,20 +178,20 @@
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
               <ul class="list-inline">
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_pdb.html'>mctc_io_read_pdb</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_filetype.html'>mctc_io_filetype</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_qchem.html'>mctc_io_read_qchem</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_structure.html'>mctc_io_structure</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_xyz.html'>mctc_io_read_xyz</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_aims.html'>mctc_io_read_aims</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_env_error.html'>mctc_env_error</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_gaussian.html'>mctc_io_read_gaussian</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_ctfile.html'>mctc_io_read_ctfile</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_turbomole.html'>mctc_io_read_turbomole</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_genformat.html'>mctc_io_read_genformat</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_qcschema.html'>mctc_io_read_qcschema</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_vasp.html'>mctc_io_read_vasp</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_read_cjson.html'>mctc_io_read_cjson</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_filetype.html'>mctc_io_filetype</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_xyz.html'>mctc_io_read_xyz</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_cjson.html'>mctc_io_read_cjson</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_qchem.html'>mctc_io_read_qchem</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_aims.html'>mctc_io_read_aims</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_ctfile.html'>mctc_io_read_ctfile</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_pdb.html'>mctc_io_read_pdb</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_structure.html'>mctc_io_structure</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_vasp.html'>mctc_io_read_vasp</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_gaussian.html'>mctc_io_read_gaussian</a></li>
+                  <li class="list-inline-item"><a href='mctc_env_error.html'>mctc_env_error</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_turbomole.html'>mctc_io_read_turbomole</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_qcschema.html'>mctc_io_read_qcschema</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_genformat.html'>mctc_io_read_genformat</a></li>
               </ul>
             </li>
         </ul>
@@ -231,7 +233,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~11"></span>
+              <span class="anchor" id="variable-self~3"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -246,7 +248,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-file~2"></span>
+              <span class="anchor" id="variable-file"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -261,7 +263,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~21"></span>
+              <span class="anchor" id="variable-error~2"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -276,7 +278,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-format~2"></span>
+              <span class="anchor" id="variable-format"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -314,7 +316,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~12"></span>
+              <span class="anchor" id="variable-self~4"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -329,7 +331,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~10"></span>
+              <span class="anchor" id="variable-unit~4"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -359,7 +361,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~22"></span>
+              <span class="anchor" id="variable-error~3"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -410,7 +412,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~10"></span>
+              <span class="anchor" id="variable-self~2"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -425,7 +427,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~9"></span>
+              <span class="anchor" id="variable-unit~2"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -440,7 +442,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~20"></span>
+              <span class="anchor" id="variable-error"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -469,7 +471,7 @@
         <section>
           <h2>Subroutines</h2>
               <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-get_structure_reader"></span><h3>public  subroutine <a href='../proc/get_structure_reader.html'>get_structure_reader</a>(reader, ftype)  
+    <div class="card-header codesum"><span class="anchor" id="proc-get_structure_reader"></span> <h3>public  subroutine <a href='../proc/get_structure_reader.html'>get_structure_reader</a>(reader, ftype)  
 </h3></div>
     <div class="card-body">
           
@@ -488,7 +490,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-reader"></span>
+              <span class="anchor" id="variable-reader~2"></span>
               procedure(<a href='../interface/structure_reader.html'>structure_reader</a>),
             </td>
 <td>intent(out),</td>
@@ -536,14 +538,17 @@
     <footer>
       <div class="container">
         <div class="row justify-content-between">
-          <div class="col"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2023 
+          <div class="col">
+            <p>
+              MCTC-library
+ was developed by Grimme group, Bonn<br>              &copy; 2024 
 </p>
           </div>
           <div class="col">
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2023-12-04 16:35              </p>
+ on 2024-08-01 06:40              </p>
           </div>
         </div>
         <br>

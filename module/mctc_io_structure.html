@@ -1,3 +1,5 @@
+<!-- -*- mode: jinja2 -*- -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,7 +19,8 @@
     <link href="../css/local.css" rel="stylesheet">
       <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
   </head>
 
   <body>
@@ -76,8 +79,7 @@
         <ul class="list-inline" style="margin-bottom:0px;display:inline">
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
-              <a data-bs-toggle="tooltip"
-                 data-bs-placement="bottom" data-html="true"
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
                  title=" 2.7% of total for modules and submodules.">133 statements</a>
             </li>
 
@@ -176,9 +178,9 @@
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
               <ul class="list-inline">
-                  <li class="list-inline-item"><a href='../module/mctc_io_symbols.html'>mctc_io_symbols</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_env_accuracy.html'>mctc_env_accuracy</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_structure_info.html'>mctc_io_structure_info</a></li>
+                  <li class="list-inline-item"><a href='mctc_env_accuracy.html'>mctc_env_accuracy</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_symbols.html'>mctc_io_symbols</a></li>
               </ul>
             </li>
         </ul>
@@ -221,7 +223,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~7"></span>
+              <span class="anchor" id="variable-self~22"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -236,7 +238,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-num~2"></span>
+              <span class="anchor" id="variable-num~4"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -251,7 +253,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sym~2"></span>
+              <span class="anchor" id="variable-sym~11"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -266,7 +268,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz~2"></span>
+              <span class="anchor" id="variable-xyz~13"></span>
               real(kind=wp),
             </td>
 <td>intent(in)</td>
@@ -281,7 +283,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge~2"></span>
+              <span class="anchor" id="variable-charge~11"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -311,7 +313,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lattice~3"></span>
+              <span class="anchor" id="variable-lattice~12"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -326,7 +328,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-periodic~2"></span>
+              <span class="anchor" id="variable-periodic~6"></span>
               logical,
             </td>
 <td>intent(in),</td>
@@ -341,7 +343,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info~2"></span>
+              <span class="anchor" id="variable-info~7"></span>
               type(<a href='../type/structure_info.html'>structure_info</a>),
             </td>
 <td>intent(in),</td>
@@ -356,7 +358,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond~2"></span>
+              <span class="anchor" id="variable-bond~6"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -394,7 +396,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~8"></span>
+              <span class="anchor" id="variable-self~23"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -409,7 +411,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-num~3"></span>
+              <span class="anchor" id="variable-num~5"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -424,7 +426,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz~3"></span>
+              <span class="anchor" id="variable-xyz~14"></span>
               real(kind=wp),
             </td>
 <td>intent(in)</td>
@@ -439,7 +441,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge~3"></span>
+              <span class="anchor" id="variable-charge~12"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -469,7 +471,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lattice~4"></span>
+              <span class="anchor" id="variable-lattice~13"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -484,7 +486,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-periodic~3"></span>
+              <span class="anchor" id="variable-periodic~7"></span>
               logical,
             </td>
 <td>intent(in),</td>
@@ -499,7 +501,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info~3"></span>
+              <span class="anchor" id="variable-info~8"></span>
               type(<a href='../type/structure_info.html'>structure_info</a>),
             </td>
 <td>intent(in),</td>
@@ -514,7 +516,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond~3"></span>
+              <span class="anchor" id="variable-bond~7"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -552,7 +554,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~9"></span>
+              <span class="anchor" id="variable-self~24"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -567,7 +569,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sym~3"></span>
+              <span class="anchor" id="variable-sym~13"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -582,7 +584,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz~4"></span>
+              <span class="anchor" id="variable-xyz~15"></span>
               real(kind=wp),
             </td>
 <td>intent(in)</td>
@@ -597,7 +599,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge~4"></span>
+              <span class="anchor" id="variable-charge~13"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -627,7 +629,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lattice~5"></span>
+              <span class="anchor" id="variable-lattice~14"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -642,7 +644,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-periodic~4"></span>
+              <span class="anchor" id="variable-periodic~8"></span>
               logical,
             </td>
 <td>intent(in),</td>
@@ -657,7 +659,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info~4"></span>
+              <span class="anchor" id="variable-info~9"></span>
               type(<a href='../type/structure_info.html'>structure_info</a>),
             </td>
 <td>intent(in),</td>
@@ -672,7 +674,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond~4"></span>
+              <span class="anchor" id="variable-bond~8"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -724,7 +726,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond"></span>
+              <span class="anchor" id="variable-bond~5"></span>
               integer,
             </td>
               <td>public,</td>
@@ -741,7 +743,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge"></span>
+              <span class="anchor" id="variable-charge~10"></span>
               real(kind=wp),
             </td>
               <td>public</td>
@@ -758,7 +760,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-comment"></span>
+              <span class="anchor" id="variable-comment~5"></span>
               character(len=:),
             </td>
               <td>public,</td>
@@ -792,7 +794,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info"></span>
+              <span class="anchor" id="variable-info~6"></span>
               type(<a href='../type/structure_info.html'>structure_info</a>),
             </td>
               <td>public</td>
@@ -809,7 +811,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lattice~2"></span>
+              <span class="anchor" id="variable-lattice~11"></span>
               real(kind=wp),
             </td>
               <td>public,</td>
@@ -826,7 +828,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-nat"></span>
+              <span class="anchor" id="variable-nat~3"></span>
               integer,
             </td>
               <td>public</td>
@@ -860,7 +862,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-nid"></span>
+              <span class="anchor" id="variable-nid~3"></span>
               integer,
             </td>
               <td>public</td>
@@ -877,7 +879,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-num"></span>
+              <span class="anchor" id="variable-num~3"></span>
               integer,
             </td>
               <td>public,</td>
@@ -894,7 +896,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pdb"></span>
+              <span class="anchor" id="variable-pdb~3"></span>
               type(<a href='../type/pdb_data.html'>pdb_data</a>),
             </td>
               <td>public,</td>
@@ -911,7 +913,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-periodic"></span>
+              <span class="anchor" id="variable-periodic~5"></span>
               logical,
             </td>
               <td>public,</td>
@@ -928,7 +930,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sdf"></span>
+              <span class="anchor" id="variable-sdf~4"></span>
               type(<a href='../type/sdf_data.html'>sdf_data</a>),
             </td>
               <td>public,</td>
@@ -945,7 +947,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sym"></span>
+              <span class="anchor" id="variable-sym~10"></span>
               character(len=symbol_length),
             </td>
               <td>public,</td>
@@ -979,7 +981,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz"></span>
+              <span class="anchor" id="variable-xyz~12"></span>
               real(kind=wp),
             </td>
               <td>public,</td>
@@ -1010,7 +1012,7 @@
         <section>
           <h2>Subroutines</h2>
               <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-new_structure"></span><h3>public  subroutine <a href='../proc/new_structure.html'>new_structure</a>(self, num, sym, xyz, charge, uhf, lattice, periodic, info, bond)  
+    <div class="card-header codesum"><span class="anchor" id="proc-new_structure"></span> <h3>public  subroutine <a href='../proc/new_structure.html'>new_structure</a>(self, num, sym, xyz, charge, uhf, lattice, periodic, info, bond)  
 </h3></div>
     <div class="card-body">
           
@@ -1029,7 +1031,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~7"></span>
+              <span class="anchor" id="variable-self~22"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -1044,7 +1046,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-num~2"></span>
+              <span class="anchor" id="variable-num~4"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -1059,7 +1061,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sym~2"></span>
+              <span class="anchor" id="variable-sym~11"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -1074,7 +1076,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz~2"></span>
+              <span class="anchor" id="variable-xyz~13"></span>
               real(kind=wp),
             </td>
 <td>intent(in)</td>
@@ -1089,7 +1091,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge~2"></span>
+              <span class="anchor" id="variable-charge~11"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -1119,7 +1121,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lattice~3"></span>
+              <span class="anchor" id="variable-lattice~12"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -1134,7 +1136,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-periodic~2"></span>
+              <span class="anchor" id="variable-periodic~6"></span>
               logical,
             </td>
 <td>intent(in),</td>
@@ -1149,7 +1151,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info~2"></span>
+              <span class="anchor" id="variable-info~7"></span>
               type(<a href='../type/structure_info.html'>structure_info</a>),
             </td>
 <td>intent(in),</td>
@@ -1164,7 +1166,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond~2"></span>
+              <span class="anchor" id="variable-bond~6"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -1197,14 +1199,17 @@
     <footer>
       <div class="container">
         <div class="row justify-content-between">
-          <div class="col"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2023 
+          <div class="col">
+            <p>
+              MCTC-library
+ was developed by Grimme group, Bonn<br>              &copy; 2024 
 </p>
           </div>
           <div class="col">
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2023-12-04 16:35              </p>
+ on 2024-08-01 06:40              </p>
           </div>
         </div>
         <br>

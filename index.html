@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,7 +19,8 @@
     <link href="./css/local.css" rel="stylesheet">
       <link  href="./tipuesearch/tipuesearch.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="./js/svg-pan-zoom.min.js"></script>
   </head>
 
   <body>
@@ -65,15 +68,19 @@
     </div>
 
     <div class="container">
-      <!-- Main component for a primary marketing message or call to action -->
-      <div class="p-5 mb-4 bg-light border rounded-3" id="jumbotron">
-        <p>Modular computation tool chain library</p>
-	<p> Find us on&hellip;</p>
-        <p>
-          <a class="btn btn-lg btn-primary" href="https://github.com/grimme-lab/mctc-lib" role="button">GitHub</a>
-          <a class="btn btn-lg btn-danger" style="float:right" href="https://github.com/grimme-lab/mctc-lib/releases" role="button">Download the Source</a>
-        </p>
-      </div>
+  <!-- Main component for a primary marketing message or call to action -->
+    <div class="p-5 mb-4 bg-light border rounded-3" id="jumbotron">
+      <p>Modular computation tool chain library</p>
+        <p> Find us on&hellip;</p>
+      <p>
+        <a class="btn btn-lg btn-primary" href="https://github.com/grimme-lab/mctc-lib" role="button">GitHub</a>
+        
+        
+        
+        
+        <a class="btn btn-lg btn-danger" style="float:right" href="https://github.com/grimme-lab/mctc-lib/releases" role="button">Download the Source</a>
+      </p>
+    </div>
 
       <div class="row" id='text'>
         <div class=col-md-8>
@@ -93,16 +100,16 @@ This library provides a unified way to perform operations on molecular structure
 </ul>
 </div>
 <h2 id="input-and-output">Input and Output</h2>
-<p>The IO module (<a href="/module/mctc_io.html">mctc_io</a>) provides access to a common type to declare molecular structure data (<a href="/type/structure_type.html">structure_type</a>).
-Also, reader routines (<a href="/module/mctc_io_read.html">mctc_io_read</a>) to obtain <a href="/type/structure_type.html">structure_type</a> objects from input files are available.
-To write a <a href="/type/structure_type.html">structure_type</a> object a set of writer routines are available as well (<a href="/module/mctc_io_write.html">mctc_io_write</a>).</p>
+<p>The IO module (<a href="module/mctc_io.html">mctc_io</a>) provides access to a common type to declare molecular structure data (<a href="type/structure_type.html">structure_type</a>).
+Also, reader routines (<a href="module/mctc_io_read.html">mctc_io_read</a>) to obtain <a href="type/structure_type.html">structure_type</a> objects from input files are available.
+To write a <a href="type/structure_type.html">structure_type</a> object a set of writer routines are available as well (<a href="module/mctc_io_write.html">mctc_io_write</a>).</p>
 <h2 id="standard-environment">Standard environment</h2>
-<p>The tool chain library provides an environment module (<a href="/module/mctc_env.html">mctc_env</a>) to allow the usage of common constants across different users.
-For a minimal error handling the <a href="/type/error_type.html">error_type</a> is available and should be passed as allocatable type to the library procedures.
-The allocation status of the <a href="/type/error_type.html">error_type</a> is used to determine failed executions and the respective error message is stored transparently in the <a href="/type/error_type.html">error_type</a>.</p>
+<p>The tool chain library provides an environment module (<a href="module/mctc_env.html">mctc_env</a>) to allow the usage of common constants across different users.
+For a minimal error handling the <a href="type/error_type.html">error_type</a> is available and should be passed as allocatable type to the library procedures.
+The allocation status of the <a href="type/error_type.html">error_type</a> is used to determine failed executions and the respective error message is stored transparently in the <a href="type/error_type.html">error_type</a>.</p>
 <h2 id="light-testing-framework">Light testing framework</h2>
 <p>Additionally, the environment module provides a testsuite implementation to setup a slim and light testing framework in dependent applications.
-The test framework can be easily setup by the <a href="/module/mctc_env_testing.html">mctc_env_testing</a> module.</p>
+The test framework can be easily setup by the <a href="module/mctc_env_testing.html">mctc_env_testing</a> module.</p>
 <h2 id="getting-started">Getting Started</h2>
 <h3 id="meson">Meson</h3>
 <p>Create a new meson project and include <code>mctc-lib</code> either as git-submodule in your subprojects directory or create a wrap file to fetch it from upstream:</p>
@@ -150,12 +157,19 @@ Just add it to the dependencies in your <code>fpm.toml</code> file:</p>
 </code></pre></div>
         </div>
           <div class="col-md-4">
-	        <div class="card card-body bg-light">
+            <div class="card card-body bg-light">
               <h2 class="card-title">Developer Info</h2>
               <h4 class="card-text">Grimme group, Bonn</h4>
               <p class="card-text"></p>
                 <div class="text-center"><div class="btn-group" role="group">
-                      <a class="btn btn-lg btn-primary" href="https://github.com/grimme-lab"><i class="fa fa-github fa-lg"></i></a>
+                    
+                    <a class="btn btn-lg btn-primary" href="https://github.com/grimme-lab"><i class="fa fa-github fa-lg"></i></a>
+                    
+                    
+                    
+                    
+                    
+                    
                 </div></div>
             </div>
           </div>
@@ -165,7 +179,7 @@ Just add it to the dependencies in your <code>fpm.toml</code> file:</p>
           <div class="col-xs-6 col-sm-3">
             <div>
               <h3>Source Files</h3>
-              <ul><li><a href='./sourcefile/accuracy.f90.html'>accuracy.f90</a></li><li><a href='./sourcefile/aims.f90.html'>aims.f90</a></li><li><a href='./sourcefile/aims.f90~2.html'>aims.f90</a></li><li><a href='./sourcefile/cjson.f90.html'>cjson.F90</a></li><li><a href='./sourcefile/cjson.f90.html'>cjson.f90</a></li><li><a href='./sourcefile/codata2018.f90.html'>codata2018.f90</a></li><li><a href='./sourcefile/constants.f90.html'>constants.f90</a></li><li><a href='./sourcefile/convert.f90.html'>convert.f90</a></li><li><a href='./sourcefile/ctfile.f90.html'>ctfile.f90</a></li><li><a href='./sourcefile/ctfile.f90~2.html'>ctfile.f90</a></li></ul>
+              <ul><li><a href='sourcefile/accuracy.f90.html'>accuracy.f90</a></li><li><a href='sourcefile/aims.f90.html'>aims.f90</a></li><li><a href='sourcefile/aims.f90~2.html'>aims.f90</a></li><li><a href='sourcefile/cjson.f90.html'>cjson.f90</a></li><li><a href='sourcefile/cjson.f90.html'>cjson.F90</a></li><li><a href='sourcefile/codata2018.f90.html'>codata2018.f90</a></li><li><a href='sourcefile/constants.f90.html'>constants.f90</a></li><li><a href='sourcefile/convert.f90.html'>convert.f90</a></li><li><a href='sourcefile/ctfile.f90.html'>ctfile.f90</a></li><li><a href='sourcefile/ctfile.f90~2.html'>ctfile.f90</a></li></ul>
             </div>
             <div>
               <ul>
@@ -176,7 +190,7 @@ Just add it to the dependencies in your <code>fpm.toml</code> file:</p>
           <div class="col-xs-6 col-sm-3">
             <div>
               <h3>Modules</h3>
-              <ul><li><a href='./module/mctc_env.html'>mctc_env</a></li><li><a href='./module/mctc_env_accuracy.html'>mctc_env_accuracy</a></li><li><a href='./module/mctc_env_error.html'>mctc_env_error</a></li><li><a href='./module/mctc_env_system.html'>mctc_env_system</a></li><li><a href='./module/mctc_env_testing.html'>mctc_env_testing</a></li><li><a href='./module/mctc_io.html'>mctc_io</a></li><li><a href='./module/mctc_io_codata2018.html'>mctc_io_codata2018</a></li><li><a href='./module/mctc_io_constants.html'>mctc_io_constants</a></li><li><a href='./module/mctc_io_convert.html'>mctc_io_convert</a></li><li><a href='./module/mctc_io_filetype.html'>mctc_io_filetype</a></li></ul>
+              <ul><li><a href='module/mctc_env.html'>mctc_env</a></li><li><a href='module/mctc_env_accuracy.html'>mctc_env_accuracy</a></li><li><a href='module/mctc_env_error.html'>mctc_env_error</a></li><li><a href='module/mctc_env_system.html'>mctc_env_system</a></li><li><a href='module/mctc_env_testing.html'>mctc_env_testing</a></li><li><a href='module/mctc_io.html'>mctc_io</a></li><li><a href='module/mctc_io_codata2018.html'>mctc_io_codata2018</a></li><li><a href='module/mctc_io_constants.html'>mctc_io_constants</a></li><li><a href='module/mctc_io_convert.html'>mctc_io_convert</a></li><li><a href='module/mctc_io_filetype.html'>mctc_io_filetype</a></li></ul>
             </div>
             <div>
               <ul>
@@ -187,7 +201,7 @@ Just add it to the dependencies in your <code>fpm.toml</code> file:</p>
           <div class="col-xs-6 col-sm-3">
             <div>
               <h3>Procedures</h3>
-              <ul><li><a href='./interface/check.html'>check</a></li><li><a href='./proc/collect_identical.html'>collect_identical</a></li><li><a href='./proc/crossprod.html'>crossprod</a></li><li><a href='./proc/dirname.html'>dirname</a></li><li><a href='./proc/eigval_3x3.html'>eigval_3x3</a></li><li><a href='./proc/eigvec_3x3.html'>eigvec_3x3</a></li><li><a href='./proc/exists.html'>exists</a></li><li><a href='./proc/fatal_error.html'>fatal_error</a></li><li><a href='./proc/filename.html'>filename</a></li><li><a href='./proc/get_argument.html'>get_argument</a></li></ul>
+              <ul><li><a href='interface/check.html'>check</a></li><li><a href='proc/collect_identical.html'>collect_identical</a></li><li><a href='proc/crossprod.html'>crossprod</a></li><li><a href='proc/dirname.html'>dirname</a></li><li><a href='proc/eigval_3x3.html'>eigval_3x3</a></li><li><a href='proc/eigvec_3x3.html'>eigvec_3x3</a></li><li><a href='proc/exists.html'>exists</a></li><li><a href='proc/fatal_error.html'>fatal_error</a></li><li><a href='proc/filename.html'>filename</a></li><li><a href='proc/get_argument.html'>get_argument</a></li></ul>
             </div>
             <div>
               <ul>
@@ -198,7 +212,7 @@ Just add it to the dependencies in your <code>fpm.toml</code> file:</p>
           <div class="col-xs-6 col-sm-3">
             <div>
               <h3>Derived Types</h3>
-              <ul><li><a href='./type/error_type.html'>error_type</a></li><li><a href='./type/pdb_data.html'>pdb_data</a></li><li><a href='./type/sdf_data.html'>sdf_data</a></li><li><a href='./type/structure_info.html'>structure_info</a></li><li><a href='./type/structure_type.html'>structure_type</a></li><li><a href='./type/testsuite_type.html'>testsuite_type</a></li><li><a href='./type/token_type.html'>token_type</a></li><li><a href='./type/unittest_type.html'>unittest_type</a></li></ul>
+              <ul><li><a href='type/error_type.html'>error_type</a></li><li><a href='type/pdb_data.html'>pdb_data</a></li><li><a href='type/sdf_data.html'>sdf_data</a></li><li><a href='type/structure_info.html'>structure_info</a></li><li><a href='type/structure_type.html'>structure_type</a></li><li><a href='type/testsuite_type.html'>testsuite_type</a></li><li><a href='type/token_type.html'>token_type</a></li><li><a href='type/unittest_type.html'>unittest_type</a></li></ul>
             </div>
             <div>
               <ul>
@@ -212,14 +226,17 @@ Just add it to the dependencies in your <code>fpm.toml</code> file:</p>
     <footer>
       <div class="container">
         <div class="row justify-content-between">
-          <div class="col"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2023 
+          <div class="col">
+            <p>
+              MCTC-library
+ was developed by Grimme group, Bonn<br>              &copy; 2024 
 </p>
           </div>
           <div class="col">
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2023-12-04 16:35              </p>
+ on 2024-08-01 06:40              </p>
           </div>
         </div>
         <br>

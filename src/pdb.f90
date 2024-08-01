@@ -12,155 +12,100 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-module mctc_io_read_pdb
+module mctc_io_write_pdb
    use mctc_env_accuracy, only : wp
-   use mctc_env_error, only : error_type
-   use mctc_io_convert, only : aatoau
-   use mctc_io_resize, only : resize
-   use mctc_io_symbols, only : to_number, symbol_length
-   use mctc_io_structure, only : structure_type, new
-   use mctc_io_structure_info, only : pdb_data, resize
-   use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
-      read_token, to_string
+   use mctc_io_convert, only : autoaa
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 
-   public :: read_pdb
+   public :: write_pdb
 
 
 contains
 
 
-subroutine read_pdb(self, unit, error)
+subroutine write_pdb(mol, unit, number)
+   type(structure_type), intent(in) :: mol
+   integer, intent(in) :: unit
+   integer, intent(in), optional :: number
+   character(len=6) :: w1
+   character(len=4) :: sym
+   character(len=2) :: a_charge
+   character(len=1) :: last_chain
+   logical :: last_het
+   integer :: offset, iat, jat
+   real(wp) :: xyz(3)
+   character(len=*), parameter :: pdb_format = &
+      &  '(a6,i5,1x,a4,a1,a3,1x,a1,i4,a1,3x,3f8.3,2f6.2,6x,a4,a2,a2)'
 
-   !> Instance of the molecular structure data
-   type(structure_type),intent(out) :: self
 
-   !> File handle
-   integer,intent(in) :: unit
+   if (present(number)) write(unit, '("MODEL ",4x,i4)') number
+   if (allocated(mol%pdb)) then
+      offset = 0
+      last_chain = mol%pdb(1)%chains
+      last_het = mol%pdb(1)%het
+      do iat = 1, mol%nat
 
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
+         ! handle the terminator
+         if (mol%pdb(iat)%het .neqv. last_het) then
+            write(unit, '("TER   ",i5,6x,a3,1x,a1,i4)') iat + offset, &
+               &  mol%pdb(iat-1)%residue, last_chain, mol%pdb(iat)%residue_number
+            last_het = .not.last_het
+            last_chain = mol%pdb(iat)%chains
+            offset = offset+1
+         else if (mol%pdb(iat)%chains /= last_chain) then
+            write(unit, '("TER   ",i5,6x,a3,1x,a1,i4)') iat + offset, &
+               &  mol%pdb(iat-1)%residue, last_chain, mol%pdb(iat)%residue_number
+            last_chain = mol%pdb(iat)%chains
+            offset = offset+1
+         endif
 
-   integer, parameter :: p_initial_size = 1000 ! this is going to be a protein
-
-   integer :: iatom, jatom, iresidue, try, stat, atom_type, pos, lnum
-   real(wp) :: occ, temp, coords(3)
-   real(wp), allocatable :: xyz(:,:)
-   type(token_type) :: token
-   character(len=4) :: a_charge
-   character(len=:), allocatable :: line
-   character(len=symbol_length), allocatable :: sym(:)
-   type(pdb_data), allocatable :: pdb(:)
-
-   allocate(sym(p_initial_size), source=repeat(' ', symbol_length))
-   allocate(xyz(3, p_initial_size), source=0.0_wp)
-   allocate(pdb(p_initial_size), source=pdb_data())
-
-   iatom = 0
-   iresidue = 0
-
-   stat = 0
-   do while(stat == 0)
-      call next_line(unit, line, pos, lnum, stat)
-      if (index(line, 'END') == 1) exit
-      if (index(line, 'ATOM') == 1 .or. index(line, 'HETATM') == 1) then
-         if (iatom >= size(xyz, 2)) call resize(xyz)
-         if (iatom >= size(sym)) call resize(sym)
-         if (iatom >= size(pdb)) call resize(pdb)
-         iatom = iatom + 1
-         pdb(iatom)%het = index(line, 'HETATM') == 1
-
-         if (len(line) >= 78) then
-            ! a4: 13:16, a1: 17:17, a3: 18:20, a1: 22:22
-            ! a1: 27:27, a4: 73:76, a2: 77:78, a2: 79:80
-            pdb(iatom)%name = line(13:16)
-            pdb(iatom)%loc = line(17:17)
-            pdb(iatom)%residue = line(18:20)
-            pdb(iatom)%chains = line(22:22)
-            pdb(iatom)%code = line(27:27)
-            pdb(iatom)%segid = line(72:74)
-            sym(iatom) = line(77:78)
+         jat = iat + offset
+         if (mol%pdb(iat)%het) then
+            w1 = "HETATM"
          else
-            token = token_type(len(line)+1, len(line)+1)
-            call io_error(error, "Too few entries provided in record", &
-               & line, token, filename(unit), lnum, "record too short")
-            return
-         end if
-         if (len(line) >= 80) then
-            a_charge = line(79:80)
+            w1 = "ATOM  "
+         endif
+
+
+         sym = adjustr(mol%sym(mol%id(iat))(1:2))
+         xyz = mol%xyz(:,iat) * autoaa
+         if (mol%pdb(iat)%charge < 0) then
+            write(a_charge, '(i1,"-")') abs(mol%pdb(iat)%charge)
+         else if (mol%pdb(iat)%charge > 0) then
+            write(a_charge, '(i1,"+")') abs(mol%pdb(iat)%charge)
          else
-            a_charge = ""
-         end if
-         if (stat == 0) then
-            ! i5: 7-11
-            token = token_type(7, 11)
-            call read_token(line, token, jatom, stat)
-         end if
-         if (stat == 0) then
-            ! i4: 23-26
-            token = token_type(23, 26)
-            call read_token(line, token, pdb(iatom)%residue_number, stat)
-         end if
-         if (stat == 0) then
-            ! f8: 31-38
-            token = token_type(31, 38)
-            call read_token(line, token, coords(1), stat)
-         end if
-         if (stat == 0) then
-            ! f8: 39-46
-            token = token_type(39, 46)
-            call read_token(line, token, coords(2), stat)
-         end if
-         if (stat == 0) then
-            ! f8: 47-54
-            token = token_type(47, 54)
-            call read_token(line, token, coords(3), stat)
-         end if
-         if (stat == 0) then
-            ! f6: 55-60
-            token = token_type(55, 60)
-            call read_token(line, token, occ, stat)
-         end if
-         if (stat == 0) then
-            ! f6: 61-66
-            token = token_type(60, 66)
-            call read_token(line, token, temp, stat)
-         end if
-         if (stat /= 0) then
-            call io_error(error, "Cannot read coordinates from record", &
-               & line, token, filename(unit), lnum, "unexpected value")
-            return
-         end if
+            a_charge = '  '
+         endif
 
-         xyz(:,iatom) = coords * aatoau
-         atom_type = to_number(sym(iatom))
-         if (atom_type == 0) then
-            try = scan(pdb(iatom)%name, 'HCNOSPF')
-            if (try > 0) sym(iatom) = pdb(iatom)%name(try:try)//' '
-            pdb(iatom)%charge = 0
-         else
-            read(a_charge(1:1), *, iostat=stat) pdb(iatom)%charge
-            if (stat /= 0) then
-               stat = 0
-               pdb(iatom)%charge = 0
-            else
-               if (a_charge(2:2) == '-') pdb(iatom)%charge = -pdb(iatom)%charge
-            end if
-         end if
-         if (to_number(sym(iatom)) == 0) then
-            call io_error(error, "Cannot map symbol to atomic number", &
-               & line, token_type(77, 78), filename(unit), lnum, "unknown element")
-            return
-         end if
-      end if
-   end do
+         write(unit, pdb_format) &
+            &  w1, jat, mol%pdb(iat)%name, mol%pdb(iat)%loc, &
+            &  mol%pdb(iat)%residue, mol%pdb(iat)%chains, mol%pdb(iat)%residue_number, &
+            &  mol%pdb(iat)%code, xyz, 1.0_wp, 0.0_wp, mol%pdb(iat)%segid, &
+            &  sym, a_charge
+      enddo
+   else
+      do iat = 1, mol%nat
+         w1 = "HETATM"
+         sym = adjustr(mol%sym(mol%id(iat))(1:2))
+         xyz = mol%xyz(:,iat) * autoaa
+         a_charge = '  '
 
-   call new(self, sym(:iatom), xyz(:, :iatom))
-   self%pdb = pdb(:iatom)
-   self%charge = sum(pdb(:iatom)%charge)
+         write(unit, pdb_format) &
+            &  w1, iat, sym, " ", &
+            &  "UNK", "A", 1, " ", xyz, 1.0_wp, 0.0_wp, "    ", &
+            &  sym, "  "
+      enddo
+   end if
 
-end subroutine read_pdb
+   if (present(number)) then
+      write(unit, '("ENDMDL")')
+   else
+      write(unit, '("END")')
+   endif
+
+end subroutine write_pdb
 
 
-end module mctc_io_read_pdb
+end module mctc_io_write_pdb

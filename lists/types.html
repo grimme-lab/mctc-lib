@@ -1,3 +1,5 @@
+<!-- -*- mode: jinja2 -*- -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -18,7 +20,8 @@
     <link href="../css/local.css" rel="stylesheet">
       <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
   </head>
 
   <body>
@@ -73,14 +76,54 @@
 			 <thead>
 			 <tr><th>Type</th><th>Location</th><th>Extends</th><th>Description</th></tr>
 			 </thead><tbody>
-			   <tr><td><a href='../type/error_type.html'>error_type</a></td><td><a href='../module/mctc_env_error.html'>mctc_env_error</a></td><td>None</td><td><p>Error message</p></td></tr>
-			   <tr><td><a href='../type/pdb_data.html'>pdb_data</a></td><td><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></td><td>None</td><td><p>Atomic pdb data type.</p><a href="../type/pdb_data.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
-			   <tr><td><a href='../type/sdf_data.html'>sdf_data</a></td><td><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></td><td>None</td><td><p>SDF atomic data.</p><a href="../type/sdf_data.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
-			   <tr><td><a href='../type/structure_info.html'>structure_info</a></td><td><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></td><td>None</td><td><p>structure input info</p><a href="../type/structure_info.html" class="pull-right"><emph>Read more&hellip;</emph></a></td></tr>
-			   <tr><td><a href='../type/structure_type.html'>structure_type</a></td><td><a href='../module/mctc_io_structure.html'>mctc_io_structure</a></td><td>None</td><td><p>Structure representation</p></td></tr>
-			   <tr><td><a href='../type/testsuite_type.html'>testsuite_type</a></td><td><a href='../module/mctc_env_testing.html'>mctc_env_testing</a></td><td>None</td><td><p>Collection of unit tests</p></td></tr>
-			   <tr><td><a href='../type/token_type.html'>token_type</a></td><td><a href='../module/mctc_io_utils.html'>mctc_io_utils</a></td><td>None</td><td><p>Text token</p></td></tr>
-			   <tr><td><a href='../type/unittest_type.html'>unittest_type</a></td><td><a href='../module/mctc_env_testing.html'>mctc_env_testing</a></td><td>None</td><td><p>Declaration of a unit test</p></td></tr>
+			   <tr>
+                 <td><a href='../type/error_type.html'>error_type</a></td>
+                 <td><a href='../module/mctc_env_error.html'>mctc_env_error</a></td>
+                 <td>None</td>
+                 <td><p>Error message</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../type/pdb_data.html'>pdb_data</a></td>
+                 <td><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></td>
+                 <td>None</td>
+                 <td><p>Atomic pdb data type.</p><a href="../type/pdb_data.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../type/sdf_data.html'>sdf_data</a></td>
+                 <td><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></td>
+                 <td>None</td>
+                 <td><p>SDF atomic data.</p><a href="../type/sdf_data.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../type/structure_info.html'>structure_info</a></td>
+                 <td><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></td>
+                 <td>None</td>
+                 <td><p>structure input info</p><a href="../type/structure_info.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+			   <tr>
+                 <td><a href='../type/structure_type.html'>structure_type</a></td>
+                 <td><a href='../module/mctc_io_structure.html'>mctc_io_structure</a></td>
+                 <td>None</td>
+                 <td><p>Structure representation</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../type/testsuite_type.html'>testsuite_type</a></td>
+                 <td><a href='../module/mctc_env_testing.html'>mctc_env_testing</a></td>
+                 <td>None</td>
+                 <td><p>Collection of unit tests</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../type/token_type.html'>token_type</a></td>
+                 <td><a href='../module/mctc_io_utils.html'>mctc_io_utils</a></td>
+                 <td>None</td>
+                 <td><p>Text token</p></td>
+               </tr>
+			   <tr>
+                 <td><a href='../type/unittest_type.html'>unittest_type</a></td>
+                 <td><a href='../module/mctc_env_testing.html'>mctc_env_testing</a></td>
+                 <td>None</td>
+                 <td><p>Declaration of a unit test</p></td>
+               </tr>
 			 </tbody></table>
              
         </div>
@@ -90,14 +133,17 @@
     <footer>
       <div class="container">
         <div class="row justify-content-between">
-          <div class="col"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2023 
+          <div class="col">
+            <p>
+              MCTC-library
+ was developed by Grimme group, Bonn<br>              &copy; 2024 
 </p>
           </div>
           <div class="col">
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2023-12-04 16:35              </p>
+ on 2024-08-01 06:40              </p>
           </div>
         </div>
         <br>

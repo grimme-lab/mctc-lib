@@ -1,3 +1,5 @@
+<!-- -*- mode: jinja2 -*- -->
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -17,7 +19,8 @@
     <link href="../css/local.css" rel="stylesheet">
       <link  href="../tipuesearch/tipuesearch.css" rel="stylesheet">
 
-    <script src="https://code.jquery.com/jquery-3.7.0.slim.min.js" integrity="sha256-tG5mcZUtJsZvyKAxYLVXrmjKBVLd6VpVccqz/r4ypFE=" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="../js/svg-pan-zoom.min.js"></script>
   </head>
 
   <body>
@@ -76,8 +79,7 @@
         <ul class="list-inline" style="margin-bottom:0px;display:inline">
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
-              <a data-bs-toggle="tooltip"
-                 data-bs-placement="bottom" data-html="true"
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
                  title=" 8.2% of total for modules and submodules.">405 statements</a>
             </li>
 
@@ -90,7 +92,7 @@
       <div class="col">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb justify-content-end mb-0">
-                <li class="breadcrumb-item"><a href='../sourcefile/ctfile.f90.html'>ctfile.f90</a></li>
+                <li class="breadcrumb-item"><a href='../sourcefile/ctfile.f90~2.html'>ctfile.f90</a></li>
             <li class="breadcrumb-item active" aria-current="page">mctc_io_read_ctfile</li>
           </ol>
         </nav>
@@ -155,13 +157,13 @@
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
               <ul class="list-inline">
-                  <li class="list-inline-item"><a href='../module/mctc_io_structure.html'>mctc_io_structure</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_env_accuracy.html'>mctc_env_accuracy</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_utils.html'>mctc_io_utils</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_symbols.html'>mctc_io_symbols</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_io_convert.html'>mctc_io_convert</a></li>
-                  <li class="list-inline-item"><a href='../module/mctc_env_error.html'>mctc_env_error</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_structure_info.html'>mctc_io_structure_info</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_structure.html'>mctc_io_structure</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_utils.html'>mctc_io_utils</a></li>
+                  <li class="list-inline-item"><a href='mctc_env_accuracy.html'>mctc_env_accuracy</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_convert.html'>mctc_io_convert</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_symbols.html'>mctc_io_symbols</a></li>
+                  <li class="list-inline-item"><a href='mctc_env_error.html'>mctc_env_error</a></li>
               </ul>
             </li>
         </ul>
@@ -181,77 +183,7 @@
         <section>
           <h2>Subroutines</h2>
               <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-read_molfile"></span><h3>public  subroutine <a href='../proc/read_molfile.html'>read_molfile</a>(self, unit, error)  
-</h3></div>
-    <div class="card-body">
-          
-  
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-self~17"></span>
-              type(<a href='../type/structure_type.html'>structure_type</a>),
-            </td>
-<td>intent(out)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>self</strong></td>
-            <td>
-<p>Instance of the molecular structure data</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-unit~18"></span>
-              integer,
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>unit</strong></td>
-            <td>
-<p>File handle</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-error~30"></span>
-              type(<a href='../type/error_type.html'>error_type</a>),
-            </td>
-<td>intent(out),</td>
-              <td></td>            <td>
-              allocatable
-            </td>
-            <td>::</td>
-            <td><strong>error</strong></td>
-            <td>
-<p>Error handling</p>
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-    </div>
-  </div>
-
-              <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-read_sdf"></span><h3>public  subroutine <a href='../proc/read_sdf.html'>read_sdf</a>(self, unit, error)  
+    <div class="card-header codesum"><span class="anchor" id="proc-read_molfile"></span> <h3>public  subroutine <a href='../proc/read_molfile.html'>read_molfile</a>(self, unit, error)  
 </h3></div>
     <div class="card-body">
           
@@ -285,7 +217,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~17"></span>
+              <span class="anchor" id="variable-unit~29"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -320,6 +252,76 @@
     </div>
   </div>
 
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-read_sdf"></span> <h3>public  subroutine <a href='../proc/read_sdf.html'>read_sdf</a>(self, unit, error)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-self~15"></span>
+              type(<a href='../type/structure_type.html'>structure_type</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>self</strong></td>
+            <td>
+<p>Instance of the molecular structure data</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-unit~28"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>unit</strong></td>
+            <td>
+<p>File handle</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error~28"></span>
+              type(<a href='../type/error_type.html'>error_type</a>),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>error</strong></td>
+            <td>
+<p>Error handling</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
         </section>
         <br>
 
@@ -333,14 +335,17 @@
     <footer>
       <div class="container">
         <div class="row justify-content-between">
-          <div class="col"><p>MCTC-library was developed by Grimme group, Bonn<br>&copy; 2023 
+          <div class="col">
+            <p>
+              MCTC-library
+ was developed by Grimme group, Bonn<br>              &copy; 2024 
 </p>
           </div>
           <div class="col">
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2023-12-04 16:35              </p>
+ on 2024-08-01 06:40              </p>
           </div>
         </div>
         <br>
