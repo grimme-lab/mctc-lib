@@ -37,6 +37,19 @@ install(
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
 
+# Compiler-specific configurations 
+if(
+  CMAKE_Fortran_COMPILER_ID MATCHES "PGI"
+  OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC"
+  OR CMAKE_Fortran_COMPILER_ID MATCHES "Flang"
+)
+  set(
+    CMAKE_Fortran_FLAGS
+    "${CMAKE_Fortran_FLAGS} -Mbackslash -Mallocatable=03"
+    PARENT_SCOPE
+  )
+endif()
+
 # Set build type as CMake does not provide defaults
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(
