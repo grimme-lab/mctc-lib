@@ -39,9 +39,9 @@ install(
 
 # Compiler-specific configurations 
 if(
-  CMAKE_Fortran_COMPILER_ID MATCHES "PGI"
-  OR CMAKE_Fortran_COMPILER_ID MATCHES "NVHPC"
-  OR CMAKE_Fortran_COMPILER_ID MATCHES "Flang"
+  "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "NVHPC"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Flang"
 )
   set(
     CMAKE_Fortran_FLAGS
