@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-subdir('data')
-subdir('env')
-subdir('io')
-subdir('ncoord')
-
 srcs += files(
-  'cutoff.f90',
-  'data.f90',
-  'env.f90',
-  'io.f90',
-  'ncoord.f90',
-  'version.F90',
+  'exp.f90',
+  'gfn.f90',
+  'erf.f90',
+  'erf_en.f90',
+  'type.f90',
 )
