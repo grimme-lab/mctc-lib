@@ -178,7 +178,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~10"></span>
+              <span class="anchor" id="variable-self~11"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -208,7 +208,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-sym~5"></span>
+              <span class="anchor" id="variable-sym~7"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -223,7 +223,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz~7"></span>
+              <span class="anchor" id="variable-xyz~9"></span>
               real(kind=wp),
             </td>
 <td>intent(in)</td>
@@ -238,7 +238,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge~7"></span>
+              <span class="anchor" id="variable-charge~6"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -268,7 +268,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lattice~9"></span>
+              <span class="anchor" id="variable-lattice~8"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -283,7 +283,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-periodic~4"></span>
+              <span class="anchor" id="variable-periodic~3"></span>
               logical,
             </td>
 <td>intent(in),</td>
@@ -298,7 +298,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info~4"></span>
+              <span class="anchor" id="variable-info~6"></span>
               type(<a href='../type/structure_info.html'>structure_info</a>),
             </td>
 <td>intent(in),</td>
@@ -313,7 +313,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond~3"></span>
+              <span class="anchor" id="variable-bond~5"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -352,7 +352,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~11"></span>
+              <span class="anchor" id="variable-self~12"></span>
               type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
 <td>intent(out)</td>
@@ -382,7 +382,166 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-xyz~8"></span>
+              <span class="anchor" id="variable-xyz~10"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>xyz</strong>(:,:)</td>
+            <td>
+                <p>Cartesian coordinates</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-charge~7"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>charge</strong></td>
+            <td>
+                <p>Total charge</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-uhf~3"></span>
+              integer,
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>uhf</strong></td>
+            <td>
+                <p>Number of unpaired electrons</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-lattice~9"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>lattice</strong>(:,:)</td>
+            <td>
+                <p>Lattice parameters</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-periodic~4"></span>
+              logical,
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>periodic</strong>(:)</td>
+            <td>
+                <p>Periodic directions</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-info~7"></span>
+              type(<a href='../type/structure_info.html'>structure_info</a>),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>info</strong></td>
+            <td>
+                <p>Vendor specific structure information</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-bond~6"></span>
+              integer,
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>bond</strong>(:,:)</td>
+            <td>
+                <p>Bond topology of the system</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+            <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_structure_sym"></span> <h3>private  subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, info, bond)  
+</h3></div>
+    <div class="card-body">
+        <p>Simplified constructor for structure representations</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-self~13"></span>
+              type(<a href='../type/structure_type.html'>structure_type</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>self</strong></td>
+            <td>
+                <p>Instance of the structure representation</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-sym~9"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>sym</strong>(:)</td>
+            <td>
+                <p>Element symbols</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-xyz~11"></span>
               real(kind=wp),
             </td>
 <td>intent(in)</td>
@@ -412,7 +571,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-uhf~3"></span>
+              <span class="anchor" id="variable-uhf~4"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -457,7 +616,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-info~5"></span>
+              <span class="anchor" id="variable-info~8"></span>
               type(<a href='../type/structure_info.html'>structure_info</a>),
             </td>
 <td>intent(in),</td>
@@ -472,166 +631,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-bond~4"></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>bond</strong>(:,:)</td>
-            <td>
-                <p>Bond topology of the system</p>
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-    </div>
-  </div>
-
-            <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-new_structure_sym"></span> <h3>private  subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, info, bond)  
-</h3></div>
-    <div class="card-body">
-        <p>Simplified constructor for structure representations</p>
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-self~12"></span>
-              type(<a href='../type/structure_type.html'>structure_type</a>),
-            </td>
-<td>intent(out)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>self</strong></td>
-            <td>
-                <p>Instance of the structure representation</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-sym~7"></span>
-              character(len=*),
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>sym</strong>(:)</td>
-            <td>
-                <p>Element symbols</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-xyz~9"></span>
-              real(kind=wp),
-            </td>
-<td>intent(in)</td>
-              <td></td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>xyz</strong>(:,:)</td>
-            <td>
-                <p>Cartesian coordinates</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-charge~9"></span>
-              real(kind=wp),
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>charge</strong></td>
-            <td>
-                <p>Total charge</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-uhf~4"></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>uhf</strong></td>
-            <td>
-                <p>Number of unpaired electrons</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-lattice~11"></span>
-              real(kind=wp),
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>lattice</strong>(:,:)</td>
-            <td>
-                <p>Lattice parameters</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-periodic~6"></span>
-              logical,
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>periodic</strong>(:)</td>
-            <td>
-                <p>Periodic directions</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-info~6"></span>
-              type(<a href='../type/structure_info.html'>structure_info</a>),
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>info</strong></td>
-            <td>
-                <p>Vendor specific structure information</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-bond~5"></span>
+              <span class="anchor" id="variable-bond~7"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -668,7 +668,7 @@
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2024-08-31 17:04              </p>
+ on 2024-11-10 22:04              </p>
           </div>
         </div>
         <br>
