@@ -38,6 +38,7 @@ tests = [
   'write-turbomole',
   'write-vasp',
   'write-xyz',
+  'ncoord',
 ]
 
 test_srcs = files(

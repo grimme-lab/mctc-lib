@@ -43,6 +43,7 @@ program tester
    use test_write_turbomole, only : collect_write_turbomole
    use test_write_vasp, only : collect_write_vasp
    use test_write_xyz, only : collect_write_xyz
+   use test_ncoord, only : collect_ncoord
    implicit none
    integer :: stat, is
    character(len=:), allocatable :: suite_name, test_name
@@ -76,7 +77,8 @@ program tester
       & new_testsuite("write-qchem", collect_write_qchem), &
       & new_testsuite("write-turbomole", collect_write_turbomole), &
       & new_testsuite("write-vasp", collect_write_vasp), &
-      & new_testsuite("write-xyz", collect_write_xyz) &
+      & new_testsuite("write-xyz", collect_write_xyz), &
+      & new_testsuite("ncoord", collect_ncoord) &
       & ]
 
    call get_argument(1, suite_name)
