@@ -88,7 +88,7 @@ module mctc_ncoord_type
 
 contains
 
-
+   !> Wrapper for CN using the CN cutoff for the lattice
    subroutine get_cn(self, mol, cn, dcndr, dcndL)
       !> Coordination number container
       class(ncoord_type), intent(in) :: self
@@ -104,11 +104,11 @@ contains
       real(wp), allocatable :: lattr(:, :)
 
       call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, lattr)
-      call get_coordination_number(self, mol, lattr, self%cutoff, cn, dcndr, dcndL)
+      call get_coordination_number(self, mol, lattr, cn, dcndr, dcndL)
    end subroutine get_cn
 
    !> Geometric fractional coordination number
-   subroutine get_coordination_number(self, mol, trans, cutoff, cn, dcndr, dcndL)
+   subroutine get_coordination_number(self, mol, trans, cn, dcndr, dcndL)
 
       !> Coordination number container
       class(ncoord_type), intent(in) :: self
@@ -118,9 +118,6 @@ contains
 
       !> Lattice points
       real(wp), intent(in) :: trans(:, :)
-
-      !> Real space cutoff
-      real(wp), intent(in) :: cutoff
 
       !> Error function coordination number.
       real(wp), intent(out) :: cn(:)
@@ -132,23 +129,21 @@ contains
       real(wp), intent(out), optional :: dcndL(:, :, :)
 
       if (present(dcndr) .and. present(dcndL)) then
-         call ncoord_d(self, mol, trans, cutoff, cn, dcndr, dcndL)
+         call ncoord_d(self, mol, trans, cn, dcndr, dcndL)
       else
-         call ncoord(self, mol, trans, cutoff, cn)
+         call ncoord(self, mol, trans, cn)
       end if
 
    end subroutine get_coordination_number
 
 
-   subroutine ncoord(self, mol, trans, cutoff, cn)
+   subroutine ncoord(self, mol, trans, cn)
       !> Coordination number container
       class(ncoord_type), intent(in) :: self
       !> Molecular structure data
       type(structure_type), intent(in) :: mol
       !> Lattice points
       real(wp), intent(in) :: trans(:, :)
-      !> Real space cutoff
-      real(wp), intent(in) :: cutoff
       !> Error function coordination number.
       real(wp), intent(out) :: cn(:)
 
@@ -156,7 +151,7 @@ contains
       real(wp) :: r2, r1, rij(3), countf, cutoff2, den
 
       cn(:) = 0.0_wp
-      cutoff2 = cutoff**2
+      cutoff2 = self%cutoff**2
 
       !$omp parallel do schedule(runtime) default(none) reduction(+:cn) &
       !$omp shared(self, mol, trans, cutoff2) &
@@ -186,15 +181,13 @@ contains
 
    end subroutine ncoord
 
-   subroutine ncoord_d(self, mol, trans, cutoff, cn, dcndr, dcndL)
+   subroutine ncoord_d(self, mol, trans, cn, dcndr, dcndL)
       !> Coordination number container
       class(ncoord_type), intent(in) :: self
       !> Molecular structure data
       type(structure_type), intent(in) :: mol
       !> Lattice points
       real(wp), intent(in) :: trans(:, :)
-      !> Real space cutoff
-      real(wp), intent(in) :: cutoff
       !> Error function coordination number.
       real(wp), intent(out) :: cn(:)
       !> Derivative of the CN with respect to the Cartesian coordinates.
@@ -208,7 +201,7 @@ contains
       cn(:) = 0.0_wp
       dcndr(:, :, :) = 0.0_wp
       dcndL(:, :, :) = 0.0_wp
-      cutoff2 = cutoff**2
+      cutoff2 = self%cutoff**2
 
       !$omp parallel do schedule(runtime) default(none) &
       !$omp reduction(+:cn, dcndr, dcndL) shared(mol, trans, cutoff2) &
