@@ -24,8 +24,6 @@ module mctc_ncoord_type
    implicit none
    private
 
-   public :: get_coordination_number
-
    !> Abstract base class for coordination number evaluator
    type, public, abstract :: ncoord_type
       real(wp)  :: cutoff
@@ -46,6 +44,8 @@ module mctc_ncoord_type
       procedure :: ncoord_d
       !> Evaluates pairwise electronegativity factor
       procedure :: get_en_factor
+      !> Add CN derivative of an arbitrary function
+      procedure :: add_coordination_number_derivs
       !> Evaluates the counting function (exp, dexp, erf, ...)
       procedure(ncoord_count),  deferred :: ncoord_count
       !> Evaluates the derivative of the counting function (exp, dexp, erf, ...)
@@ -244,6 +244,66 @@ contains
       end do
 
    end subroutine ncoord_d
+
+
+   subroutine add_coordination_number_derivs(self, mol, trans, dEdcn, gradient, sigma)
+
+      !> Coordination number container
+      class(ncoord_type), intent(in) :: self
+
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+   
+      !> Lattice points
+      real(wp), intent(in) :: trans(:, :)
+   
+      !> Derivative of expression with respect to the coordination number
+      real(wp), intent(in) :: dEdcn(:)
+   
+      !> Derivative of the CN with respect to the Cartesian coordinates
+      real(wp), intent(inout) :: gradient(:, :)
+   
+      !> Derivative of the CN with respect to strain deformations
+      real(wp), intent(inout) :: sigma(:, :)
+   
+      integer :: iat, jat, izp, jzp, itr
+      real(wp) :: r2, r1, rc, rij(3), countf, countd(3), ds(3, 3), cutoff2, den
+   
+      cutoff2 = self%cutoff**2
+   
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp reduction(+:gradient, sigma) &
+      !$omp shared(self, mol, trans, cutoff2, dEdcn) &
+      !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, rc, countd, ds, den)
+      do iat = 1, mol%nat
+         izp = mol%id(iat)
+         do jat = 1, iat
+            jzp = mol%id(jat)
+            den = self%get_en_factor(izp, jzp)
+
+            do itr = 1, size(trans, dim=2)
+               rij = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, itr))
+               r2 = sum(rij**2)
+               if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
+               r1 = sqrt(r2)
+
+               countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
+
+               gradient(:, iat) = gradient(:, iat) + countd &
+                  & * (dEdcn(iat) * self%directed_factor + dEdcn(jat))
+               gradient(:, jat) = gradient(:, jat) - countd &
+                  & * (dEdcn(iat) + dEdcn(jat) * self%directed_factor)
+   
+               ds = spread(countd, 1, 3) * spread(rij, 2, 3)
+   
+               sigma(:, :) = sigma(:, :) &
+                  & + ds * (dEdcn(iat) + &
+                  & merge(dEdcn(jat) * self%directed_factor, 0.0_wp, jat /= iat))
+            end do
+         end do
+      end do
+   
+   end subroutine add_coordination_number_derivs
 
 
    !> Evaluates pairwise electronegativity factor if non applies

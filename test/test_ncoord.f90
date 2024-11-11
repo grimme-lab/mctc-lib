@@ -26,7 +26,7 @@ module test_ncoord
    use mctc_ncoord_erf, only : erf_ncoord_type, new_erf_ncoord
    use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
    use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
-   use mctc_ncoord_type 
+   use mctc_ncoord_type, only : ncoord_type
    use mctc_ncoord, only : new_ncoord
    implicit none
    private
@@ -120,7 +120,7 @@ contains
       allocate(cn(mol%nat))
 
       call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
-      call get_coordination_number(ncoord, mol, lattr, cn)
+      call ncoord%get_coordination_number(mol, lattr, cn)
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -157,15 +157,15 @@ contains
       do iat = 1, mol%nat
          do ic = 1, 3
             mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
-            call get_coordination_number(ncoord, mol, lattr, cnr)
+            call ncoord%get_coordination_number(mol, lattr, cnr)
             mol%xyz(ic, iat) = mol%xyz(ic, iat) - 2*step
-            call get_coordination_number(ncoord, mol, lattr, cnl)
+            call ncoord%get_coordination_number(mol, lattr, cnl)
             mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
             numdr(ic, iat, :) = 0.5_wp*(cnr - cnl)/step
          end do
       end do
 
-      call get_coordination_number(ncoord, mol, lattr, cn, dcndr, dcndL)
+      call ncoord%get_coordination_number(mol, lattr, cn, dcndr, dcndL)
 
       if (any(abs(dcndr - numdr) > thr2)) then
          call test_failed(error, "Derivative of coordination number does not match")
@@ -208,11 +208,11 @@ contains
             eps(jc, ic) = eps(jc, ic) + step
             mol%xyz(:, :) = matmul(eps, xyz)
             lattr(:, :) = matmul(eps, trans)
-            call get_coordination_number(ncoord, mol, lattr, cnr)
+            call ncoord%get_coordination_number(mol, lattr, cnr)
             eps(jc, ic) = eps(jc, ic) - 2*step
             mol%xyz(:, :) = matmul(eps, xyz)
             lattr(:, :) = matmul(eps, trans)
-            call get_coordination_number(ncoord, mol, lattr, cnl)
+            call ncoord%get_coordination_number(mol, lattr, cnl)
             eps(jc, ic) = eps(jc, ic) + step
             mol%xyz(:, :) = xyz
             lattr(:, :) = trans
@@ -220,7 +220,7 @@ contains
          end do
       end do
 
-      call get_coordination_number(ncoord, mol, lattr, cn, dcndr, dcndL)
+      call ncoord%get_coordination_number(mol, lattr, cn, dcndr, dcndL)
 
       if (any(abs(dcndL - numdL) > 10.0_wp * thr2)) then
          call test_failed(error, "Derivative of coordination number does not match")
