@@ -290,7 +290,7 @@ contains
                countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
 
                gradient(:, iat) = gradient(:, iat) + countd &
-                  & * (dEdcn(iat) * self%directed_factor + dEdcn(jat))
+                  & * (dEdcn(iat) + dEdcn(jat) * self%directed_factor)
                gradient(:, jat) = gradient(:, jat) - countd &
                   & * (dEdcn(iat) + dEdcn(jat) * self%directed_factor)
    
