@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-srcs += files(
-  'atomicrad.f90',
-  'covrad.f90',
-  'paulingen.f90',
+set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
+
+list(
+  APPEND srcs
+  "${dir}/dftd4.f90"
+  "${dir}/en.f90"
 )
+
+set(srcs "${srcs}" PARENT_SCOPE)

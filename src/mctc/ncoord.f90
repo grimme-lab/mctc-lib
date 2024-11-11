@@ -23,10 +23,11 @@ module mctc_ncoord
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_ncoord_type, only : ncoord_type
-   use mctc_ncoord_gfn, only : gfn_ncoord_type, new_gfn_ncoord
+   use mctc_ncoord_dexp, only : dexp_ncoord_type, new_dexp_ncoord
    use mctc_ncoord_exp, only : exp_ncoord_type, new_exp_ncoord
    use mctc_ncoord_erf, only : erf_ncoord_type, new_erf_ncoord
    use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
+   use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
    implicit none
    private
 
@@ -58,11 +59,11 @@ subroutine new_ncoord(self, mol, cn_type, kcn, rcov, en)
          call new_exp_ncoord(tmp, mol, kcn=kcn, rcov=rcov)
          call move_alloc(tmp, self)
       end block
-   case("gfn")
+   case("dexp")
       block
-         type(gfn_ncoord_type), allocatable :: tmp
+         type(dexp_ncoord_type), allocatable :: tmp
          allocate(tmp)
-         call new_gfn_ncoord(tmp, mol, rcov=rcov)
+         call new_dexp_ncoord(tmp, mol, rcov=rcov)
          call move_alloc(tmp, self)
       end block
    case("erf")
@@ -77,6 +78,13 @@ subroutine new_ncoord(self, mol, cn_type, kcn, rcov, en)
          type(erf_en_ncoord_type), allocatable :: tmp
          allocate(tmp)
          call new_erf_en_ncoord(tmp, mol, kcn=kcn, rcov=rcov, en=en)
+         call move_alloc(tmp, self)
+      end block
+   case("dftd4")
+      block
+         type(erf_dftd4_ncoord_type), allocatable :: tmp
+         allocate(tmp)
+         call new_erf_dftd4_ncoord(tmp, mol, kcn=kcn, rcov=rcov, en=en)
          call move_alloc(tmp, self)
       end block
    end select

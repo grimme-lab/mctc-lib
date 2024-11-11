@@ -13,7 +13,6 @@
 # limitations under the License.
 
 srcs += files(
-  'atomicrad.f90',
-  'covrad.f90',
-  'paulingen.f90',
+  'dftd4.f90',
+  'en.f90',
 )

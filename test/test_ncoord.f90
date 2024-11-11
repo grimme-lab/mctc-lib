@@ -21,11 +21,12 @@ module test_ncoord
    use mctc_cutoff, only : get_lattice_points
    use mctc_data_covrad, only : get_covalent_rad
    use mctc_data_paulingen, only : get_pauling_en
-   use mctc_ncoord_gfn
-   use mctc_ncoord_exp
-   use mctc_ncoord_erf
-   use mctc_ncoord_erf_en
-   use mctc_ncoord_type !, only : get_coordination_number
+   use mctc_ncoord_dexp, only : dexp_ncoord_type, new_dexp_ncoord
+   use mctc_ncoord_exp, only : exp_ncoord_type, new_exp_ncoord
+   use mctc_ncoord_erf, only : erf_ncoord_type, new_erf_ncoord
+   use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
+   use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
+   use mctc_ncoord_type 
    implicit none
    private
 
@@ -33,7 +34,6 @@ module test_ncoord
 
    real(wp), parameter :: thr = 100*epsilon(1.0_wp)
    real(wp), parameter :: thr2 = sqrt(epsilon(1.0_wp))
-
 
 contains
 
@@ -45,16 +45,16 @@ contains
       type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
       testsuite = [ &
-      & new_unittest("cn-mb01_gfn", test_cn_mb01_gfn), &
-      & new_unittest("cn-mb02_gfn", test_cn_mb02_gfn), &
-      & new_unittest("cn-mb03_gfn", test_cn_mb03_gfn), &
-      & new_unittest("cn-acetic_gfn", test_cn_acetic_gfn), &
-      & new_unittest("dcndr-mb04_gfn", test_dcndr_mb04_gfn), &
-      & new_unittest("dcndr-mb05_gfn", test_dcndr_mb05_gfn), &
-      & new_unittest("dcndr-ammonia_gfn", test_dcndr_ammonia_gfn), &
-      & new_unittest("dcndL-mb06_gfn", test_dcndL_mb06_gfn), &
-      & new_unittest("dcndL-mb07_gfn", test_dcndL_mb07_gfn), &
-      & new_unittest("dcndL-antracene_gfn", test_dcndL_anthracene_gfn), &
+      & new_unittest("cn-mb01_dexp", test_cn_mb01_dexp), &
+      & new_unittest("cn-mb02_dexp", test_cn_mb02_dexp), &
+      & new_unittest("cn-mb03_dexp", test_cn_mb03_dexp), &
+      & new_unittest("cn-acetic_dexp", test_cn_acetic_dexp), &
+      & new_unittest("dcndr-mb04_dexp", test_dcndr_mb04_dexp), &
+      & new_unittest("dcndr-mb05_dexp", test_dcndr_mb05_dexp), &
+      & new_unittest("dcndr-ammonia_dexp", test_dcndr_ammonia_dexp), &
+      & new_unittest("dcndL-mb06_dexp", test_dcndL_mb06_dexp), &
+      & new_unittest("dcndL-mb07_dexp", test_dcndL_mb07_dexp), &
+      & new_unittest("dcndL-antracene_dexp", test_dcndL_anthracene_dexp), &
       & new_unittest("cn-mb01_exp", test_cn_mb01_exp), &
       & new_unittest("cn-mb02_exp", test_cn_mb02_exp), &
       & new_unittest("cn-mb03_exp", test_cn_mb03_exp), &
@@ -84,7 +84,17 @@ contains
       & new_unittest("dcndr-ammonia_erf_en", test_dcndr_ammonia_erf_en), &
       & new_unittest("dcndL-mb06_erf_en", test_dcndL_mb06_erf_en), &
       & new_unittest("dcndL-mb07_erf_en", test_dcndL_mb07_erf_en), &
-      & new_unittest("dcndL-antracene_erf_en", test_dcndL_anthracene_erf_en) &
+      & new_unittest("dcndL-antracene_erf_en", test_dcndL_anthracene_erf_en), &
+      & new_unittest("cn-mb01_erf_dftd4", test_cn_mb01_erf_dftd4), &
+      & new_unittest("cn-mb02_erf_dftd4", test_cn_mb02_erf_dftd4), &
+      & new_unittest("cn-mb03_erf_dftd4", test_cn_mb03_erf_dftd4), &
+      & new_unittest("cn-acetic_erf_dftd4", test_cn_acetic_erf_dftd4), &
+      & new_unittest("dcndr-mb04_erf_dftd4", test_dcndr_mb04_erf_dftd4), &
+      & new_unittest("dcndr-mb05_erf_dftd4", test_dcndr_mb05_erf_dftd4), &
+      & new_unittest("dcndr-ammonia_erf_dftd4", test_dcndr_ammonia_erf_dftd4), &
+      & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
+      & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
+      & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4) &
       & ]
 
    end subroutine collect_ncoord
@@ -225,15 +235,15 @@ contains
 
 
    !> ----------------------------------------------------
-   !> Tests for double-exponential (GFN) coordination number
+   !> Tests for double-exponential coordination number
    !> ----------------------------------------------------
-   subroutine test_cn_mb01_gfn(error)
+   subroutine test_cn_mb01_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -250,19 +260,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, gfn_ncoord, cutoff, ref)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_cn_gen(error, mol, dexp_ncoord, cutoff, ref)
 
-   end subroutine test_cn_mb01_gfn
+   end subroutine test_cn_mb01_dexp
 
 
-   subroutine test_cn_mb02_gfn(error)
+   subroutine test_cn_mb02_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -279,19 +289,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol,  gfn_ncoord, cutoff, ref)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_cn_gen(error, mol,  dexp_ncoord, cutoff, ref)
 
-   end subroutine test_cn_mb02_gfn
+   end subroutine test_cn_mb02_dexp
 
 
-   subroutine test_cn_mb03_gfn(error)
+   subroutine test_cn_mb03_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -308,19 +318,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, gfn_ncoord, cutoff, ref)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_cn_gen(error, mol, dexp_ncoord, cutoff, ref)
 
-   end subroutine test_cn_mb03_gfn
+   end subroutine test_cn_mb03_dexp
 
 
-   subroutine test_cn_acetic_gfn(error)
+   subroutine test_cn_acetic_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -342,19 +352,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, gfn_ncoord, cutoff, ref)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_cn_gen(error, mol, dexp_ncoord, cutoff, ref)
 
-   end subroutine test_cn_acetic_gfn
+   end subroutine test_cn_acetic_dexp
 
 
-   subroutine test_dcndr_mb04_gfn(error)
+   subroutine test_dcndr_mb04_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -364,19 +374,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, gfn_ncoord, cutoff)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_numgrad(error, mol, dexp_ncoord, cutoff)
 
-   end subroutine test_dcndr_mb04_gfn
+   end subroutine test_dcndr_mb04_dexp
 
 
-   subroutine test_dcndr_mb05_gfn(error)
+   subroutine test_dcndr_mb05_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -386,19 +396,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, gfn_ncoord, cutoff)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_numgrad(error, mol, dexp_ncoord, cutoff)
 
-   end subroutine test_dcndr_mb05_gfn
+   end subroutine test_dcndr_mb05_dexp
 
 
-   subroutine test_dcndr_ammonia_gfn(error)
+   subroutine test_dcndr_ammonia_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -408,19 +418,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, gfn_ncoord, cutoff)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_numgrad(error, mol, dexp_ncoord, cutoff)
 
-   end subroutine test_dcndr_ammonia_gfn
+   end subroutine test_dcndr_ammonia_dexp
 
 
-   subroutine test_dcndL_mb06_gfn(error)
+   subroutine test_dcndL_mb06_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -430,19 +440,19 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, gfn_ncoord, cutoff)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_numsigma(error, mol, dexp_ncoord, cutoff)
 
-   end subroutine test_dcndL_mb06_gfn
+   end subroutine test_dcndL_mb06_dexp
 
 
-   subroutine test_dcndL_mb07_gfn(error)
+   subroutine test_dcndL_mb07_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
@@ -452,32 +462,32 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, gfn_ncoord, cutoff)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_numsigma(error, mol, dexp_ncoord, cutoff)
 
-   end subroutine test_dcndL_mb07_gfn
+   end subroutine test_dcndL_mb07_dexp
 
 
-   subroutine test_dcndL_anthracene_gfn(error)
+   subroutine test_dcndL_anthracene_dexp(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(gfn_ncoord_type) :: gfn_ncoord
+      type(dexp_ncoord_type) :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
 
-      call get_structure(mol, "x04")
+      call get_structure(mol, "x05")
 
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_gfn_ncoord(gfn_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, gfn_ncoord, cutoff)
+      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call test_numsigma(error, mol, dexp_ncoord, cutoff)
 
-   end subroutine test_dcndL_anthracene_gfn
+   end subroutine test_dcndL_anthracene_dexp
 
 
    !> ----------------------------------------------------
@@ -725,7 +735,7 @@ contains
 
       real(wp), parameter :: cutoff = 30.0_wp
 
-      call get_structure(mol, "x04")
+      call get_structure(mol, "x05")
 
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
@@ -737,7 +747,7 @@ contains
 
 
    !> ----------------------------------------------------
-   !> Tests for error-function based CEH/GP3 coordination number 
+   !> Tests for error-function based coordination number 
    !> using the Pyykko covalent radii and Pauling EN
    !> ----------------------------------------------------
    subroutine test_cn_mb01_erf(error)
@@ -999,7 +1009,7 @@ contains
 
    !> ----------------------------------------------------
    !> Tests for electronegativity-weighted
-   !> error-function-based CEH/GP3 coordination number
+   !> error-function-based coordination number
    !> using the Pyykko covalent radii and Pauling EN
    !> ----------------------------------------------------
    subroutine test_cn_mb01_erf_en(error)
@@ -1277,6 +1287,283 @@ contains
       call test_numsigma(error, mol, erf_en_ncoord, cutoff)
 
    end subroutine test_dcndL_anthracene_erf_en
+
+
+   !> ----------------------------------------------------
+   !> Tests for DFT-D4 coordination number
+   !> using the Pyykko covalent radii and Pauling EN
+   !> ----------------------------------------------------
+   subroutine test_cn_mb01_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 3.07349677110402E+0_wp, 9.31461605116103E-1_wp, 1.43709439375839E+0_wp, &
+      & 1.33309431581960E+0_wp, 7.20743527030337E-1_wp, 8.59659004770982E-1_wp, &
+      & 1.35782158177921E+0_wp, 1.53940006996025E+0_wp, 3.19400368195259E+0_wp, &
+      & 8.12162111631342E-1_wp, 8.59533443784854E-1_wp, 1.53347108155587E+0_wp, &
+      & 4.23314989525721E+0_wp, 3.03048504567396E+0_wp, 3.45229319488306E+0_wp, &
+      & 4.28478289652264E+0_wp]
+
+      call get_structure(mol, "mindless01")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_cn_gen(error, mol, erf_dftd4_ncoord, cutoff, ref)
+
+   end subroutine test_cn_mb01_erf_dftd4
+
+
+   subroutine test_cn_mb02_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 9.20259141516190E-1_wp, 3.29216939906043E+0_wp, 3.51944438412931E+0_wp, &
+      & 2.25877973040028E+0_wp, 4.46999073626179E+0_wp, 8.18916367808423E-1_wp, &
+      & 9.28914937407466E-1_wp, 9.30833050893587E-1_wp, 4.60708718003244E+0_wp, &
+      & 8.18343168300509E-1_wp, 3.70959638795740E+0_wp, 2.87405845608016E+0_wp, &
+      & 1.24015900552686E+0_wp, 9.11079070954527E-1_wp, 1.57258868344791E+0_wp, &
+      & 1.67284525339418E+0_wp]
+
+      call get_structure(mol, "mindless02")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_cn_gen(error, mol,  erf_dftd4_ncoord, cutoff, ref)
+
+   end subroutine test_cn_mb02_erf_dftd4
+
+
+   subroutine test_cn_mb03_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 3.70329575672631E+0_wp, 2.11476582851627E+0_wp, 9.23682826697708E-1_wp, &
+      & 3.88999767055963E+0_wp, 6.17490081567969E+0_wp, 4.10595506858888E+0_wp, &
+      & 4.22916534938705E+0_wp, 1.04287687415719E+0_wp, 9.23686985143960E-1_wp, &
+      & 9.24487848931390E-1_wp, 1.22927636800717E+0_wp, 2.59853001985457E+0_wp, &
+      & 4.30015470969650E+0_wp, 8.29081650895103E-1_wp, 2.65239010637793E+0_wp, &
+      & 1.19840431336618E+0_wp]
+
+      call get_structure(mol, "mindless03")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_cn_gen(error, mol, erf_dftd4_ncoord, cutoff, ref)
+
+   end subroutine test_cn_mb03_erf_dftd4
+
+
+   subroutine test_cn_acetic_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: ref(32) = [&
+      & 8.57927937964499E-1_wp, 1.65578811302979E+0_wp, 8.57942519815764E-01_wp, &
+      & 1.65577032315393E+0_wp, 1.65579750428472E+0_wp, 8.57976292566367E-01_wp, &
+      & 8.57959806712906E-1_wp, 1.65580595790859E+0_wp, 2.68757316963446E+00_wp, &
+      & 3.75387937835847E+0_wp, 2.68757320525778E+0_wp, 3.75388279785624E+00_wp, &
+      & 3.75389467927099E+0_wp, 2.68757350196962E+0_wp, 2.68757458902025E+00_wp, &
+      & 3.75387626586114E+0_wp, 9.24588078703746E-1_wp, 8.00786883779774E-01_wp, &
+      & 9.25187896946826E-1_wp, 9.24714572053233E-1_wp, 9.24714022896347E-01_wp, &
+      & 9.25191607736594E-1_wp, 9.24588475035834E-1_wp, 8.00785878187927E-01_wp, &
+      & 9.25198590606433E-1_wp, 9.24591610342463E-1_wp, 8.00781165120561E-01_wp, &
+      & 9.24717032271544E-1_wp, 9.25190368617526E-1_wp, 9.24586232339746E-01_wp, &
+      & 9.24711233829591E-1_wp, 8.00775373869118E-1_wp]
+
+      call get_structure(mol, "x02")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_cn_gen(error, mol, erf_dftd4_ncoord, cutoff, ref)
+
+   end subroutine test_cn_acetic_erf_dftd4
+
+
+   subroutine test_dcndr_mb04_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+
+      call get_structure(mol, "mindless04")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_numgrad(error, mol, erf_dftd4_ncoord, cutoff)
+
+   end subroutine test_dcndr_mb04_erf_dftd4
+
+
+   subroutine test_dcndr_mb05_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+
+      call get_structure(mol, "mindless05")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_numgrad(error, mol, erf_dftd4_ncoord, cutoff)
+
+   end subroutine test_dcndr_mb05_erf_dftd4
+
+
+   subroutine test_dcndr_ammonia_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+
+      call get_structure(mol, "x04")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_numgrad(error, mol, erf_dftd4_ncoord, cutoff)
+
+   end subroutine test_dcndr_ammonia_erf_dftd4
+
+
+   subroutine test_dcndL_mb06_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+
+      call get_structure(mol, "mindless06")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_numsigma(error, mol, erf_dftd4_ncoord, cutoff)
+
+   end subroutine test_dcndL_mb06_erf_dftd4
+
+
+   subroutine test_dcndL_mb07_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+
+      call get_structure(mol, "mindless07")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_numsigma(error, mol, erf_dftd4_ncoord, cutoff)
+
+   end subroutine test_dcndL_mb07_erf_dftd4
+
+
+   subroutine test_dcndL_anthracene_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+
+      call get_structure(mol, "x05")
+
+      allocate(rcov(mol%nid), en(mol%nid))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call test_numsigma(error, mol, erf_dftd4_ncoord, cutoff)
+
+   end subroutine test_dcndL_anthracene_erf_dftd4
 
 
 end module test_ncoord

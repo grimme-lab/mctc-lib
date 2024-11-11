@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+subdir('erf')
+
 srcs += files(
+  'dexp.f90',
   'exp.f90',
-  'gfn.f90',
   'erf.f90',
-  'erf_en.f90',
   'type.f90',
 )

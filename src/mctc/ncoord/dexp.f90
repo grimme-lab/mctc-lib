@@ -12,11 +12,11 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @file mctc/ncoord/gfn.f90
+!> @file mctc/ncoord/dexp.f90
 !> Provides a coordination number implementation with double exponential counting function
 
-!> Coordination number implementation using a double exponential counting function
-module mctc_ncoord_gfn
+!> Coordination number implementation using a double exponential counting function as in GFN2-xTB
+module mctc_ncoord_dexp
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_data_covrad, only : get_covalent_rad
@@ -24,18 +24,18 @@ module mctc_ncoord_gfn
    implicit none
    private
 
-   public :: new_gfn_ncoord
+   public :: new_dexp_ncoord
    
 
    !> Coordination number evaluator
-   type, public, extends(ncoord_type) :: gfn_ncoord_type
+   type, public, extends(ncoord_type) :: dexp_ncoord_type
       real(wp), allocatable :: rcov(:)
    contains
-      !> Evaluates the gfn counting function 
+      !> Evaluates the dexp counting function 
       procedure :: ncoord_count
-      !> Evaluates the derivative of the gfn counting function
+      !> Evaluates the derivative of the dexp counting function
       procedure :: ncoord_dcount
-   end type gfn_ncoord_type
+   end type dexp_ncoord_type
 
    !> Steepness of first counting function
    real(wp),parameter :: ka = 10.0_wp
@@ -50,9 +50,9 @@ module mctc_ncoord_gfn
 contains
 
 
-subroutine new_gfn_ncoord(self, mol, cutoff, rcov)
+subroutine new_dexp_ncoord(self, mol, cutoff, rcov)
    !> Coordination number container
-   type(gfn_ncoord_type), intent(out) :: self
+   type(dexp_ncoord_type), intent(out) :: self
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Real space cutoff
@@ -75,12 +75,13 @@ subroutine new_gfn_ncoord(self, mol, cutoff, rcov)
    
    self%directed_factor = 1.0_wp
 
-end subroutine new_gfn_ncoord
+end subroutine new_dexp_ncoord
+
 
 !> Double-exponential counting function for coordination number contributions.
 elemental function ncoord_count(self, izp, jzp, r) result(count)
    !> Coordination number container
-   class(gfn_ncoord_type), intent(in) :: self
+   class(dexp_ncoord_type), intent(in) :: self
    !> Atom i index
    integer, intent(in)  :: izp
    !> Atom j index
@@ -91,15 +92,15 @@ elemental function ncoord_count(self, izp, jzp, r) result(count)
    real(wp) :: rc, count
 
    rc = self%rcov(izp) + self%rcov(jzp)
-   ! double exponential function based counting function
-   count = gfn_count(ka, r, rc) * gfn_count(kb, r, rc + r_shift)
+
+   count = exp_count(ka, r, rc) * exp_count(kb, r, rc + r_shift)
 
 end function ncoord_count
 
 !> Derivative of the double-exponential counting function w.r.t. the distance.
 elemental function ncoord_dcount(self, izp, jzp, r) result(count)
    !> Coordination number container
-   class(gfn_ncoord_type), intent(in) :: self
+   class(dexp_ncoord_type), intent(in) :: self
    !> Atom i index
    integer, intent(in)  :: izp
    !> Atom j index
@@ -110,14 +111,15 @@ elemental function ncoord_dcount(self, izp, jzp, r) result(count)
    real(wp) :: rc, count
    
    rc = self%rcov(izp) + self%rcov(jzp)
-   ! double exponential function based counting function derivative
-   count = (gfn_dcount(ka, r, rc) * gfn_count(kb, r, rc + r_shift) &
-               & + gfn_count(ka, r, rc) * gfn_dcount(kb, r, rc + r_shift))
+
+   count = (exp_dcount(ka, r, rc) * exp_count(kb, r, rc + r_shift) &
+               & + exp_count(ka, r, rc) * exp_dcount(kb, r, rc + r_shift))
 
 end function ncoord_dcount
 
+
 !> Mono-exponential counting function for coordination number contributions.
-elemental function gfn_count(k, r, r0) result(count)
+elemental function exp_count(k, r, r0) result(count)
    !> Steepness of the counting function.
    real(wp), intent(in) :: k
    !> Current distance.
@@ -129,11 +131,10 @@ elemental function gfn_count(k, r, r0) result(count)
 
    count = 1.0_wp/(1.0_wp+exp(-k*(r0/r-1.0_wp)))
 
-end function gfn_count
-
+end function exp_count
 
 !> Derivative of the mono-exponential counting function w.r.t. the distance.
-elemental function gfn_dcount(k, r, r0) result(count)
+elemental function exp_dcount(k, r, r0) result(count)
    !> Steepness of the counting function.
    real(wp), intent(in) :: k
    !> Current distance.
@@ -147,6 +148,6 @@ elemental function gfn_dcount(k, r, r0) result(count)
    expterm = exp(-k*(r0/r-1._wp))
    count = (-k*r0*expterm)/(r**2*((expterm+1._wp)**2))
 
-end function gfn_dcount
+end function exp_dcount
 
-end module mctc_ncoord_gfn
+end module mctc_ncoord_dexp

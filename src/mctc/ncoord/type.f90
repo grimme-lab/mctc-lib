@@ -44,9 +44,11 @@ module mctc_ncoord_type
       procedure :: ncoord
       !> Evaluates derivative of the CN from the specific counting function
       procedure :: ncoord_d
-      !> Evaluates the counting function (exp, erf, ...)
+      !> Evaluates pairwise electronegativity factor
+      procedure :: get_en_factor
+      !> Evaluates the counting function (exp, dexp, erf, ...)
       procedure(ncoord_count),  deferred :: ncoord_count
-      !> Evaluates the derivative of the counting function (exp, erf, ...)
+      !> Evaluates the derivative of the counting function (exp, dexp, erf, ...)
       procedure(ncoord_dcount), deferred :: ncoord_dcount
    end type ncoord_type
 
@@ -105,7 +107,7 @@ contains
       call get_coordination_number(self, mol, lattr, self%cutoff, cn, dcndr, dcndL)
    end subroutine get_cn
 
-   !> Geometric fractional coordination number, supports exponential and error counting functions.
+   !> Geometric fractional coordination number
    subroutine get_coordination_number(self, mol, trans, cutoff, cn, dcndr, dcndL)
 
       !> Coordination number container
@@ -137,6 +139,7 @@ contains
 
    end subroutine get_coordination_number
 
+
    subroutine ncoord(self, mol, trans, cutoff, cn)
       !> Coordination number container
       class(ncoord_type), intent(in) :: self
@@ -150,18 +153,19 @@ contains
       real(wp), intent(out) :: cn(:)
 
       integer :: iat, jat, izp, jzp, itr
-      real(wp) :: r2, r1, rij(3), countf, cutoff2
+      real(wp) :: r2, r1, rij(3), countf, cutoff2, den
 
       cn(:) = 0.0_wp
       cutoff2 = cutoff**2
 
       !$omp parallel do schedule(runtime) default(none) reduction(+:cn) &
       !$omp shared(self, mol, trans, cutoff2) &
-      !$omp private(jat, itr, izp, jzp, r2, rij, r1, countf)
+      !$omp private(jat, itr, izp, jzp, r2, rij, r1, den, countf)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat
             jzp = mol%id(jat)
+            den = self%get_en_factor(izp, jzp)
 
             do itr = 1, size(trans, dim=2)
                rij = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, itr))
@@ -169,7 +173,7 @@ contains
                if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
                r1 = sqrt(r2)
 
-               countf = self%ncoord_count(izp, jzp, r1)
+               countf = den * self%ncoord_count(izp, jzp, r1)
 
                cn(iat) = cn(iat) + countf
                if (iat /= jat) then
@@ -199,7 +203,7 @@ contains
       real(wp), intent(out) :: dcndL(:, :, :)
 
       integer :: iat, jat, izp, jzp, itr
-      real(wp) :: r2, r1, rij(3), countf, countd(3), sigma(3, 3), cutoff2
+      real(wp) :: r2, r1, rij(3), countf, countd(3), sigma(3, 3), cutoff2, den
 
       cn(:) = 0.0_wp
       dcndr(:, :, :) = 0.0_wp
@@ -209,11 +213,12 @@ contains
       !$omp parallel do schedule(runtime) default(none) &
       !$omp reduction(+:cn, dcndr, dcndL) shared(mol, trans, cutoff2) &
       !$omp shared(self) &
-      !$omp private(jat, itr, izp, jzp, r2, rij, r1, countf, countd, sigma)
+      !$omp private(jat, itr, izp, jzp, r2, rij, r1, den, countf, countd, sigma)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat
             jzp = mol%id(jat)
+            den = self%get_en_factor(izp, jzp)
 
             do itr = 1, size(trans, dim=2)
                rij = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, itr))
@@ -221,8 +226,8 @@ contains
                if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
                r1 = sqrt(r2)
 
-               countf = self%ncoord_count(izp, jzp, r1)
-               countd = self%ncoord_dcount(izp, jzp, r1) * rij/r1
+               countf = den * self%ncoord_count(izp, jzp, r1)
+               countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
 
                cn(iat) = cn(iat) + countf
                if (iat /= jat) then
@@ -247,5 +252,20 @@ contains
 
    end subroutine ncoord_d
 
+
+   !> Evaluates pairwise electronegativity factor if non applies
+   elemental function get_en_factor(self, izp, jzp) result(en_factor)
+      !> Coordination number container
+      class(ncoord_type), intent(in) :: self
+      !> Atom i index
+      integer, intent(in)  :: izp
+      !> Atom j index
+      integer, intent(in)  :: jzp
+
+      real(wp) :: en_factor
+
+      en_factor = 1.0_wp
+      
+   end function get_en_factor
 
 end module mctc_ncoord_type

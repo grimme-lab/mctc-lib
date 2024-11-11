@@ -27,7 +27,7 @@ module mctc_data_covrad
    public :: get_covalent_rad
 
 
-   !> Covalent radii for DFT-D3 coordination number
+   !> Covalent radii for coordination number
    interface get_covalent_rad
       module procedure :: get_covalent_rad_num
       module procedure :: get_covalent_rad_sym
@@ -37,7 +37,7 @@ module mctc_data_covrad
    integer, parameter :: max_elem = 118
 
    !> Covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
-   !  188-197), values for metals decreased by 10 %
+   !> 188-197), values for metals decreased by 10 %
    real(wp), parameter :: covalent_rad_2009(max_elem) = aatoau * [ &
       & 0.32_wp,0.46_wp, & ! H,He
       & 1.20_wp,0.94_wp,0.77_wp,0.75_wp,0.71_wp,0.63_wp,0.64_wp,0.67_wp, & ! Li-Ne

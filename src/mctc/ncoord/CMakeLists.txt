@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+add_subdirectory("erf")
+
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
+  "${dir}/dexp.f90"
   "${dir}/exp.f90"
-  "${dir}/gfn.f90"
   "${dir}/erf.f90"
-  "${dir}/erf_en.f90"
   "${dir}/type.f90"
 )
 
