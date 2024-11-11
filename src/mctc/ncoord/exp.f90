@@ -15,8 +15,7 @@
 !> @file mctc/ncoord/exp.f90
 !> Provides a coordination number implementation with exponential counting function
 
-!> Coordination number implementation using an exponential counting function, 
-!> same as in dftd3.
+!> Coordination number implementation using an exponential counting function as in dftd3. 
 module mctc_ncoord_exp
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -95,11 +94,10 @@ contains
       real(wp) :: rc, count
 
       rc = self%rcov(izp) + self%rcov(jzp)
-      ! exponential function based counting function
+
       count =1.0_wp/(1.0_wp+exp(-self%kcn*(rc/r-1.0_wp)))
 
    end function ncoord_count
-
 
    !> Derivative of the exponential counting function w.r.t. the distance.
    elemental function ncoord_dcount(self, izp, jzp, r) result(count)
@@ -115,11 +113,10 @@ contains
       real(wp) :: rc, expterm, count
 
       rc = self%rcov(izp) + self%rcov(jzp)
-      ! exponential function based counting function derivative
+
       expterm = exp(-self%kcn*(rc/r-1._wp))
       count = (-self%kcn*rc*expterm)/(r**2*((expterm+1._wp)**2))
 
    end function ncoord_dcount
-
 
 end module mctc_ncoord_exp

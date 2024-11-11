@@ -12,10 +12,13 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @file mctc/ncoord/erf.f90
-!> Provides a (standard) coordination number implementation for the CEH method
+!> @dir mctc/ncoord/erf
+!> Provides variations (EN) of the error function based coordination number
 
-!> Coordination number implementation with single error function for the CEH and GP3-xTB methods.
+!> @file mctc/ncoord/erf.f90
+!> Provides error function based coordination number
+
+!> Coordination number implementation with single error function
 module mctc_ncoord_erf
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -80,6 +83,7 @@ contains
 
    end subroutine new_erf_ncoord
 
+
    !> Error counting function for coordination number contributions.
    elemental function ncoord_count(self, izp, jzp, r) result(count)
       !> Coordination number container
@@ -94,7 +98,7 @@ contains
       real(wp) :: rc, count
       
       rc = (self%rcov(izp) + self%rcov(jzp))
-      ! error function based counting function
+
       count = 0.5_wp * (1.0_wp + erf(-self%kcn*(r-rc)/rc))
       
    end function ncoord_count
@@ -110,13 +114,14 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
+      real(wp), parameter :: sqrtpi = sqrt(pi)
       real(wp) :: rc, exponent, expterm, count
 
       rc = self%rcov(izp) + self%rcov(jzp)
-      ! error function based counting function with EN derivative
+
       exponent = self%kcn*(r-rc)/rc
       expterm = exp(-exponent**2)
-      count = -(self%kcn*expterm)/(rc*sqrt(pi))
+      count = -(self%kcn*expterm)/(rc*sqrtpi)
 
    end function ncoord_dcount
 

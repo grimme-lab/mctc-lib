@@ -20,9 +20,10 @@
 
 !> Proxy module for providing access to element data.
 module mctc_data
+   use mctc_data_atomicrad, only : get_atomic_rad
    use mctc_data_covrad, only : get_covalent_rad
    use mctc_data_paulingen, only : get_pauling_en
    implicit none
 
-   public :: get_covalent_rad, get_pauling_en
+   public :: get_atomic_rad, get_covalent_rad, get_pauling_en
 end module mctc_data
