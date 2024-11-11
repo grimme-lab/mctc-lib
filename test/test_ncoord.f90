@@ -101,7 +101,7 @@ contains
    end subroutine collect_ncoord
 
 
-   subroutine test_cn_gen(error, mol, ncoord, cutoff, ref)
+   subroutine test_cn_gen(error, mol, ncoord, ref)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
@@ -112,8 +112,6 @@ contains
       !> Coordination number type
       class(ncoord_type)   :: ncoord
 
-      real(wp), intent(in) :: cutoff
-
       !> Reference CNs
       real(wp), intent(in) :: ref(:)
       real(wp), allocatable :: cn(:)
@@ -121,8 +119,8 @@ contains
 
       allocate(cn(mol%nat))
 
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
-      call get_coordination_number(ncoord, mol, lattr, cutoff, cn)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_coordination_number(ncoord, mol, lattr, cn)
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -132,7 +130,7 @@ contains
    end subroutine test_cn_gen
 
 
-   subroutine test_numgrad(error, mol, ncoord, cutoff)
+   subroutine test_numgrad(error, mol, ncoord)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
@@ -142,8 +140,6 @@ contains
 
       !> Coordination number type
       class(ncoord_type)   :: ncoord
-
-      real(wp), intent(in) :: cutoff
 
       integer :: iat, ic
       real(wp), allocatable :: cn(:), cnr(:), cnl(:)
@@ -156,20 +152,20 @@ contains
       & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), &
       & numdr(3, mol%nat, mol%nat))
 
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
 
       do iat = 1, mol%nat
          do ic = 1, 3
             mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
-            call get_coordination_number(ncoord, mol, lattr, cutoff, cnr)
+            call get_coordination_number(ncoord, mol, lattr, cnr)
             mol%xyz(ic, iat) = mol%xyz(ic, iat) - 2*step
-            call get_coordination_number(ncoord, mol, lattr, cutoff, cnl)
+            call get_coordination_number(ncoord, mol, lattr, cnl)
             mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
             numdr(ic, iat, :) = 0.5_wp*(cnr - cnl)/step
          end do
       end do
 
-      call get_coordination_number(ncoord, mol, lattr, cutoff, cn, dcndr, dcndL)
+      call get_coordination_number(ncoord, mol, lattr, cn, dcndr, dcndL)
 
       if (any(abs(dcndr - numdr) > thr2)) then
          call test_failed(error, "Derivative of coordination number does not match")
@@ -178,7 +174,7 @@ contains
    end subroutine test_numgrad
 
 
-   subroutine test_numsigma(error, mol, ncoord, cutoff)
+   subroutine test_numsigma(error, mol, ncoord)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
@@ -188,8 +184,6 @@ contains
 
       !> Coordination number type
       class(ncoord_type)   :: ncoord
-
-      real(wp), intent(in) :: cutoff
 
       integer :: ic, jc
       real(wp) :: eps(3, 3)
@@ -204,7 +198,7 @@ contains
       allocate(cn(mol%nat), cnr(mol%nat), cnl(mol%nat), &
       & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), xyz(3, mol%nat), &
       & numdL(3, 3, mol%nat))
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
 
       eps(:, :) = unity
       xyz(:, :) = mol%xyz
@@ -214,11 +208,11 @@ contains
             eps(jc, ic) = eps(jc, ic) + step
             mol%xyz(:, :) = matmul(eps, xyz)
             lattr(:, :) = matmul(eps, trans)
-            call get_coordination_number(ncoord, mol, lattr, cutoff, cnr)
+            call get_coordination_number(ncoord, mol, lattr, cnr)
             eps(jc, ic) = eps(jc, ic) - 2*step
             mol%xyz(:, :) = matmul(eps, xyz)
             lattr(:, :) = matmul(eps, trans)
-            call get_coordination_number(ncoord, mol, lattr, cutoff, cnl)
+            call get_coordination_number(ncoord, mol, lattr, cnl)
             eps(jc, ic) = eps(jc, ic) + step
             mol%xyz(:, :) = xyz
             lattr(:, :) = trans
@@ -226,7 +220,7 @@ contains
          end do
       end do
 
-      call get_coordination_number(ncoord, mol, lattr, cutoff, cn, dcndr, dcndL)
+      call get_coordination_number(ncoord, mol, lattr, cn, dcndr, dcndL)
 
       if (any(abs(dcndL - numdL) > 10.0_wp * thr2)) then
          call test_failed(error, "Derivative of coordination number does not match")
@@ -297,7 +291,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol,  dexp_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, dexp_ncoord, ref)
 
    end subroutine test_cn_mb02_dexp
 
@@ -326,7 +320,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, dexp_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, dexp_ncoord, ref)
 
    end subroutine test_cn_mb03_dexp
 
@@ -360,7 +354,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, dexp_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, dexp_ncoord, ref)
 
    end subroutine test_cn_acetic_dexp
 
@@ -382,7 +376,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, dexp_ncoord, cutoff)
+      call test_numgrad(error, mol, dexp_ncoord)
 
    end subroutine test_dcndr_mb04_dexp
 
@@ -404,7 +398,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, dexp_ncoord, cutoff)
+      call test_numgrad(error, mol, dexp_ncoord)
 
    end subroutine test_dcndr_mb05_dexp
 
@@ -426,7 +420,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, dexp_ncoord, cutoff)
+      call test_numgrad(error, mol, dexp_ncoord)
 
    end subroutine test_dcndr_ammonia_dexp
 
@@ -448,7 +442,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, dexp_ncoord, cutoff)
+      call test_numsigma(error, mol, dexp_ncoord)
 
    end subroutine test_dcndL_mb06_dexp
 
@@ -470,7 +464,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, dexp_ncoord, cutoff)
+      call test_numsigma(error, mol, dexp_ncoord)
 
    end subroutine test_dcndL_mb07_dexp
 
@@ -492,7 +486,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, dexp_ncoord, cutoff)
+      call test_numsigma(error, mol, dexp_ncoord)
 
    end subroutine test_dcndL_anthracene_dexp
 
@@ -560,7 +554,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol,  exp_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol,  exp_ncoord, ref)
 
    end subroutine test_cn_mb02_exp
 
@@ -589,7 +583,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, exp_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, exp_ncoord, ref)
 
    end subroutine test_cn_mb03_exp
 
@@ -623,7 +617,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, exp_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, exp_ncoord, ref)
 
    end subroutine test_cn_acetic_exp
 
@@ -645,7 +639,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, exp_ncoord, cutoff)
+      call test_numgrad(error, mol, exp_ncoord)
 
    end subroutine test_dcndr_mb04_exp
 
@@ -667,7 +661,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, exp_ncoord, cutoff)
+      call test_numgrad(error, mol, exp_ncoord)
 
    end subroutine test_dcndr_mb05_exp
 
@@ -689,7 +683,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, exp_ncoord, cutoff)
+      call test_numgrad(error, mol, exp_ncoord)
 
    end subroutine test_dcndr_ammonia_exp
 
@@ -711,7 +705,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, exp_ncoord, cutoff)
+      call test_numsigma(error, mol, exp_ncoord)
 
    end subroutine test_dcndL_mb06_exp
 
@@ -733,7 +727,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, exp_ncoord, cutoff)
+      call test_numsigma(error, mol, exp_ncoord)
 
    end subroutine test_dcndL_mb07_exp
 
@@ -755,7 +749,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, exp_ncoord, cutoff)
+      call test_numsigma(error, mol, exp_ncoord)
 
    end subroutine test_dcndL_anthracene_exp
 
@@ -826,7 +820,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, erf_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_ncoord, ref)
 
    end subroutine test_cn_mb02_erf
 
@@ -856,7 +850,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, erf_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_ncoord, ref)
 
    end subroutine test_cn_mb03_erf
 
@@ -891,7 +885,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, erf_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_ncoord, ref)
 
    end subroutine test_cn_acetic_erf
 
@@ -913,7 +907,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, erf_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_ncoord)
 
    end subroutine test_dcndr_mb04_erf
 
@@ -935,7 +929,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, erf_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_ncoord)
 
    end subroutine test_dcndr_mb05_erf
 
@@ -957,7 +951,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numgrad(error, mol, erf_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_ncoord)
 
    end subroutine test_dcndr_ammonia_erf
 
@@ -979,7 +973,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, erf_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_ncoord)
 
    end subroutine test_dcndL_mb06_erf
 
@@ -1001,7 +995,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, erf_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_ncoord)
 
    end subroutine test_dcndL_mb07_erf
 
@@ -1023,7 +1017,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_numsigma(error, mol, erf_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_ncoord)
 
    end subroutine test_dcndL_anthracene_erf
 
@@ -1100,7 +1094,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol,  erf_en_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol,  erf_en_ncoord, ref)
 
    end subroutine test_cn_mb02_erf_en
 
@@ -1132,7 +1126,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol, erf_en_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_en_ncoord, ref)
 
    end subroutine test_cn_mb03_erf_en
 
@@ -1169,7 +1163,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol, erf_en_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_en_ncoord, ref)
 
    end subroutine test_cn_acetic_erf_en
 
@@ -1193,7 +1187,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numgrad(error, mol, erf_en_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_en_ncoord)
 
    end subroutine test_dcndr_mb04_erf_en
 
@@ -1217,7 +1211,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numgrad(error, mol, erf_en_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_en_ncoord)
 
    end subroutine test_dcndr_mb05_erf_en
 
@@ -1241,7 +1235,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numgrad(error, mol, erf_en_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_en_ncoord)
 
    end subroutine test_dcndr_ammonia_erf_en
 
@@ -1265,7 +1259,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numsigma(error, mol, erf_en_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_en_ncoord)
 
    end subroutine test_dcndL_mb06_erf_en
 
@@ -1289,7 +1283,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numsigma(error, mol, erf_en_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_en_ncoord)
 
    end subroutine test_dcndL_mb07_erf_en
 
@@ -1313,7 +1307,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numsigma(error, mol, erf_en_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_en_ncoord)
 
    end subroutine test_dcndL_anthracene_erf_en
 
@@ -1387,7 +1381,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol,  erf_dftd4_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_dftd4_ncoord, ref)
 
    end subroutine test_cn_mb02_erf_dftd4
 
@@ -1418,7 +1412,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol, erf_dftd4_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_dftd4_ncoord, ref)
 
    end subroutine test_cn_mb03_erf_dftd4
 
@@ -1454,7 +1448,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol, erf_dftd4_ncoord, cutoff, ref)
+      call test_cn_gen(error, mol, erf_dftd4_ncoord, ref)
 
    end subroutine test_cn_acetic_erf_dftd4
 
@@ -1478,7 +1472,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numgrad(error, mol, erf_dftd4_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndr_mb04_erf_dftd4
 
@@ -1502,7 +1496,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numgrad(error, mol, erf_dftd4_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndr_mb05_erf_dftd4
 
@@ -1526,7 +1520,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numgrad(error, mol, erf_dftd4_ncoord, cutoff)
+      call test_numgrad(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndr_ammonia_erf_dftd4
 
@@ -1550,7 +1544,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numsigma(error, mol, erf_dftd4_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndL_mb06_erf_dftd4
 
@@ -1574,7 +1568,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numsigma(error, mol, erf_dftd4_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndL_mb07_erf_dftd4
 
@@ -1598,7 +1592,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_numsigma(error, mol, erf_dftd4_ncoord, cutoff)
+      call test_numsigma(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndL_anthracene_erf_dftd4
 

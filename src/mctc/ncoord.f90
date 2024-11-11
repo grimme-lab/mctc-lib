@@ -52,7 +52,6 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en)
    !> Optional set of electronegativity to be use din CN
    real(wp), intent(in), optional :: en(:)
 
-
    select case(cn_type)
    case("exp")
       block
@@ -92,6 +91,7 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en)
          call move_alloc(tmp, self)
       end block
    end select
+
 end subroutine new_ncoord
 
 end module mctc_ncoord
