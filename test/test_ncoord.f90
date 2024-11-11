@@ -27,6 +27,7 @@ module test_ncoord
    use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
    use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
    use mctc_ncoord_type 
+   use mctc_ncoord, only : new_ncoord
    implicit none
    private
 
@@ -243,8 +244,9 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(dexp_ncoord_type) :: dexp_ncoord
+      class(ncoord_type), allocatable :: dexp_ncoord
       real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: cn(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: ref(16) = [&
@@ -257,11 +259,16 @@ contains
 
       call get_structure(mol, "mindless01")
 
-      allocate(rcov(mol%nid))
+      allocate(rcov(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
+      ! Test also the external interface
+      call new_ncoord(dexp_ncoord, mol, "dexp", cutoff=cutoff, rcov=rcov)
+      call dexp_ncoord%get_cn(mol, cn)
 
-      call new_dexp_ncoord(dexp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, dexp_ncoord, cutoff, ref)
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
 
    end subroutine test_cn_mb01_dexp
 
@@ -499,8 +506,9 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(exp_ncoord_type) :: exp_ncoord
+      class(ncoord_type), allocatable :: exp_ncoord
       real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: cn(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: ref(16) = [&
@@ -513,12 +521,18 @@ contains
 
       call get_structure(mol, "mindless01")
 
-      allocate(rcov(mol%nid))
+      allocate(rcov(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_exp_ncoord(exp_ncoord, mol, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, exp_ncoord, cutoff, ref)
+      ! Test also the external interface
+      call new_ncoord(exp_ncoord, mol, "exp", cutoff=cutoff, rcov=rcov)
+      call exp_ncoord%get_cn(mol, cn)
 
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
+   
    end subroutine test_cn_mb01_exp
 
 
@@ -756,8 +770,9 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(erf_ncoord_type) :: erf_ncoord
+      class(ncoord_type), allocatable :: erf_ncoord
       real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: cn(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: kcn = 2.60_wp
@@ -771,11 +786,17 @@ contains
 
       call get_structure(mol, "mindless01")
 
-      allocate(rcov(mol%nid))
+      allocate(rcov(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov)
-      call test_cn_gen(error, mol, erf_ncoord, cutoff, ref)
+      ! Test also the external interface
+      call new_ncoord(erf_ncoord, mol, "erf", kcn=kcn, cutoff=cutoff, rcov=rcov)
+      call erf_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
 
    end subroutine test_cn_mb01_erf
 
@@ -1018,9 +1039,10 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(erf_en_ncoord_type) :: erf_en_ncoord
+      class(ncoord_type), allocatable :: erf_en_ncoord
       real(wp), allocatable :: rcov(:)
       real(wp), allocatable :: en(:)
+      real(wp), allocatable :: cn(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: kcn = 2.60_wp
@@ -1034,12 +1056,19 @@ contains
 
       call get_structure(mol, "mindless01")
 
-      allocate(rcov(mol%nid), en(mol%nid))
+      allocate(rcov(mol%nid), en(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
       en(:) = get_pauling_en(mol%num)
 
-      call new_erf_en_ncoord(erf_en_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol, erf_en_ncoord, cutoff, ref)
+      ! Test also the external interface
+      call new_ncoord(erf_en_ncoord, mol, "erf_en", &
+         & kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
+      call erf_en_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
 
    end subroutine test_cn_mb01_erf_en
 
@@ -1299,9 +1328,10 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      type(erf_dftd4_ncoord_type) :: erf_dftd4_ncoord
+      class(ncoord_type), allocatable :: erf_dftd4_ncoord
       real(wp), allocatable :: rcov(:)
       real(wp), allocatable :: en(:)
+      real(wp), allocatable :: cn(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: ref(16) = [&
@@ -1314,12 +1344,19 @@ contains
 
       call get_structure(mol, "mindless01")
 
-      allocate(rcov(mol%nid), en(mol%nid))
+      allocate(rcov(mol%nid), en(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
       en(:) = get_pauling_en(mol%num)
 
-      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
-      call test_cn_gen(error, mol, erf_dftd4_ncoord, cutoff, ref)
+      ! Test also the external interface
+      call new_ncoord(erf_dftd4_ncoord, mol, "dftd4", &
+         & cutoff=cutoff, rcov=rcov, en=en)
+      call erf_dftd4_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
 
    end subroutine test_cn_mb01_erf_dftd4
 
