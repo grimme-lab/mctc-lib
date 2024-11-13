@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-subdir('data')
-subdir('env')
-subdir('io')
-subdir('ncoord')
+add_subdirectory("erf")
 
-srcs += files(
-  'cutoff.f90',
-  'data.f90',
-  'env.f90',
-  'io.f90',
-  'ncoord.f90',
-  'version.F90',
+set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
+
+list(
+  APPEND srcs
+  "${dir}/dexp.f90"
+  "${dir}/exp.f90"
+  "${dir}/erf.f90"
+  "${dir}/type.f90"
 )
+
+set(srcs "${srcs}" PARENT_SCOPE)
