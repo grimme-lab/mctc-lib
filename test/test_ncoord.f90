@@ -67,6 +67,7 @@ contains
       & new_unittest("dcndL-mb07_exp", test_dcndL_mb07_exp), &
       & new_unittest("dcndL-antracene_exp", test_dcndL_anthracene_exp), &
       & new_unittest("cn-mb01_erf", test_cn_mb01_erf), &
+      & new_unittest("cn-mb01_cutoff_erf", test_cn_cutoff_mb01_erf), &
       & new_unittest("cn-mb02_erf", test_cn_mb02_erf), &
       & new_unittest("cn-mb03_erf", test_cn_mb03_erf), &
       & new_unittest("cn-acetic_erf", test_cn_acetic_erf), &
@@ -794,6 +795,43 @@ contains
       end if
 
    end subroutine test_cn_mb01_erf
+
+   subroutine test_cn_cutoff_mb01_erf(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: erf_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: cn(:)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: kcn = 7.5_wp
+      real(wp), parameter :: cn_max = 8.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 4.01821724338495E+0_wp, 9.72247109465167E-1_wp, 1.98487635195765E+0_wp, &
+      & 1.47199898291333E+0_wp, 9.96978323172462E-1_wp, 9.96288834201663E-1_wp, &
+      & 1.45078799827281E+0_wp, 1.99055055374771E+0_wp, 3.83042334184661E+0_wp, &
+      & 1.00185131973923E+0_wp, 9.96142041368325E-1_wp, 1.92309124625511E+0_wp, &
+      & 4.58700117126191E+0_wp, 3.80489139049207E+0_wp, 3.94005009430351E+0_wp, &
+      & 5.27144183788523E+0_wp]
+
+      call get_structure(mol, "mindless01")
+
+      allocate(rcov(mol%nid), cn(mol%nat))
+      rcov(:) = get_covalent_rad(mol%num)
+
+      ! Test also the external interface
+      call new_ncoord(erf_ncoord, mol, "erf", kcn=kcn, cutoff=cutoff, rcov=rcov, cut=cn_max)
+      call erf_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
+
+   end subroutine test_cn_cutoff_mb01_erf
 
 
    subroutine test_cn_mb02_erf(error)

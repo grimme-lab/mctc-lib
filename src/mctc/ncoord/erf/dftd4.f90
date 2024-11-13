@@ -52,7 +52,7 @@ module mctc_ncoord_erf_dftd4
 contains
 
 
-   subroutine new_erf_dftd4_ncoord(self, mol, kcn, cutoff, rcov, en)
+   subroutine new_erf_dftd4_ncoord(self, mol, kcn, cutoff, rcov, en, cut)
       !> Coordination number container
       type(erf_dftd4_ncoord_type), intent(out) :: self
       !> Molecular structure data
@@ -65,7 +65,9 @@ contains
       real(wp), intent(in), optional :: rcov(:)
       !> Electronegativity
       real(wp), intent(in), optional :: en(:)
-      
+      !> Cutoff for the maximum coordination number
+      real(wp), intent(in), optional :: cut
+
       if(present(kcn)) then
          self%kcn = kcn
       else
@@ -93,6 +95,13 @@ contains
       end if
 
       self%directed_factor = 1.0_wp
+
+      if (present(cut)) then
+         self%cut = cut
+      else
+         ! Negative value deactivates the cutoff
+         self%cut = -1.0_wp
+      end if
 
    end subroutine new_erf_dftd4_ncoord
 
