@@ -50,7 +50,7 @@ module mctc_ncoord_dexp
 contains
 
 
-subroutine new_dexp_ncoord(self, mol, cutoff, rcov)
+subroutine new_dexp_ncoord(self, mol, cutoff, rcov, cut)
    !> Coordination number container
    type(dexp_ncoord_type), intent(out) :: self
    !> Molecular structure data
@@ -59,6 +59,8 @@ subroutine new_dexp_ncoord(self, mol, cutoff, rcov)
    real(wp), intent(in), optional :: cutoff
    !> Covalent radii
    real(wp), intent(in), optional :: rcov(:)
+   !> Cutoff for the maximum coordination number
+   real(wp), intent(in), optional :: cut
 
    if (present(cutoff)) then
       self%cutoff = cutoff
@@ -74,6 +76,13 @@ subroutine new_dexp_ncoord(self, mol, cutoff, rcov)
    end if
    
    self%directed_factor = 1.0_wp
+
+   if (present(cut)) then
+      self%cut = cut
+   else
+      ! Negative value deactivates the cutoff
+      self%cut = -1.0_wp
+   end if
 
 end subroutine new_dexp_ncoord
 

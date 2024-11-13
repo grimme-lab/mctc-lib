@@ -36,7 +36,7 @@ module mctc_ncoord
 contains
 
 !> Create a new generic coordination number container
-subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en)
+subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en, cut)
    !> Instance of the coordination number container
    class(ncoord_type), allocatable, intent(out) :: self
    !> Molecular structure data
@@ -51,27 +51,29 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en)
    real(wp), intent(in), optional :: rcov(:)
    !> Optional set of electronegativity to be use din CN
    real(wp), intent(in), optional :: en(:)
+   !> Cutoff for the maximum coordination number
+   real(wp), intent(in), optional :: cut
 
    select case(cn_type)
    case("exp")
       block
          type(exp_ncoord_type), allocatable :: tmp
          allocate(tmp)
-         call new_exp_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, rcov=rcov)
+         call new_exp_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, cut=cut)
          call move_alloc(tmp, self)
       end block
    case("dexp")
       block
          type(dexp_ncoord_type), allocatable :: tmp
          allocate(tmp)
-         call new_dexp_ncoord(tmp, mol, cutoff=cutoff, rcov=rcov)
+         call new_dexp_ncoord(tmp, mol, cutoff=cutoff, rcov=rcov, cut=cut)
          call move_alloc(tmp, self)
       end block
    case("erf")
       block
          type(erf_ncoord_type), allocatable :: tmp
          allocate(tmp)
-         call new_erf_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, rcov=rcov)
+         call new_erf_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, cut=cut)
          call move_alloc(tmp, self)
       end block
    case("erf_en")
@@ -79,7 +81,7 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en)
          type(erf_en_ncoord_type), allocatable :: tmp
          allocate(tmp)
          call new_erf_en_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, &
-            & rcov=rcov, en=en)
+            & rcov=rcov, en=en, cut=cut)
          call move_alloc(tmp, self)
       end block
    case("dftd4")
@@ -87,7 +89,7 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en)
          type(erf_dftd4_ncoord_type), allocatable :: tmp
          allocate(tmp)
          call new_erf_dftd4_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, &
-            & rcov=rcov, en=en)
+            & rcov=rcov, en=en, cut=cut)
          call move_alloc(tmp, self)
       end block
    end select

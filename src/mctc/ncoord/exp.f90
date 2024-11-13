@@ -44,7 +44,7 @@ module mctc_ncoord_exp
 contains
 
 
-   subroutine new_exp_ncoord(self, mol, kcn, cutoff, rcov)
+   subroutine new_exp_ncoord(self, mol, kcn, cutoff, rcov, cut)
       !> Coordination number container
       type(exp_ncoord_type), intent(out) :: self
       !> Molecular structure data
@@ -55,6 +55,8 @@ contains
       real(wp), intent(in), optional :: cutoff
       !> Covalent radii
       real(wp), intent(in), optional :: rcov(:)
+      !> Cutoff for the maximum coordination number
+      real(wp), intent(in), optional :: cut
 
       if(present(kcn)) then
          self%kcn = kcn
@@ -76,6 +78,13 @@ contains
       end if
 
       self%directed_factor = 1.0_wp
+
+      if (present(cut)) then
+         self%cut = cut
+      else
+         ! Negative value deactivates the cutoff
+         self%cut = -1.0_wp
+      end if
 
    end subroutine new_exp_ncoord
    

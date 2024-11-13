@@ -26,6 +26,7 @@ module mctc_ncoord_type
 
    !> Abstract base class for coordination number evaluator
    type, public, abstract :: ncoord_type
+      !> Radial cutoff for the coordination number
       real(wp)  :: cutoff
       !> Steepness of counting function
       real(wp)  :: kcn 
@@ -33,6 +34,8 @@ module mctc_ncoord_type
       !> if +1 the CN contribution is added equally to both partners
       !> if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other
       real(wp)  :: directed_factor
+      !> Cutoff for the maximum coordination number (negative value, no cutoff)
+      real(wp)  :: cut = -1.0_wp
    contains
       !> Obtains lattice information and calls get_coordination number
       procedure :: get_cn
@@ -132,6 +135,10 @@ contains
          call ncoord_d(self, mol, trans, cn, dcndr, dcndL)
       else
          call ncoord(self, mol, trans, cn)
+      end if
+
+      if (self%cut > 0.0_wp) then
+         call cut_coordination_number(self%cut, cn, dcndr, dcndL)
       end if
 
    end subroutine get_coordination_number
@@ -320,5 +327,60 @@ contains
       en_factor = 1.0_wp
       
    end function get_en_factor
+
+
+   !> Cutoff function for large coordination numbers
+   pure subroutine cut_coordination_number(cn_max, cn, dcndr, dcndL)
+
+      !> Maximum CN (not strictly obeyed)
+      real(wp), intent(in) :: cn_max
+
+      !> On input coordination number, on output modified CN
+      real(wp), intent(inout) :: cn(:)
+
+      !> On input derivative of CN w.r.t. cartesian coordinates,
+      !> on output derivative of modified CN
+      real(wp), intent(inout), optional :: dcndr(:, :, :)
+
+      !> On input derivative of CN w.r.t. strain deformation,
+      !> on output derivative of modified CN
+      real(wp), intent(inout), optional :: dcndL(:, :, :)
+
+      real(wp) :: dcnpdcn
+      integer  :: iat
+
+      if (present(dcndL)) then
+         do iat = 1, size(cn)
+            dcnpdcn = dlog_cn_cut(cn(iat), cn_max)
+            dcndL(:, :, iat) = dcnpdcn*dcndL(:, :, iat)
+         enddo
+      endif
+
+      if (present(dcndr)) then
+         do iat = 1, size(cn)
+            dcnpdcn = dlog_cn_cut(cn(iat), cn_max)
+            dcndr(:, :, iat) = dcnpdcn*dcndr(:, :, iat)
+         enddo
+      endif
+
+      do iat = 1, size(cn)
+         cn(iat) = log_cn_cut(cn(iat), cn_max)
+      enddo
+
+   end subroutine cut_coordination_number
+
+   elemental function log_cn_cut(cn, cnmax) result(cnp)
+      real(wp), intent(in) :: cn
+      real(wp), intent(in) :: cnmax
+      real(wp) :: cnp
+      cnp = log(1.0_wp + exp(cnmax)) - log(1.0_wp + exp(cnmax - cn))
+   end function log_cn_cut
+
+   elemental function dlog_cn_cut(cn, cnmax) result(dcnpdcn)
+      real(wp), intent(in) :: cn
+      real(wp), intent(in) :: cnmax
+      real(wp) :: dcnpdcn
+      dcnpdcn = exp(cnmax)/(exp(cnmax) + exp(cn))
+   end function dlog_cn_cut
 
 end module mctc_ncoord_type
