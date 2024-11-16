@@ -33,6 +33,8 @@ module mctc_ncoord_erf
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: erf_ncoord_type
       real(wp), allocatable :: rcov(:)
+      !> Exponent of the distance normalization
+      real(wp)  :: norm_exp
    contains
       !> Evaluates the error counting function
       procedure :: ncoord_count
@@ -43,12 +45,15 @@ module mctc_ncoord_erf
    !> Steepness of counting function (CEH)
    real(wp), parameter :: default_kcn = 3.15_wp
 
+   !> Exponent of distance normalization 
+   real(wp), parameter :: default_norm_exp = 1.0_wp
+
    real(wp), parameter :: default_cutoff = 25.0_wp
 
 contains
 
 
-   subroutine new_erf_ncoord(self, mol, kcn, cutoff, rcov, cut)
+   subroutine new_erf_ncoord(self, mol, kcn, cutoff, rcov, cut, norm_exp)
       !> Coordination number container
       type(erf_ncoord_type), intent(out) :: self
       !> Molecular structure data
@@ -61,6 +66,8 @@ contains
       real(wp), intent(in), optional :: rcov(:)
       !> Cutoff for the maximum coordination number
       real(wp), intent(in), optional :: cut
+      !> Exponent of the distance normalization
+      real(wp), intent(in), optional :: norm_exp
 
       if(present(kcn)) then
          self%kcn = kcn
@@ -90,6 +97,12 @@ contains
          self%cut = -1.0_wp
       end if
 
+      if (present(norm_exp)) then
+         self%norm_exp = norm_exp
+      else
+         self%norm_exp = default_norm_exp
+      end if
+
    end subroutine new_erf_ncoord
 
 
@@ -108,7 +121,7 @@ contains
       
       rc = (self%rcov(izp) + self%rcov(jzp))
 
-      count = 0.5_wp * (1.0_wp + erf(-self%kcn*(r-rc)/rc))
+      count = 0.5_wp * (1.0_wp + erf(-self%kcn*(r-rc)/rc**self%norm_exp))
       
    end function ncoord_count
 
@@ -128,7 +141,7 @@ contains
 
       rc = self%rcov(izp) + self%rcov(jzp)
 
-      exponent = self%kcn*(r-rc)/rc
+      exponent = self%kcn*(r-rc)/rc**self%norm_exp
       expterm = exp(-exponent**2)
       count = -(self%kcn*expterm)/(rc*sqrtpi)
 

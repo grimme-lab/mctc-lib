@@ -38,12 +38,15 @@ module mctc_ncoord_erf_en
    !> Steepness of counting function (CEH)
    real(wp), parameter :: default_kcn = 2.65_wp
 
+   !> Exponent of distance normalization 
+   real(wp), parameter :: default_norm_exp = 1.0_wp
+
    real(wp), parameter :: default_cutoff = 25.0_wp
 
 contains
 
 
-   subroutine new_erf_en_ncoord(self, mol, kcn, cutoff, rcov, en, cut)
+   subroutine new_erf_en_ncoord(self, mol, kcn, cutoff, rcov, en, cut, norm_exp)
       !> Coordination number container
       type(erf_en_ncoord_type), intent(out) :: self
       !> Molecular structure data
@@ -54,10 +57,12 @@ contains
       real(wp), intent(in), optional :: cutoff
       !> Covalent radii
       real(wp), intent(in), optional :: rcov(:)
-      !> Electronegativity
+      !> Electronegativity (normalized to F)
       real(wp), intent(in), optional :: en(:)
       !> Cutoff for the maximum coordination number
       real(wp), intent(in), optional :: cut
+      !> Exponent of the distance normalization
+      real(wp), intent(in), optional :: norm_exp
 
       if(present(kcn)) then
          self%kcn = kcn
@@ -94,6 +99,12 @@ contains
       else
          ! Negative value deactivates the cutoff
          self%cut = -1.0_wp
+      end if
+
+      if (present(norm_exp)) then
+         self%norm_exp = norm_exp
+      else
+         self%norm_exp = default_norm_exp
       end if
 
    end subroutine new_erf_en_ncoord
