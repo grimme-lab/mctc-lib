@@ -38,6 +38,9 @@ module mctc_ncoord_erf_dftd4
    !> Steepness of counting function
    real(wp), parameter :: default_kcn = 7.5_wp
 
+   !> Exponent of distance normalization 
+   real(wp), parameter :: default_norm_exp = 1.0_wp
+
    real(wp), parameter :: default_cutoff = 25.0_wp
 
    !> Parameter for electronegativity scaling
@@ -52,7 +55,7 @@ module mctc_ncoord_erf_dftd4
 contains
 
 
-   subroutine new_erf_dftd4_ncoord(self, mol, kcn, cutoff, rcov, en, cut)
+   subroutine new_erf_dftd4_ncoord(self, mol, kcn, cutoff, rcov, en, cut, norm_exp)
       !> Coordination number container
       type(erf_dftd4_ncoord_type), intent(out) :: self
       !> Molecular structure data
@@ -67,6 +70,8 @@ contains
       real(wp), intent(in), optional :: en(:)
       !> Cutoff for the maximum coordination number
       real(wp), intent(in), optional :: cut
+      !> Exponent of the distance normalization
+      real(wp), intent(in), optional :: norm_exp
 
       if(present(kcn)) then
          self%kcn = kcn
@@ -101,6 +106,12 @@ contains
       else
          ! Negative value deactivates the cutoff
          self%cut = -1.0_wp
+      end if
+
+      if (present(norm_exp)) then
+         self%norm_exp = norm_exp
+      else
+         self%norm_exp = default_norm_exp
       end if
 
    end subroutine new_erf_dftd4_ncoord

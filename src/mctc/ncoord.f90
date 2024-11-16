@@ -36,7 +36,7 @@ module mctc_ncoord
 contains
 
 !> Create a new generic coordination number container
-subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en, cut)
+subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en, cut, norm_exp)
    !> Instance of the coordination number container
    class(ncoord_type), allocatable, intent(out) :: self
    !> Molecular structure data
@@ -51,8 +51,10 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en, cut)
    real(wp), intent(in), optional :: rcov(:)
    !> Optional set of electronegativity to be use din CN
    real(wp), intent(in), optional :: en(:)
-   !> Cutoff for the maximum coordination number
+   !> Optional cutoff for the maximum coordination number
    real(wp), intent(in), optional :: cut
+   !> Optional exponent of the distance normalization
+   real(wp), intent(in), optional :: norm_exp
 
    select case(cn_type)
    case("exp")
@@ -73,7 +75,8 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en, cut)
       block
          type(erf_ncoord_type), allocatable :: tmp
          allocate(tmp)
-         call new_erf_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, cut=cut)
+         call new_erf_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, &
+            & rcov=rcov, cut=cut, norm_exp=norm_exp)
          call move_alloc(tmp, self)
       end block
    case("erf_en")
@@ -81,7 +84,7 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en, cut)
          type(erf_en_ncoord_type), allocatable :: tmp
          allocate(tmp)
          call new_erf_en_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, &
-            & rcov=rcov, en=en, cut=cut)
+            & rcov=rcov, en=en, cut=cut, norm_exp=norm_exp)
          call move_alloc(tmp, self)
       end block
    case("dftd4")
@@ -89,7 +92,7 @@ subroutine new_ncoord(self, mol, cn_type, kcn, cutoff, rcov, en, cut)
          type(erf_dftd4_ncoord_type), allocatable :: tmp
          allocate(tmp)
          call new_erf_dftd4_ncoord(tmp, mol, kcn=kcn, cutoff=cutoff, &
-            & rcov=rcov, en=en, cut=cut)
+            & rcov=rcov, en=en, cut=cut, norm_exp=norm_exp)
          call move_alloc(tmp, self)
       end block
    end select

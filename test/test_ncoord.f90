@@ -845,20 +845,21 @@ contains
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: kcn = 2.60_wp
+      real(wp), parameter :: norm_exp = 0.8_wp
       real(wp), parameter :: ref(16) = [&
-      & +7.69338455488404E-01_wp, +3.43906282200685E+00_wp, +3.09682161007250E+00_wp, &
-      & +2.51887440744333E+00_wp, +4.48473180889284E+00_wp, +1.04427988033896E+00_wp, &
-      & +7.91999226960846E-01_wp, +8.10605045203656E-01_wp, +4.38499629754698E+00_wp, &
-      & +1.18154096161350E+00_wp, +3.50661982359796E+00_wp, +3.79803204777630E+00_wp, &
-      & +1.71950724069027E+00_wp, +7.52262747522523E-01_wp, +1.30981487576456E+00_wp, &
-      & +1.93023548195301E+00_wp]
+      & 7.82883150684095E-01_wp, 3.47414568086695E+00_wp, 3.21490904495080E+00_wp, &
+      & 2.57204039419665E+00_wp, 4.70139897809430E+00_wp, 1.01600663641776E+00_wp, &
+      & 8.02988129457653E-01_wp, 8.05575211220716E-01_wp, 4.53312550965630E+00_wp, &
+      & 1.07341286735542E+00_wp, 3.48131954350286E+00_wp, 3.75872922171681E+00_wp, &
+      & 1.83133763195600E+00_wp, 8.02241219305798E-01_wp, 1.33431699912730E+00_wp, &
+      & 1.85405528497185E+00_wp]
 
       call get_structure(mol, "mindless02")
 
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov)
+      call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, norm_exp=norm_exp)
       call test_cn_gen(error, mol, erf_ncoord, ref)
 
    end subroutine test_cn_mb02_erf
@@ -1118,13 +1119,14 @@ contains
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: kcn = 2.60_wp
+      real(wp), parameter :: norm_exp = 0.8_wp
       real(wp), parameter :: ref(16) = [&
-      & -1.12234584286121E-01_wp, -2.94004224176729E+00_wp, -5.58562445598307E-02_wp, &
-      & -4.14055422698917E+00_wp, +4.94118711261405E+00_wp, +6.99329422648258E-01_wp, &
-      & -1.03826235691724E-01_wp, -1.37913918152233E-01_wp, +9.80518929048175E-01_wp, &
-      & +6.69155623786794E-01_wp, +5.48588370791672E-01_wp, +6.70886303840263E+00_wp, &
-      & -4.81696150596437E+00_wp, -2.21594284437332E-01_wp, -2.79322359462227E-01_wp, &
-      & -1.73933689598129E+00_wp]
+      & -1.20766490409683E-01_wp, -3.16431597148754E+00_wp, -5.05004208597497E-02_wp, &
+      & -4.25983254262925E+00_wp,  5.12905009209427E+00_wp,  8.28195323146111E-01_wp, &
+      & -1.20642619114040E-01_wp, -1.30015328757524E-01_wp,  1.04018711784936E+00_wp, &
+      &  8.14999806238091E-01_wp,  6.97386143793777E-01_wp,  6.83247561402713E+00_wp, &
+      & -5.18157773756499E+00_wp, -2.40202426638317E-01_wp, -3.02851981491491E-01_wp, &
+      & -1.77158857819614E+00_wp]
 
       call get_structure(mol, "mindless02")
 
@@ -1132,7 +1134,8 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
       en(:) = get_pauling_en(mol%num)
 
-      call new_erf_en_ncoord(erf_en_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
+      call new_erf_en_ncoord(erf_en_ncoord, mol, kcn=kcn, cutoff=cutoff, &
+         & rcov=rcov, en=en, norm_exp=norm_exp)
       call test_cn_gen(error, mol,  erf_en_ncoord, ref)
 
    end subroutine test_cn_mb02_erf_en
@@ -1471,13 +1474,14 @@ contains
       real(wp), allocatable :: en(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: norm_exp = 0.8_wp
       real(wp), parameter :: ref(16) = [&
-      & 9.20259141516190E-1_wp, 3.29216939906043E+0_wp, 3.51944438412931E+0_wp, &
-      & 2.25877973040028E+0_wp, 4.46999073626179E+0_wp, 8.18916367808423E-1_wp, &
-      & 9.28914937407466E-1_wp, 9.30833050893587E-1_wp, 4.60708718003244E+0_wp, &
-      & 8.18343168300509E-1_wp, 3.70959638795740E+0_wp, 2.87405845608016E+0_wp, &
-      & 1.24015900552686E+0_wp, 9.11079070954527E-1_wp, 1.57258868344791E+0_wp, &
-      & 1.67284525339418E+0_wp]
+      & 9.42718287075170E-1_wp, 3.36848356833576E+0_wp, 3.63463906109694E+0_wp, &
+      & 2.27670250096768E+0_wp, 4.71481260163654E+0_wp, 8.10661654309892E-1_wp, &
+      & 9.47358382643435E-1_wp, 9.48316042740831E-1_wp, 4.64606177656574E+0_wp, &
+      & 8.10384366749581E-1_wp, 3.74392916782297E+0_wp, 2.93620819522544E+0_wp, &
+      & 1.24273507745740E+0_wp, 9.30562514461567E-1_wp, 1.67284106029936E+0_wp, &
+      & 1.68882066428832E+0_wp]
 
       call get_structure(mol, "mindless02")
 
@@ -1485,7 +1489,8 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
       en(:) = get_pauling_en(mol%num)
 
-      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, &
+         & rcov=rcov, en=en, norm_exp=norm_exp)
       call test_cn_gen(error, mol, erf_dftd4_ncoord, ref)
 
    end subroutine test_cn_mb02_erf_dftd4
