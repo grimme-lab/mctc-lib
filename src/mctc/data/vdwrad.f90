@@ -25,7 +25,7 @@
 !>    PCCP, 2019, 21,18048, DOI: 10.1039/c9cp02455g
 !>    L. Wittmann, I. Gordiy, M. Friede, B. Helmich-Paris, S. Grimme, A. Hansen, M. Bursch,
 !>    PCCP, 2024, 26, 21379, DOI: 10.1039/d4cp01514b
-module mcrc_data_vdwrad
+module mctc_data_vdwrad
    use mctc_env, only : wp
    use mctc_io_convert, only : aatoau
    use mctc_io_symbols, only : to_number
