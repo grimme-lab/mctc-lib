@@ -961,6 +961,7 @@ contains
       type(erf_ncoord_type) :: erf_ncoord
       real(wp), allocatable :: rcov(:)
 
+      real(wp), parameter :: norm_exp = 0.8_wp
       real(wp), parameter :: cutoff = 30.0_wp
 
       call get_structure(mol, "mindless05")
@@ -968,7 +969,8 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, &
+         & rcov=rcov, norm_exp=norm_exp)
       call test_numgrad(error, mol, erf_ncoord)
 
    end subroutine test_dcndr_mb05_erf
@@ -1244,6 +1246,7 @@ contains
       real(wp), allocatable :: rcov(:)
       real(wp), allocatable :: en(:)
 
+      real(wp), parameter :: norm_exp = 0.8_wp
       real(wp), parameter :: cutoff = 30.0_wp
 
       call get_structure(mol, "mindless05")
@@ -1252,7 +1255,8 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
       en(:) = get_pauling_en(mol%num)
 
-      call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call new_erf_en_ncoord(erf_en_ncoord, mol, cutoff=cutoff, &
+         & rcov=rcov, en=en, norm_exp=norm_exp)
       call test_numgrad(error, mol, erf_en_ncoord)
 
    end subroutine test_dcndr_mb05_erf_en

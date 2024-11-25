@@ -143,7 +143,7 @@ contains
 
       exponent = self%kcn*(r-rc)/rc**self%norm_exp
       expterm = exp(-exponent**2)
-      count = -(self%kcn*expterm)/(rc*sqrtpi)
+      count = -(self%kcn*expterm)/(sqrtpi*rc**self%norm_exp)
 
    end function ncoord_dcount
 
