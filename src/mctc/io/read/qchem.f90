@@ -145,7 +145,7 @@ subroutine read_qchem(mol, unit, error)
          end do
          if (stat /= 0) then
             call io_error(error, "Cannot read coordinates", &
-               & line, token, filename(unit), lnum, "expected real value")
+               & line, token, filename(unit), lnum, "expected value")
             return
          end if
 
@@ -165,6 +165,11 @@ subroutine read_qchem(mol, unit, error)
             y = zm(1) * sin(zm(2) * deg_to_rad) * sin(zm(3) * deg_to_rad)
             z = zm(1) * cos(zm(2) * deg_to_rad)
          end select
+         if (ij(1) >= iat) then
+            call io_error(error, "Cannot read coordinates", &
+               & line, token, filename(unit), lnum, "invalid atom index")
+            return
+         end if
          xyz(:, iat) = xyz(:, ij(1)) + [x, y, z] * aatoau
 
       end do
