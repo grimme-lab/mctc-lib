@@ -36,11 +36,16 @@ subroutine collect_read_qchem(testsuite)
       & new_unittest("valid1-qchem", test_valid1_qchem), &
       & new_unittest("valid2-qchem", test_valid2_qchem), &
       & new_unittest("valid3-qchem", test_valid3_qchem), &
+      & new_unittest("valid4-qchem", test_valid4_qchem), &
       & new_unittest("invalid1-qchem", test_invalid1_qchem, should_fail=.true.), &
       & new_unittest("invalid2-qchem", test_invalid2_qchem, should_fail=.true.), &
       & new_unittest("invalid3-qchem", test_invalid3_qchem, should_fail=.true.), &
       & new_unittest("invalid4-qchem", test_invalid4_qchem, should_fail=.true.), &
-      & new_unittest("invalid5-qchem", test_invalid5_qchem, should_fail=.true.) &
+      & new_unittest("invalid5-qchem", test_invalid5_qchem, should_fail=.true.), &
+      & new_unittest("invalid6-qchem", test_invalid6_qchem, should_fail=.true.), &
+      & new_unittest("invalid7-qchem", test_invalid7_qchem, should_fail=.true.), &
+      & new_unittest("invalid8-qchem", test_invalid8_qchem, should_fail=.true.), &
+      & new_unittest("invalid9-qchem", test_invalid9_qchem, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_qchem
@@ -157,6 +162,36 @@ subroutine test_valid3_qchem(error)
 
 end subroutine test_valid3_qchem
 
+subroutine test_valid4_qchem(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$molecule", &
+      "0 1", &
+      "P", &
+      "H  1 1.407461", &
+      "H  1 1.407521 2 100.786448", &
+      "H  1 1.407521 2 100.786448 3 103.310033 0", &
+      "O  1 1.487800 2 117.174945 3 -128.344983 0", &
+      "$end"
+   rewind(unit)
+
+   call read_qchem(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 5, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 3, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid4_qchem
 
 
 subroutine test_invalid1_qchem(error)
@@ -322,6 +357,106 @@ subroutine test_invalid5_qchem(error)
    close(unit)
 
 end subroutine test_invalid5_qchem
+
+subroutine test_invalid6_qchem(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$molecule", &
+      "0 1", &
+      "P", &
+      "H", &
+      "H  1 1.407521 2 100.786448", &
+      "H  1 1.407521 2 100.786448 3 103.310033 0", &
+      "O  1 1.487800 2 117.174945 3 -128.344983 0", &
+      "$end"
+   rewind(unit)
+
+   call read_qchem(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid6_qchem
+
+subroutine test_invalid7_qchem(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$molecule", &
+      "0 1", &
+      "P", &
+      "H  1", &
+      "H  1 1.407521 2 100.786448", &
+      "H  1 1.407521 2 100.786448 3 103.310033 0", &
+      "O  1 1.487800 2 117.174945 3 -128.344983 0", &
+      "$end"
+   rewind(unit)
+
+   call read_qchem(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid7_qchem
+
+subroutine test_invalid8_qchem(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$molecule", &
+      "0 1", &
+      "P", &
+      "H  2 1.407461", &
+      "H  1 1.407521 2 100.786448", &
+      "H  1 1.407521 2 100.786448 3 103.310033 0", &
+      "O  1 1.487800 2 117.174945 3 -128.344983 0", &
+      "$end"
+   rewind(unit)
+
+   call read_qchem(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid8_qchem
+
+subroutine test_invalid9_qchem(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "$molecule", &
+      "0 1", &
+      "P", &
+      "*", &
+      "H  1 1.407521 2 100.786448", &
+      "H  1 1.407521 2 100.786448 3 103.310033 0", &
+      "O  1 1.487800 2 117.174945 3 -128.344983 0", &
+      "$end"
+   rewind(unit)
+
+   call read_qchem(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid9_qchem
 
 
 end module test_read_qchem
