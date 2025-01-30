@@ -15,6 +15,7 @@
 module mctc_io_read_qchem
    use mctc_env_accuracy, only : wp
    use mctc_env_error, only : error_type
+   use mctc_io_constants, only : pi
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
    use mctc_io_symbols, only : symbol_length, to_number, to_symbol
@@ -41,14 +42,15 @@ subroutine read_qchem(mol, unit, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: stat, pos, lnum, izp, iat
-   integer :: charge, multiplicity
+   integer :: stat, pos, lnum, izp, iat, iz, ij(3)
+   integer :: charge, multiplicity, zrepeat
    type(token_type) :: token
    character(len=:), allocatable :: line
-   real(wp) :: x, y, z
+   real(wp) :: x, y, z, zm(3)
    character(len=symbol_length), allocatable :: sym(:)
    real(wp), allocatable :: xyz(:, :), abc(:, :), lattice(:, :)
    logical :: is_frac, periodic(3)
+   real(wp), parameter :: deg_to_rad = pi / 180.0_wp
 
    iat = 0
    lnum = 0
@@ -83,30 +85,90 @@ subroutine read_qchem(mol, unit, error)
    allocate(sym(initial_size), source=repeat(' ', symbol_length))
    allocate(xyz(3, initial_size), source=0.0_wp)
 
-   do while(stat == 0)
-      call next_line(unit, line, pos, lnum, stat)
-      if (stat /= 0) exit
+   call next_line(unit, line, pos, lnum, stat)
+   if (stat /= 0) then
+      call io_error(error, "Failed to read molecule block", &
+         & line, token_type(0, 0), filename(unit), lnum, "unexpected end of input")
+      return
+   end if
 
-      call next_token(line, pos, token)
-      if (to_lower(line(token%first:token%last)) == '$end') exit
+   call next_token(line, pos, token)
 
-      if (iat >= size(sym)) call resize(sym)
-      if (iat >= size(xyz, 2)) call resize(xyz)
-      iat = iat + 1
+   iat = iat + 1
 
-      token%last = min(token%last, token%first + symbol_length - 1)
-      sym(iat) = line(token%first:token%last)
-      if (to_number(sym(iat)) == 0) then
-         call read_token(line, token, izp, stat)
-         sym(iat) = to_symbol(izp)
-      end if
-      if (stat /= 0) then
-         call io_error(error, "Cannot map symbol to atomic number", &
-            & line, token, filename(unit), lnum, "unknown element")
-         return
-      end if
+   token%last = min(token%last, token%first + symbol_length - 1)
+   sym(iat) = line(token%first:token%last)
+   if (to_number(sym(iat)) == 0) then
+      call read_token(line, token, izp, stat)
+      sym(iat) = to_symbol(izp)
+   end if
+   if (stat /= 0) then
+      call io_error(error, "Cannot map symbol to atomic number", &
+         & line, token, filename(unit), lnum, "unknown element")
+      return
+   end if
 
-      call read_next_token(line, pos, token, x, stat)
+   call read_next_token(line, pos, token, x, stat)
+   if (stat /= 0) then
+      stat = 0
+      xyz(:, iat) = [0, 0, 0] * aatoau
+      zrepeat = 1
+
+      do while(stat == 0)
+         call next_line(unit, line, pos, lnum, stat)
+         if (stat /= 0) exit
+
+         call next_token(line, pos, token)
+         if (to_lower(line(token%first:token%last)) == '$end') exit
+
+         if (iat >= size(sym)) call resize(sym)
+         if (iat >= size(xyz, 2)) call resize(xyz)
+         iat = iat + 1
+
+         token%last = min(token%last, token%first + symbol_length - 1)
+         sym(iat) = line(token%first:token%last)
+         if (to_number(sym(iat)) == 0) then
+            call read_token(line, token, izp, stat)
+            sym(iat) = to_symbol(izp)
+         end if
+         if (stat /= 0) then
+            call io_error(error, "Cannot map symbol to atomic number", &
+               & line, token, filename(unit), lnum, "unknown element")
+            return
+         end if
+
+         do iz = 1, zrepeat
+            if (stat == 0) &
+            call read_next_token(line, pos, token, ij(iz), stat)
+            if (stat == 0) &
+            call read_next_token(line, pos, token, zm(iz), stat)
+         end do
+         if (stat /= 0) then
+            call io_error(error, "Cannot read coordinates", &
+               & line, token, filename(unit), lnum, "expected real value")
+            return
+         end if
+
+         select case(zrepeat)
+         case(1)
+            x = 0.0_wp
+            y = 0.0_wp
+            z = zm(1)
+            zrepeat = zrepeat + 1
+         case(2)
+            x = 0.0_wp
+            y = zm(1) * sin(zm(2) * deg_to_rad)
+            z = zm(1) * cos(zm(2) * deg_to_rad)
+            zrepeat = zrepeat + 1
+         case default
+            x = zm(1) * sin(zm(2) * deg_to_rad) * cos(zm(3) * deg_to_rad)
+            y = zm(1) * sin(zm(2) * deg_to_rad) * sin(zm(3) * deg_to_rad)
+            z = zm(1) * cos(zm(2) * deg_to_rad)
+         end select
+         xyz(:, iat) = xyz(:, ij(1)) + [x, y, z] * aatoau
+
+      end do
+   else
       if (stat == 0) &
          call read_next_token(line, pos, token, y, stat)
       if (stat == 0) &
@@ -118,7 +180,44 @@ subroutine read_qchem(mol, unit, error)
       end if
 
       xyz(:, iat) = [x, y, z] * aatoau
-   end do
+
+      do while(stat == 0)
+         call next_line(unit, line, pos, lnum, stat)
+         if (stat /= 0) exit
+
+         call next_token(line, pos, token)
+         if (to_lower(line(token%first:token%last)) == '$end') exit
+
+         if (iat >= size(sym)) call resize(sym)
+         if (iat >= size(xyz, 2)) call resize(xyz)
+         iat = iat + 1
+
+         token%last = min(token%last, token%first + symbol_length - 1)
+         sym(iat) = line(token%first:token%last)
+         if (to_number(sym(iat)) == 0) then
+            call read_token(line, token, izp, stat)
+            sym(iat) = to_symbol(izp)
+         end if
+         if (stat /= 0) then
+            call io_error(error, "Cannot map symbol to atomic number", &
+               & line, token, filename(unit), lnum, "unknown element")
+            return
+         end if
+
+         call read_next_token(line, pos, token, x, stat)
+         if (stat == 0) &
+            call read_next_token(line, pos, token, y, stat)
+         if (stat == 0) &
+            call read_next_token(line, pos, token, z, stat)
+         if (stat /= 0) then
+            call io_error(error, "Cannot read coordinates", &
+               & line, token, filename(unit), lnum, "expected real value")
+            return
+         end if
+
+         xyz(:, iat) = [x, y, z] * aatoau
+      end do
+   end if
 
    if (stat /= 0) then
       call io_error(error, "Failed to read molecule block", &
