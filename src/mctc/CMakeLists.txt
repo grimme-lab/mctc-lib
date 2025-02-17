@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+add_subdirectory("data")
 add_subdirectory("env")
 add_subdirectory("io")
+add_subdirectory("ncoord")
 
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
+  "${dir}/cutoff.f90"
+  "${dir}/data.f90"
   "${dir}/env.f90"
   "${dir}/io.f90"
+  "${dir}/ncoord.f90"
   "${dir}/version.F90"
 )
 

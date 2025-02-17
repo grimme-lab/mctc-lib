@@ -40,6 +40,7 @@ set(
   "write-turbomole"
   "write-vasp"
   "write-xyz"
+  "ncoord"
 )
 set(
   test-srcs
