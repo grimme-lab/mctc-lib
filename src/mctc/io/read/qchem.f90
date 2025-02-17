@@ -18,6 +18,7 @@ module mctc_io_read_qchem
    use mctc_io_constants, only : pi
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
+   use mctc_io_math, only : crossprod
    use mctc_io_symbols, only : symbol_length, to_number, to_symbol
    use mctc_io_structure, only : structure_type, new
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
@@ -46,7 +47,7 @@ subroutine read_qchem(mol, unit, error)
    integer :: charge, multiplicity, zrepeat
    type(token_type) :: token
    character(len=:), allocatable :: line
-   real(wp) :: x, y, z, zm(3)
+   real(wp) :: x, y, z, zm(3), a12(3), a32(3), vec(3)
    character(len=symbol_length), allocatable :: sym(:)
    real(wp), allocatable :: xyz(:, :), abc(:, :), lattice(:, :)
    logical :: is_frac, periodic(3)
@@ -151,26 +152,37 @@ subroutine read_qchem(mol, unit, error)
 
          select case(zrepeat)
          case(1)
-            x = 0.0_wp
-            y = 0.0_wp
-            z = zm(1)
+            x = xyz(1, ij(1)) + zm(1) * aatoau
+            y = xyz(2, ij(1))
+            z = xyz(3, ij(1))
             zrepeat = zrepeat + 1
          case(2)
-            x = 0.0_wp
-            y = zm(1) * sin(zm(2) * deg_to_rad)
-            z = zm(1) * cos(zm(2) * deg_to_rad)
+            x = xyz(1, ij(1)) + zm(1) * aatoau * cos(zm(2) * deg_to_rad) * (ij(2) - ij(1))
+            y = xyz(2, ij(1)) + zm(1) * aatoau * sin(zm(2) * deg_to_rad)
+            z = xyz(3, ij(1))
             zrepeat = zrepeat + 1
          case default
-            x = zm(1) * sin(zm(2) * deg_to_rad) * cos(zm(3) * deg_to_rad)
-            y = zm(1) * sin(zm(2) * deg_to_rad) * sin(zm(3) * deg_to_rad)
-            z = zm(1) * cos(zm(2) * deg_to_rad)
+            a12 = xyz(:, ij(2)) - xyz(:, ij(1))
+            a12 = a12 / norm2(a12)
+
+            a32 = xyz(:, ij(2)) - xyz(:, ij(3))
+            a32 = a32 - a12 * dot_product(a32, a12)
+            a32 = a32 / norm2(a32)
+
+            vec = a32 * cos(zm(3) * deg_to_rad) + crossprod(a12, a32) * sin(zm(3) * deg_to_rad)
+            vec = a12 * cos(zm(2) * deg_to_rad) - vec * sin(zm(2) * deg_to_rad)
+            vec = zm(1) * aatoau / norm2(vec) * vec
+
+            x = xyz(1, ij(1)) + vec(1)
+            y = xyz(2, ij(1)) + vec(2)
+            z = xyz(3, ij(1)) + vec(3)
          end select
          if (ij(1) >= iat) then
             call io_error(error, "Cannot read coordinates", &
                & line, token, filename(unit), lnum, "invalid atom index")
             return
          end if
-         xyz(:, iat) = xyz(:, ij(1)) + [x, y, z] * aatoau
+         xyz(:, iat) = [x, y, z]
 
       end do
    else
