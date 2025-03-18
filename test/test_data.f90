@@ -70,6 +70,8 @@ contains
          print'(3es21.14)', ratm_sym
          print'("---")'
          print'(3es21.14)', ratm_num
+         print'("---")'
+         print'(3es21.14)', ref
       end if
 
    end subroutine test_atomic_rad
@@ -99,6 +101,8 @@ contains
          print'(3es21.14)', rcov_sym
          print'("---")'
          print'(3es21.14)', rcov_num
+         print'("---")'
+         print'(3es21.14)', ref
       end if
 
    end subroutine test_covalent_rad
@@ -113,10 +117,10 @@ contains
       real(wp), allocatable :: lattr(:, :)
       real(wp), allocatable :: en_sym(:), en_num(:)
 
-      real(wp), parameter :: ref(7) = [&
+      real(wp), parameter :: ref(9) = [&
       & 2.55000000000000E+0_wp, 3.44000000000000E+0_wp, 2.20000000000000E+0_wp, &
       & 9.80000000000000E-1_wp, 1.31000000000000E+0_wp, 1.61000000000000E+0_wp, &
-      & 3.98000000000000E+0_wp]
+      & 3.98000000000000E+0_wp, 2.58000000000000E+0_wp, 9.30000000000000E-1_wp]
 
       call get_structure(mol, "mindless03")
 
@@ -128,6 +132,8 @@ contains
          print'(3es21.14)', en_sym
          print'("---")'
          print'(3es21.14)', en_num
+         print'("---")'
+         print'(3es21.14)', ref
       end if
 
    end subroutine test_pauling_en
@@ -162,6 +168,8 @@ contains
          print'(3es21.14)', rvdw_sym
          print'("---")'
          print'(3es21.14)', rvdw_num
+         print'("---")'
+         print'(3es21.14)', ref
       end if
 
       rvdw_pair_sym = get_vdw_rad(mol%num, 1)
@@ -173,6 +181,8 @@ contains
          print'(3es21.14)', rvdw_pair_sym
          print'("---")'
          print'(3es21.14)', rvdw_pair_num
+         print'("---")'
+         print'(3es21.14)', ref_pair
       end if
 
    end subroutine test_vdw_rad

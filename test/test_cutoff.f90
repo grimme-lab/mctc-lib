@@ -202,7 +202,7 @@ contains
       real(wp), allocatable :: lattr(:, :)
 
       integer, parameter :: rep(3) = [2, 1, 1]
-      real(wp), parameter :: ref(3, 43) = reshape([&
+      real(wp), parameter :: ref(3, 44) = reshape([&
       &  0.00000000000E+0_wp,  0.00000000000E+0_wp,  9.47387737000E+0_wp, &
       &  0.00000000000E+0_wp,  0.00000000000E+0_wp, -9.47387737000E+0_wp, &
       &  0.00000000000E+0_wp,  9.47387737000E+0_wp,  0.00000000000E+0_wp, &
