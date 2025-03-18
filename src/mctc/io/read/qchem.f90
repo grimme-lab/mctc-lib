@@ -22,7 +22,7 @@ module mctc_io_read_qchem
    use mctc_io_symbols, only : symbol_length, to_number, to_symbol
    use mctc_io_structure, only : structure_type, new
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
-      read_next_token, read_token
+      read_next_token, read_token, to_lower
    implicit none
    private
 
@@ -244,42 +244,5 @@ subroutine read_qchem(mol, unit, error)
 
    call new(mol, sym(:iat), xyz, charge=real(charge, wp), uhf=multiplicity-1)
 end subroutine read_qchem
-
-!> Convert input string to lowercase
-elemental function to_lower(str) result(lcstr)
-
-   !> Input string
-   character(len=*), intent(in) :: str
-
-   !> Lowercase version of string
-   character(len=len(str)):: lcstr
-
-   integer :: ilen, iquote, i, iav, iqc
-   integer, parameter :: offset = iachar('A') - iachar('a')
-
-   ilen = len(str)
-   iquote = 0
-   lcstr = str
-
-   do i = 1, ilen
-      iav = iachar(str(i:i))
-      if (iquote == 0 .and. (iav == 34 .or.iav == 39)) then
-         iquote = 1
-         iqc = iav
-         cycle
-      end if
-      if (iquote == 1 .and. iav==iqc) then
-         iquote=0
-         cycle
-      end if
-      if (iquote == 1) cycle
-      if (iav >= iachar('A') .and. iav <= iachar('Z')) then
-         lcstr(i:i) = achar(iav - offset)
-      else
-         lcstr(i:i) = str(i:i)
-      end if
-   end do
-
-end function to_lower
 
 end module mctc_io_read_qchem

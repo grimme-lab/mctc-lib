@@ -13,7 +13,10 @@
 # limitations under the License.
 
 tests = [
+  'cutoff',
+  'data',
   'math',
+  'ncoord',
   'read',
   'read-aims',
   'read-cjson',
@@ -38,7 +41,6 @@ tests = [
   'write-turbomole',
   'write-vasp',
   'write-xyz',
-  'ncoord',
 ]
 
 test_srcs = files(

@@ -34,7 +34,7 @@ module mctc_cutoff
 contains
 
 
-!> Generate lattice points from repeatitions
+!> Generate lattice points from repetitions
 subroutine get_lattice_points_rep_3d(lat, rep, origin, trans)
 
    !> Lattice vectors

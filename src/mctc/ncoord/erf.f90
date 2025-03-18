@@ -32,6 +32,7 @@ module mctc_ncoord_erf
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: erf_ncoord_type
+      !> Covalent radii
       real(wp), allocatable :: rcov(:)
       !> Exponent of the distance normalization
       real(wp)  :: norm_exp
@@ -42,12 +43,11 @@ module mctc_ncoord_erf
       procedure :: ncoord_dcount
    end type erf_ncoord_type
 
-   !> Steepness of counting function (CEH)
+   !> Steepness of counting function
    real(wp), parameter :: default_kcn = 3.15_wp
-
    !> Exponent of distance normalization 
    real(wp), parameter :: default_norm_exp = 1.0_wp
-
+   !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
 
 contains
@@ -142,7 +142,7 @@ contains
       rc = self%rcov(izp) + self%rcov(jzp)
 
       exponent = self%kcn*(r-rc)/rc**self%norm_exp
-      expterm = exp(-exponent**2)
+      expterm = exp(-exponent**2.0_wp)
       count = -(self%kcn*expterm)/(sqrtpi*rc**self%norm_exp)
 
    end function ncoord_dcount

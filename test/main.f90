@@ -18,7 +18,10 @@ program tester
    use mctc_env_system, only : get_argument
    use mctc_env_testing, only : run_testsuite, new_testsuite, testsuite_type, &
       & select_suite, run_selected
+   use test_cutoff, only : collect_cutoff
+   use test_data, only : collect_data
    use test_math, only : collect_math
+   use test_ncoord, only : collect_ncoord
    use test_read, only : collect_read
    use test_read_aims, only : collect_read_aims
    use test_read_cjson, only : collect_read_cjson
@@ -43,7 +46,6 @@ program tester
    use test_write_turbomole, only : collect_write_turbomole
    use test_write_vasp, only : collect_write_vasp
    use test_write_xyz, only : collect_write_xyz
-   use test_ncoord, only : collect_ncoord
    implicit none
    integer :: stat, is
    character(len=:), allocatable :: suite_name, test_name
@@ -53,7 +55,10 @@ program tester
    stat = 0
 
    testsuites = [ &
+      & new_testsuite("cutoff", collect_cutoff), &
+      & new_testsuite("data", collect_data), &
       & new_testsuite("math", collect_math), &
+      & new_testsuite("ncoord", collect_ncoord), &
       & new_testsuite("symbols", collect_symbols), &
       & new_testsuite("read", collect_read), &
       & new_testsuite("read-aims", collect_read_aims), &
@@ -77,8 +82,7 @@ program tester
       & new_testsuite("write-qchem", collect_write_qchem), &
       & new_testsuite("write-turbomole", collect_write_turbomole), &
       & new_testsuite("write-vasp", collect_write_vasp), &
-      & new_testsuite("write-xyz", collect_write_xyz), &
-      & new_testsuite("ncoord", collect_ncoord) &
+      & new_testsuite("write-xyz", collect_write_xyz) &
       & ]
 
    call get_argument(1, suite_name)

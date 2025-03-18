@@ -29,18 +29,18 @@ module mctc_ncoord_erf_en
 
    !> Coordination number evaluator
    type, public, extends(erf_ncoord_type) :: erf_en_ncoord_type
+      !> Electronegativity
       real(wp), allocatable :: en(:)
    contains
       !> Evaluates pairwise electronegativity factor
       procedure :: get_en_factor
    end type erf_en_ncoord_type
 
-   !> Steepness of counting function (CEH)
+   !> Steepness of counting function
    real(wp), parameter :: default_kcn = 2.65_wp
-
    !> Exponent of distance normalization 
    real(wp), parameter :: default_norm_exp = 1.0_wp
-
+   !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
 
 contains
@@ -110,7 +110,7 @@ contains
    end subroutine new_erf_en_ncoord
 
 
-   !> Evaluates pairwise electronegativity factor if non applies
+   !> Evaluates pairwise electronegativity factor
    elemental function get_en_factor(self, izp, jzp) result(en_factor)
       !> Coordination number container
       class(erf_en_ncoord_type), intent(in) :: self

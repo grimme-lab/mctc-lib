@@ -29,6 +29,7 @@ module mctc_ncoord_erf_dftd4
 
    !> Coordination number evaluator
    type, public, extends(erf_ncoord_type) :: erf_dftd4_ncoord_type
+      !> Electronegativity
       real(wp), allocatable :: en(:)
    contains
       !> Evaluates pairwise electronegativity factor
@@ -37,20 +38,17 @@ module mctc_ncoord_erf_dftd4
 
    !> Steepness of counting function
    real(wp), parameter :: default_kcn = 7.5_wp
-
    !> Exponent of distance normalization 
    real(wp), parameter :: default_norm_exp = 1.0_wp
-
+   !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
 
    !> Parameter for electronegativity scaling
    real(wp), parameter :: k4 = 4.10451_wp
-
    !> Parameter for electronegativity scaling
    real(wp), parameter :: k5 = 19.08857_wp
-
    !> Parameter for electronegativity scaling
-   real(wp), parameter :: k6 = 2*11.28174_wp**2
+   real(wp), parameter :: k6 = 2*11.28174_wp**2.0_wp
 
 contains
 
@@ -128,7 +126,7 @@ contains
 
       real(wp) :: en_factor
 
-      en_factor = k4*exp(-(abs(self%en(izp)-self%en(jzp)) + k5)**2/k6)
+      en_factor = k4*exp(-(abs(self%en(izp)-self%en(jzp)) + k5)**2.0_wp/k6)
       
    end function get_en_factor
 

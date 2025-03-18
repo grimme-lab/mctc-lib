@@ -29,6 +29,7 @@ module mctc_ncoord_dexp
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: dexp_ncoord_type
+      !> Covalent radii
       real(wp), allocatable :: rcov(:)
    contains
       !> Evaluates the dexp counting function 
@@ -43,7 +44,7 @@ module mctc_ncoord_dexp
    real(wp),parameter :: kb = 20.0_wp
    !> Offset of the second counting function
    real(wp),parameter :: r_shift = 2.0_wp
-
+   !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
 
 
@@ -154,8 +155,8 @@ elemental function exp_dcount(k, r, r0) result(count)
    real(wp) :: count
    real(wp) :: expterm
 
-   expterm = exp(-k*(r0/r-1._wp))
-   count = (-k*r0*expterm)/(r**2*((expterm+1._wp)**2))
+   expterm = exp(-k*(r0/r-1.0_wp))
+   count = (-k*r0*expterm)/(r**2.0_wp*((expterm+1.0_wp)**2.0_wp))
 
 end function exp_dcount
 

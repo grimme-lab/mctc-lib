@@ -27,7 +27,7 @@ module test_ncoord
    use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
    use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
    use mctc_ncoord_type, only : ncoord_type
-   use mctc_ncoord, only : new_ncoord
+   use mctc_ncoord, only : new_ncoord, cn_count
    implicit none
    private
 
@@ -47,6 +47,7 @@ contains
 
       testsuite = [ &
       & new_unittest("cn-mb01_dexp", test_cn_mb01_dexp), &
+      & new_unittest("cn-mb01_dexp-defaults", test_cn_mb01_dexp_defaults), &
       & new_unittest("cn-mb02_dexp", test_cn_mb02_dexp), &
       & new_unittest("cn-mb03_dexp", test_cn_mb03_dexp), &
       & new_unittest("cn-acetic_dexp", test_cn_acetic_dexp), &
@@ -57,6 +58,7 @@ contains
       & new_unittest("dcndL-mb07_dexp", test_dcndL_mb07_dexp), &
       & new_unittest("dcndL-antracene_dexp", test_dcndL_anthracene_dexp), &
       & new_unittest("cn-mb01_exp", test_cn_mb01_exp), &
+      & new_unittest("cn-mb01_exp-defaults", test_cn_mb01_exp_defaults), &
       & new_unittest("cn-mb02_exp", test_cn_mb02_exp), &
       & new_unittest("cn-mb03_exp", test_cn_mb03_exp), &
       & new_unittest("cn-acetic_exp", test_cn_acetic_exp), &
@@ -67,7 +69,7 @@ contains
       & new_unittest("dcndL-mb07_exp", test_dcndL_mb07_exp), &
       & new_unittest("dcndL-antracene_exp", test_dcndL_anthracene_exp), &
       & new_unittest("cn-mb01_erf", test_cn_mb01_erf), &
-      & new_unittest("cn-mb01_cutoff_erf", test_cn_cutoff_mb01_erf), &
+      & new_unittest("cn-mb01_erf-defaults", test_cn_mb01_erf_defaults), &
       & new_unittest("cn-mb02_erf", test_cn_mb02_erf), &
       & new_unittest("cn-mb03_erf", test_cn_mb03_erf), &
       & new_unittest("cn-acetic_erf", test_cn_acetic_erf), &
@@ -78,6 +80,7 @@ contains
       & new_unittest("dcndL-mb07_erf", test_dcndL_mb07_erf), &
       & new_unittest("dcndL-antracene_erf", test_dcndL_anthracene_erf), &
       & new_unittest("cn-mb01_erf_en", test_cn_mb01_erf_en), &
+      & new_unittest("cn-mb01_erf_en-defaults", test_cn_mb01_erf_en_defaults), &
       & new_unittest("cn-mb02_erf_en", test_cn_mb02_erf_en), &
       & new_unittest("cn-mb03_erf_en", test_cn_mb03_erf_en), &
       & new_unittest("cn-acetic_erf_en", test_cn_acetic_erf_en), &
@@ -88,6 +91,7 @@ contains
       & new_unittest("dcndL-mb07_erf_en", test_dcndL_mb07_erf_en), &
       & new_unittest("dcndL-antracene_erf_en", test_dcndL_anthracene_erf_en), &
       & new_unittest("cn-mb01_erf_dftd4", test_cn_mb01_erf_dftd4), &
+      & new_unittest("cn-mb01_erf_dftd4-defaults", test_cn_mb01_erf_dftd4_defaults), &
       & new_unittest("dfdcn-mb01_erf_dftd4", test_dfdcn_mb01_erf_dftd4), &
       & new_unittest("cn-mb02_erf_dftd4", test_cn_mb02_erf_dftd4), &
       & new_unittest("cn-mb03_erf_dftd4", test_cn_mb03_erf_dftd4), &
@@ -258,7 +262,7 @@ contains
       allocate(rcov(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
       ! Test also the external interface
-      call new_ncoord(dexp_ncoord, mol, "dexp", cutoff=cutoff, rcov=rcov)
+      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, cutoff=cutoff, rcov=rcov)
       call dexp_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -267,6 +271,38 @@ contains
       end if
 
    end subroutine test_cn_mb01_dexp
+
+   subroutine test_cn_mb01_dexp_defaults(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: dexp_ncoord
+      real(wp), allocatable :: cn(:)
+
+      real(wp), parameter :: cut = 8.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 4.09454175505598E+0_wp, 9.31542782327779E-1_wp, 2.03331622407469E+0_wp, &
+      & 1.42122371191997E+0_wp, 1.12742367795718E+0_wp, 1.05428853626261E+0_wp, &
+      & 1.52588252023738E+0_wp, 1.94868233639268E+0_wp, 3.82248414162617E+0_wp, &
+      & 1.09321740798910E+0_wp, 1.07026473308676E+0_wp, 2.00070519876048E+0_wp, &
+      & 4.33832738074586E+0_wp, 3.81962825718532E+0_wp, 3.89907034954333E+0_wp, &
+      & 5.50039630110828E+0_wp]
+
+      call get_structure(mol, "mindless01")
+
+      allocate(cn(mol%nat))
+      ! Test also the external interface
+      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, cut=cut)
+      call dexp_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
+
+   end subroutine test_cn_mb01_dexp_defaults
 
 
    subroutine test_cn_mb02_dexp(error)
@@ -521,7 +557,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(exp_ncoord, mol, "exp", cutoff=cutoff, rcov=rcov)
+      call new_ncoord(exp_ncoord, mol, cn_count%exp, cutoff=cutoff, rcov=rcov)
       call exp_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -530,6 +566,39 @@ contains
       end if
    
    end subroutine test_cn_mb01_exp
+
+
+   subroutine test_cn_mb01_exp_defaults(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: exp_ncoord
+      real(wp), allocatable :: cn(:)
+
+      real(wp), parameter :: cut = 8.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 4.12992877807345E+0_wp, 9.78311016805857E-1_wp, 2.00864270424507E+0_wp, &
+      & 1.47752177526616E+0_wp, 1.03516897897016E+0_wp, 1.01148282016162E+0_wp, &
+      & 1.50212590877184E+0_wp, 1.99644790103832E+0_wp, 3.87585066556086E+0_wp, &
+      & 1.04261742233948E+0_wp, 1.01467576985712E+0_wp, 1.99102872800478E+0_wp, &
+      & 4.60161397650915E+0_wp, 3.85745359167474E+0_wp, 3.97547595558861E+0_wp, &
+      & 5.37578501884834E+0_wp]
+
+      call get_structure(mol, "mindless01")
+
+      allocate(cn(mol%nat))
+      ! Test also the external interface
+      call new_ncoord(exp_ncoord, mol, cn_count%exp, cut=cut)
+      call exp_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
+
+   end subroutine test_cn_mb01_exp_defaults
 
 
    subroutine test_cn_mb02_exp(error)
@@ -786,7 +855,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_ncoord, mol, "erf", kcn=kcn, cutoff=cutoff, rcov=rcov)
+      call new_ncoord(erf_ncoord, mol, cn_count%erf, kcn=kcn, cutoff=cutoff, rcov=rcov)
       call erf_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -796,34 +865,30 @@ contains
 
    end subroutine test_cn_mb01_erf
 
-   subroutine test_cn_cutoff_mb01_erf(error)
+
+   subroutine test_cn_mb01_erf_defaults(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
       class(ncoord_type), allocatable :: erf_ncoord
-      real(wp), allocatable :: rcov(:)
       real(wp), allocatable :: cn(:)
 
-      real(wp), parameter :: cutoff = 30.0_wp
-      real(wp), parameter :: kcn = 7.5_wp
-      real(wp), parameter :: cn_max = 8.0_wp
+      real(wp), parameter :: cut = 8.0_wp
       real(wp), parameter :: ref(16) = [&
-      & 4.01821724338495E+0_wp, 9.72247109465167E-1_wp, 1.98487635195765E+0_wp, &
-      & 1.47199898291333E+0_wp, 9.96978323172462E-1_wp, 9.96288834201663E-1_wp, &
-      & 1.45078799827281E+0_wp, 1.99055055374771E+0_wp, 3.83042334184661E+0_wp, &
-      & 1.00185131973923E+0_wp, 9.96142041368325E-1_wp, 1.92309124625511E+0_wp, &
-      & 4.58700117126191E+0_wp, 3.80489139049207E+0_wp, 3.94005009430351E+0_wp, &
-      & 5.27144183788523E+0_wp]
+      & 3.94865526262727E+0_wp, 8.03534979384260E-1_wp, 1.82363418867863E+0_wp, &
+      & 1.29194109497855E+0_wp, 1.00631892909636E+0_wp, 9.20734547485533E-1_wp, &
+      & 1.43055872450306E+0_wp, 1.75329680336097E+0_wp, 3.38202218304395E+0_wp, &
+      & 1.01209895835635E+0_wp, 9.31636038289878E-1_wp, 1.77838311316717E+0_wp, &
+      & 3.94732423741765E+0_wp, 3.49939502605498E+0_wp, 3.49015552628822E+0_wp, &
+      & 5.16876186109389E+0_wp]
 
       call get_structure(mol, "mindless01")
 
-      allocate(rcov(mol%nid), cn(mol%nat))
-      rcov(:) = get_covalent_rad(mol%num)
-
+      allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(erf_ncoord, mol, "erf", kcn=kcn, cutoff=cutoff, rcov=rcov, cut=cn_max)
+      call new_ncoord(erf_ncoord, mol, cn_count%erf, cut=cut)
       call erf_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -831,7 +896,7 @@ contains
          print'(3es21.14)', cn
       end if
 
-   end subroutine test_cn_cutoff_mb01_erf
+   end subroutine test_cn_mb01_erf_defaults
 
 
    subroutine test_cn_mb02_erf(error)
@@ -859,7 +924,8 @@ contains
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, rcov=rcov, norm_exp=norm_exp)
+      call new_erf_ncoord(erf_ncoord, mol, kcn=kcn, cutoff=cutoff, &
+         & rcov=rcov, norm_exp=norm_exp)
       call test_cn_gen(error, mol, erf_ncoord, ref)
 
    end subroutine test_cn_mb02_erf
@@ -940,13 +1006,14 @@ contains
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: cut = 8.0_wp
 
       call get_structure(mol, "mindless04")
 
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov, cut=cut)
       call test_numgrad(error, mol, erf_ncoord)
 
    end subroutine test_dcndr_mb04_erf
@@ -1030,13 +1097,14 @@ contains
       real(wp), allocatable :: rcov(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: cut = 8.0_wp
 
       call get_structure(mol, "mindless07")
 
       allocate(rcov(mol%nid))
       rcov(:) = get_covalent_rad(mol%num)
 
-      call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov)
+      call new_erf_ncoord(erf_ncoord, mol, cutoff=cutoff, rcov=rcov, cut=cut)
       call test_numsigma(error, mol, erf_ncoord)
 
    end subroutine test_dcndL_mb07_erf
@@ -1097,7 +1165,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_en_ncoord, mol, "erf_en", &
+      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
       call erf_en_ncoord%get_cn(mol, cn)
 
@@ -1107,6 +1175,39 @@ contains
       end if
 
    end subroutine test_cn_mb01_erf_en
+
+
+   subroutine test_cn_mb01_erf_en_defaults(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: erf_en_ncoord
+      real(wp), allocatable :: cn(:)
+
+      real(wp), parameter :: cut = 8.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 6.28512318865646E+0_wp, -9.48165569926278E-2_wp, -3.20974798259955E+0_wp, &
+      &-7.29074735683836E-1_wp, -1.91124739345982E+0_wp,  6.75956934105788E-1_wp, &
+      &-6.45376614102426E-1_wp, -2.57466431918300E+0_wp, -3.30563352773637E+0_wp, &
+      & 8.94205686629223E-1_wp,  6.68995462547443E-1_wp, -2.50415951195522E+0_wp, &
+      & 4.30396885503051E-1_wp,  2.99748612833491E+0_wp, -2.73382879558600E+0_wp, &
+      & 5.47020661174583E+0_wp]
+
+      call get_structure(mol, "mindless01")
+
+      allocate(cn(mol%nat))
+      ! Test also the external interface
+      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, cut=cut)
+      call erf_en_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
+
+   end subroutine test_cn_mb01_erf_en_defaults
 
 
    subroutine test_cn_mb02_erf_en(error)
@@ -1389,7 +1490,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, "dftd4", &
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, &
          & cutoff=cutoff, rcov=rcov, en=en)
       call erf_dftd4_ncoord%get_cn(mol, cn)
 
@@ -1399,6 +1500,40 @@ contains
       end if
 
    end subroutine test_cn_mb01_erf_dftd4
+
+
+   subroutine test_cn_mb01_erf_dftd4_defaults(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: erf_dftd4_ncoord
+      real(wp), allocatable :: cn(:)
+
+      real(wp), parameter :: cut = 8.0_wp
+      real(wp), parameter :: ref(16) = [&
+      & 3.06660652852575E+0_wp, 9.30945897066814E-1_wp, 1.43601901807739E+0_wp, &
+      & 1.33215820126205E+0_wp, 7.20389472953384E-1_wp, 8.59202243173923E-1_wp, &
+      & 1.35685365476930E+0_wp, 1.53817284066048E+0_wp, 3.18619182109750E+0_wp, &
+      & 8.11742082108597E-1_wp, 8.59076781607564E-1_wp, 1.53225308252248E+0_wp, &
+      & 4.21062383837406E+0_wp, 3.02389795134399E+0_wp, 3.44209283304307E+0_wp, &
+      & 4.26105988742614E+0_wp]
+
+      call get_structure(mol, "mindless01")
+
+      allocate(cn(mol%nat))
+      ! Test also the external interface
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, cut=cut)
+      call erf_dftd4_ncoord%get_cn(mol, cn)
+
+      if (any(abs(cn - ref) > thr)) then
+         call test_failed(error, "Coordination numbers do not match")
+         print'(3es21.14)', cn
+      end if
+
+   end subroutine test_cn_mb01_erf_dftd4_defaults
+
 
    subroutine test_dfdcn_mb01_erf_dftd4(error)
 
@@ -1449,7 +1584,7 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, "dftd4", &
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, &
          & cutoff=cutoff, rcov=rcov, en=en)
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
       call erf_dftd4_ncoord%add_coordination_number_derivs(mol, lattr, &
@@ -1466,6 +1601,7 @@ contains
       end if
 
    end subroutine test_dfdcn_mb01_erf_dftd4
+
 
    subroutine test_cn_mb02_erf_dftd4(error)
 

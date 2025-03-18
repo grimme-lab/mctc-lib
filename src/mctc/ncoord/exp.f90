@@ -28,6 +28,7 @@ module mctc_ncoord_exp
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: exp_ncoord_type
+      !> Covalent radii
       real(wp), allocatable :: rcov(:)
    contains
       !> Evaluates the exponential counting function
@@ -38,7 +39,7 @@ module mctc_ncoord_exp
 
    !> Steepness of counting function
    real(wp), parameter :: default_kcn = 16.0_wp
-
+   !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
 
 contains
@@ -123,8 +124,8 @@ contains
 
       rc = self%rcov(izp) + self%rcov(jzp)
 
-      expterm = exp(-self%kcn*(rc/r-1._wp))
-      count = (-self%kcn*rc*expterm)/(r**2*((expterm+1._wp)**2))
+      expterm = exp(-self%kcn*(rc/r-1.0_wp))
+      count = (-self%kcn*rc*expterm)/(r**2.0_wp*((expterm+1.0_wp)**2.0_wp))
 
    end function ncoord_dcount
 

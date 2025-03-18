@@ -15,7 +15,10 @@
 # Unit testing
 set(
   tests
+  "cutoff"
+  "data"
   "math"
+  "ncoord"
   "read"
   "read-aims"
   "read-cjson"
@@ -40,7 +43,6 @@ set(
   "write-turbomole"
   "write-vasp"
   "write-xyz"
-  "ncoord"
 )
 set(
   test-srcs
