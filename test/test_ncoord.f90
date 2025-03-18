@@ -543,13 +543,14 @@ contains
       real(wp), allocatable :: cn(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: kcn = 8.0_wp
       real(wp), parameter :: ref(16) = [&
-      & 4.15066368951397E+0_wp, 9.78868026389781E-1_wp, 2.01080985633859E+0_wp, &
-      & 1.47865697827818E+0_wp, 1.03577822442117E+0_wp, 1.01206994314781E+0_wp, &
-      & 1.50329777127401E+0_wp, 1.99858468272609E+0_wp, 3.89181927539324E+0_wp, &
-      & 1.04323373360740E+0_wp, 1.01526584450636E+0_wp, 1.99315213227354E+0_wp, &
-      & 4.63526560889683E+0_wp, 3.87312260639335E+0_wp, 3.99316800677884E+0_wp, &
-      & 5.45068226903888E+0_wp]
+      & 4.37656744263860E+0_wp, 1.01980731865293E+0_wp, 2.15301102461509E+0_wp, &
+      & 1.48974161904353E+0_wp, 1.37740361220178E+0_wp, 1.19571408761236E+0_wp, &
+      & 1.64256955610752E+0_wp, 2.10050172533832E+0_wp, 3.97810521360522E+0_wp, &
+      & 1.17477637418781E+0_wp, 1.21863960255555E+0_wp, 2.31794359805965E+0_wp, &
+      & 4.30010159253583E+0_wp, 3.91597563150413E+0_wp, 4.05566413625170E+0_wp, &
+      & 5.80055689112793E+0_wp]
 
       call get_structure(mol, "mindless01")
 
@@ -557,7 +558,7 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(exp_ncoord, mol, cn_count%exp, cutoff=cutoff, rcov=rcov)
+      call new_ncoord(exp_ncoord, mol, cn_count%exp, kcn=kcn, cutoff=cutoff, rcov=rcov)
       call exp_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -1647,13 +1648,14 @@ contains
       real(wp), allocatable :: en(:)
 
       real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: kcn = 8.0_wp
       real(wp), parameter :: ref(16) = [&
-      & 3.70329575672631E+0_wp, 2.11476582851627E+0_wp, 9.23682826697708E-1_wp, &
-      & 3.88999767055963E+0_wp, 6.17490081567969E+0_wp, 4.10595506858888E+0_wp, &
-      & 4.22916534938705E+0_wp, 1.04287687415719E+0_wp, 9.23686985143960E-1_wp, &
-      & 9.24487848931390E-1_wp, 1.22927636800717E+0_wp, 2.59853001985457E+0_wp, &
-      & 4.30015470969650E+0_wp, 8.29081650895103E-1_wp, 2.65239010637793E+0_wp, &
-      & 1.19840431336618E+0_wp]
+      & 3.70724324529119E+0_wp, 2.11973219426028E+0_wp, 9.26017486406989E-1_wp, &
+      & 3.90899183247175E+0_wp, 6.23852155281573E+0_wp, 4.15468179554002E+0_wp, &
+      & 4.24624109603910E+0_wp, 1.03290088178372E+0_wp, 9.26063450718642E-1_wp, &
+      & 9.26690202951857E-1_wp, 1.23222500932634E+0_wp, 2.60466433049767E+0_wp, &
+      & 4.32156749864851E+0_wp, 8.23391482357522E-1_wp, 2.68029791972147E+0_wp, &
+      & 1.19256701474199E+0_wp]
 
       call get_structure(mol, "mindless03")
 
@@ -1661,7 +1663,8 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
       en(:) = get_pauling_en(mol%num)
 
-      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, cutoff=cutoff, rcov=rcov, en=en)
+      call new_erf_dftd4_ncoord(erf_dftd4_ncoord, mol, kcn=kcn, &
+         & cutoff=cutoff, rcov=rcov, en=en)
       call test_cn_gen(error, mol, erf_dftd4_ncoord, ref)
 
    end subroutine test_cn_mb03_erf_dftd4
