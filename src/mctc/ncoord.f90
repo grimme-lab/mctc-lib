@@ -73,7 +73,7 @@ subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm
    real(wp), intent(in), optional :: cutoff
    !> Optional set of covalent radii to be used in CN
    real(wp), intent(in), optional :: rcov(:)
-   !> Optional set of electronegativity to be use din CN
+   !> Optional set of electronegativities to be used in CN
    real(wp), intent(in), optional :: en(:)
    !> Optional cutoff for the maximum coordination number
    real(wp), intent(in), optional :: cut
