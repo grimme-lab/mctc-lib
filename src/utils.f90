@@ -22,6 +22,7 @@ module mctc_io_utils
    public :: token_type, next_token, read_token, read_next_token
    public :: io_error, io2_error
    public :: filename, to_string
+   public :: to_lower
 
 
    !> Text token
@@ -442,6 +443,44 @@ subroutine read_token_real(line, token, val, iostat, iomsg)
    end if
    if (present(iomsg)) iomsg = trim(msg)
 end subroutine read_token_real
+
+
+!> Convert input string to lowercase
+elemental function to_lower(str) result(lcstr)
+
+   !> Input string
+   character(len=*), intent(in) :: str
+
+   !> Lowercase version of string
+   character(len=len(str)):: lcstr
+
+   integer :: ilen, iquote, i, iav, iqc
+   integer, parameter :: offset = iachar('A') - iachar('a')
+
+   ilen = len(str)
+   iquote = 0
+   lcstr = str
+
+   do i = 1, ilen
+      iav = iachar(str(i:i))
+      if (iquote == 0 .and. (iav == 34 .or.iav == 39)) then
+         iquote = 1
+         iqc = iav
+         cycle
+      end if
+      if (iquote == 1 .and. iav==iqc) then
+         iquote=0
+         cycle
+      end if
+      if (iquote == 1) cycle
+      if (iav >= iachar('A') .and. iav <= iachar('Z')) then
+         lcstr(i:i) = achar(iav - offset)
+      else
+         lcstr(i:i) = str(i:i)
+      end if
+   end do
+
+end function to_lower
 
 
 end module mctc_io_utils

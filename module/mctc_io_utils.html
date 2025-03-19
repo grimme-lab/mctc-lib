@@ -80,7 +80,7 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title=" 5.4% of total for modules and submodules.">272 statements</a>
+                 title=" 5.1% of total for modules and submodules.">300 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
@@ -153,6 +153,7 @@
       <div id="funcs-0" class="collapse">
         <div class="list-group list-group-flush">
             <a class="list-group-item" href="../module/mctc_io_utils.html#proc-filename">filename</a>
+            <a class="list-group-item" href="../module/mctc_io_utils.html#proc-to_lower">to_lower</a>
             <a class="list-group-item" href="../module/mctc_io_utils.html#proc-to_string">to_string</a>
         </div>
       </div>
@@ -238,7 +239,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~13"></span>
+              <span class="anchor" id="variable-line~21"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -253,7 +254,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pos~12"></span>
+              <span class="anchor" id="variable-pos~21"></span>
               integer,
             </td>
 <td>intent(inout)</td>
@@ -268,7 +269,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~8"></span>
+              <span class="anchor" id="variable-token~14"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(inout)</td>
@@ -283,7 +284,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~8"></span>
+              <span class="anchor" id="variable-val~9"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -351,7 +352,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~15"></span>
+              <span class="anchor" id="variable-line~23"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -366,7 +367,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pos~13"></span>
+              <span class="anchor" id="variable-pos~22"></span>
               integer,
             </td>
 <td>intent(inout)</td>
@@ -381,7 +382,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~10"></span>
+              <span class="anchor" id="variable-token~16"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(inout)</td>
@@ -396,7 +397,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~10"></span>
+              <span class="anchor" id="variable-val~11"></span>
               real(kind=wp),
             </td>
 <td>intent(out)</td>
@@ -474,7 +475,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~14"></span>
+              <span class="anchor" id="variable-line~22"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -489,7 +490,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~9"></span>
+              <span class="anchor" id="variable-token~15"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(in)</td>
@@ -504,7 +505,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~9"></span>
+              <span class="anchor" id="variable-val~10"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -572,7 +573,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~16"></span>
+              <span class="anchor" id="variable-line~24"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -587,7 +588,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~11"></span>
+              <span class="anchor" id="variable-token~17"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(in)</td>
@@ -602,7 +603,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~11"></span>
+              <span class="anchor" id="variable-val~12"></span>
               real(kind=wp),
             </td>
 <td>intent(out)</td>
@@ -750,7 +751,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~21"></span>
+              <span class="anchor" id="variable-unit~37"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -776,6 +777,51 @@
   </div>
 
               <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-to_lower"></span> <h3>public elemental function <a href='../proc/to_lower.html'>to_lower</a>(str) result(lcstr)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Convert input string to lowercase</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-str~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>str</strong></td>
+            <td>
+<p>Input string</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>character(len=len)</small>
+    </h4>
+    <p>Lowercase version of string</p>
+
+    </div>
+  </div>
+
+              <div class="card">
     <div class="card-header codesum"><span class="anchor" id="proc-to_string"></span> <h3>public pure function <a href='../proc/to_string.html'>to_string</a>(val, width) result(string)  
 </h3></div>
     <div class="card-body">
@@ -795,7 +841,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-val~7"></span>
+              <span class="anchor" id="variable-val~8"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -860,7 +906,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~19"></span>
+              <span class="anchor" id="variable-unit~35"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -875,7 +921,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~10"></span>
+              <span class="anchor" id="variable-line~18"></span>
               character(len=:),
             </td>
 <td>intent(out),</td>
@@ -945,7 +991,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~14"></span>
+              <span class="anchor" id="variable-error~36"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -960,7 +1006,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-message~3"></span>
+              <span class="anchor" id="variable-message~16"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -1135,7 +1181,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~13"></span>
+              <span class="anchor" id="variable-error~35"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -1150,7 +1196,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-message~2"></span>
+              <span class="anchor" id="variable-message~15"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -1180,7 +1226,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~7"></span>
+              <span class="anchor" id="variable-token~13"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(in)</td>
@@ -1210,7 +1256,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~12"></span>
+              <span class="anchor" id="variable-line~20"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -1265,7 +1311,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-unit~20"></span>
+              <span class="anchor" id="variable-unit~36"></span>
               integer,
             </td>
 <td>intent(in)</td>
@@ -1280,7 +1326,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~11"></span>
+              <span class="anchor" id="variable-line~19"></span>
               character(len=:),
             </td>
 <td>intent(out),</td>
@@ -1295,7 +1341,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pos~9"></span>
+              <span class="anchor" id="variable-pos~18"></span>
               integer,
             </td>
 <td>intent(out)</td>
@@ -1310,7 +1356,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-lnum~8"></span>
+              <span class="anchor" id="variable-lnum~14"></span>
               integer,
             </td>
 <td>intent(inout)</td>
@@ -1380,7 +1426,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-string~9"></span>
+              <span class="anchor" id="variable-string~10"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -1395,7 +1441,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-pos~10"></span>
+              <span class="anchor" id="variable-pos~19"></span>
               integer,
             </td>
 <td>intent(inout)</td>
@@ -1410,7 +1456,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~6"></span>
+              <span class="anchor" id="variable-token~12"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(out)</td>
@@ -1453,7 +1499,7 @@
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2025-03-17 12:44 +0000             </p>
+ on 2025-03-19 08:33 +0000             </p>
           </div>
         </div>
         <br>

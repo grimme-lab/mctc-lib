@@ -76,6 +76,60 @@
 			 <thead><tr><th>Module</th><th>Source File</th><th>Description</th></tr></thead>
 			 <tbody>
 			   <tr class="active">
+                 <td><a href='../module/mctc_cutoff.html'>mctc_cutoff</a></td>
+                 <td><a href='../sourcefile/cutoff.f90.html'>cutoff.f90</a></td>
+                 <td><p>@file mctc/cutoff.f90
+Provides realspace cutoff and lattice generation
+Realspace cutoff and lattice point generator utilities</p></td>
+               </tr>
+<!--active-->			   <tr class="">
+                 <td><a href='../module/mctc_data.html'>mctc_data</a></td>
+                 <td><a href='../sourcefile/data.f90.html'>data.f90</a></td>
+                 <td><p>@dir mctc/data
+Contains element data used for defining interactions.
+@file mctc/data.f90
+Reexports access to element-specific data.
+Proxy module for providing access to element data.</p></td>
+               </tr>
+<!---->			   <tr class="active">
+                 <td><a href='../module/mctc_data_atomicrad.html'>mctc_data_atomicrad</a></td>
+                 <td><a href='../sourcefile/atomicrad.f90.html'>atomicrad.f90</a></td>
+                 <td><p>@file mctc/data/atomicrad.f90
+Provides atomic radii for all elements
+Atomic radii of the elements</p><a href="../module/mctc_data_atomicrad.html" class="pull-right"><emph>Read more&hellip;</emph></a></td>
+               </tr>
+<!--active-->			   <tr class="">
+                 <td><a href='../module/mctc_data_covrad.html'>mctc_data_covrad</a></td>
+                 <td><a href='../sourcefile/covrad.f90.html'>covrad.f90</a></td>
+                 <td><p>@file mctc/data/covrad.f90
+Provides covalent radii for all elements
+Covalent radii (taken from Pyykko and Atsumi, Chem. Eur. J. 15, 2009,
+188-197), values for metals decreased by 10 %</p></td>
+               </tr>
+<!---->			   <tr class="active">
+                 <td><a href='../module/mctc_data_paulingen.html'>mctc_data_paulingen</a></td>
+                 <td><a href='../sourcefile/paulingen.f90.html'>paulingen.f90</a></td>
+                 <td><p>@file mctc/data/paulingen.f90
+Provides electronegativities for all elements
+Pauling electronegativities</p></td>
+               </tr>
+<!--active-->			   <tr class="">
+                 <td><a href='../module/mctc_data_vdwrad.html'>mctc_data_vdwrad</a></td>
+                 <td><a href='../sourcefile/vdwrad.f90.html'>vdwrad.f90</a></td>
+                 <td><p>@file mctc/data/vdwrad.f90
+Provides van der Waals radii for all elements and pairs of elements
+Pairwise van der Waals or cutoff radii based on the distance
+where the first-order PBE0/def2-QZVP energy falls below a cutoff value
+defined by: 
+   S. Grimme, J. Antony, S. Ehrlich, H. Krieg, 
+   J. Chem. Phys. 132, 154104 (2010), DOI: 10.1063/1.3382344
+extended by: 
+   L. Trombach, S. Ehlert, S. Grimme, P Schwerdtfeger, J.-M. Mewes, 
+   PCCP, 2019, 21,18048, DOI: 10.1039/c9cp02455g
+   L. Wittmann, I. Gordiy, M. Friede, B. Helmich-Paris, S. Grimme, A. Hansen, M. Bursch,
+   PCCP, 2024, 26, 21379, DOI: 10.1039/d4cp01514b</p></td>
+               </tr>
+<!---->			   <tr class="active">
                  <td><a href='../module/mctc_env.html'>mctc_env</a></td>
                  <td><a href='../sourcefile/env.f90.html'>env.f90</a></td>
                  <td><p>Public API reexport of environment library</p></td>
@@ -139,7 +193,7 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!---->			   <tr class="active">
                  <td><a href='../module/mctc_io_read_aims.html'>mctc_io_read_aims</a></td>
-                 <td><a href='../sourcefile/aims.f90~2.html'>aims.f90</a></td>
+                 <td><a href='../sourcefile/aims.f90.html'>aims.f90</a></td>
                  <td></td>
                </tr>
 <!--active-->			   <tr class="">
@@ -149,12 +203,12 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!---->			   <tr class="active">
                  <td><a href='../module/mctc_io_read_ctfile.html'>mctc_io_read_ctfile</a></td>
-                 <td><a href='../sourcefile/ctfile.f90~2.html'>ctfile.f90</a></td>
+                 <td><a href='../sourcefile/ctfile.f90.html'>ctfile.f90</a></td>
                  <td></td>
                </tr>
 <!--active-->			   <tr class="">
                  <td><a href='../module/mctc_io_read_gaussian.html'>mctc_io_read_gaussian</a></td>
-                 <td><a href='../sourcefile/gaussian.f90~2.html'>gaussian.f90</a></td>
+                 <td><a href='../sourcefile/gaussian.f90.html'>gaussian.f90</a></td>
                  <td></td>
                </tr>
 <!---->			   <tr class="active">
@@ -169,7 +223,7 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!---->			   <tr class="active">
                  <td><a href='../module/mctc_io_read_qchem.html'>mctc_io_read_qchem</a></td>
-                 <td><a href='../sourcefile/qchem.f90~2.html'>qchem.f90</a></td>
+                 <td><a href='../sourcefile/qchem.f90.html'>qchem.f90</a></td>
                  <td></td>
                </tr>
 <!--active-->			   <tr class="">
@@ -184,7 +238,7 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!--active-->			   <tr class="">
                  <td><a href='../module/mctc_io_read_vasp.html'>mctc_io_read_vasp</a></td>
-                 <td><a href='../sourcefile/vasp.f90~2.html'>vasp.f90</a></td>
+                 <td><a href='../sourcefile/vasp.f90.html'>vasp.f90</a></td>
                  <td></td>
                </tr>
 <!---->			   <tr class="active">
@@ -224,7 +278,7 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!--active-->			   <tr class="">
                  <td><a href='../module/mctc_io_write_aims.html'>mctc_io_write_aims</a></td>
-                 <td><a href='../sourcefile/aims.f90.html'>aims.f90</a></td>
+                 <td><a href='../sourcefile/aims.f90~2.html'>aims.f90</a></td>
                  <td></td>
                </tr>
 <!---->			   <tr class="active">
@@ -234,12 +288,12 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!--active-->			   <tr class="">
                  <td><a href='../module/mctc_io_write_ctfile.html'>mctc_io_write_ctfile</a></td>
-                 <td><a href='../sourcefile/ctfile.f90.html'>ctfile.f90</a></td>
+                 <td><a href='../sourcefile/ctfile.f90~2.html'>ctfile.f90</a></td>
                  <td></td>
                </tr>
 <!---->			   <tr class="active">
                  <td><a href='../module/mctc_io_write_gaussian.html'>mctc_io_write_gaussian</a></td>
-                 <td><a href='../sourcefile/gaussian.f90.html'>gaussian.f90</a></td>
+                 <td><a href='../sourcefile/gaussian.f90~2.html'>gaussian.f90</a></td>
                  <td></td>
                </tr>
 <!--active-->			   <tr class="">
@@ -254,7 +308,7 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!--active-->			   <tr class="">
                  <td><a href='../module/mctc_io_write_qchem.html'>mctc_io_write_qchem</a></td>
-                 <td><a href='../sourcefile/qchem.f90.html'>qchem.f90</a></td>
+                 <td><a href='../sourcefile/qchem.f90~2.html'>qchem.f90</a></td>
                  <td></td>
                </tr>
 <!---->			   <tr class="active">
@@ -269,7 +323,7 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                </tr>
 <!---->			   <tr class="active">
                  <td><a href='../module/mctc_io_write_vasp.html'>mctc_io_write_vasp</a></td>
-                 <td><a href='../sourcefile/vasp.f90.html'>vasp.f90</a></td>
+                 <td><a href='../sourcefile/vasp.f90~2.html'>vasp.f90</a></td>
                  <td></td>
                </tr>
 <!--active-->			   <tr class="">
@@ -278,11 +332,64 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
                  <td></td>
                </tr>
 <!---->			   <tr class="active">
+                 <td><a href='../module/mctc_ncoord.html'>mctc_ncoord</a></td>
+                 <td><a href='../sourcefile/ncoord.f90.html'>ncoord.f90</a></td>
+                 <td><p>@dir mctc/ncoord
+Contains the implementation for the coordination number evaluators.
+@file mctc/ncoord.f90
+Reexports the coordination number evaluation modules.
+Proxy module to expose coordination number containers</p></td>
+               </tr>
+<!--active-->			   <tr class="">
+                 <td><a href='../module/mctc_ncoord_dexp.html'>mctc_ncoord_dexp</a></td>
+                 <td><a href='../sourcefile/dexp.f90.html'>dexp.f90</a></td>
+                 <td><p>@file mctc/ncoord/dexp.f90
+Provides a coordination number implementation with double exponential counting function
+Coordination number implementation using a double exponential counting function as in GFN2-xTB</p></td>
+               </tr>
+<!---->			   <tr class="active">
+                 <td><a href='../module/mctc_ncoord_erf.html'>mctc_ncoord_erf</a></td>
+                 <td><a href='../sourcefile/erf.f90.html'>erf.f90</a></td>
+                 <td><p>@dir mctc/ncoord/erf
+Provides variations (EN) of the error function based coordination number
+@file mctc/ncoord/erf.f90
+Provides error function based coordination number
+Coordination number implementation with single error function</p></td>
+               </tr>
+<!--active-->			   <tr class="">
+                 <td><a href='../module/mctc_ncoord_erf_dftd4.html'>mctc_ncoord_erf_dftd4</a></td>
+                 <td><a href='../sourcefile/dftd4.f90.html'>dftd4.f90</a></td>
+                 <td><p>@file mctc/ncoord/erf_en.f90
+Provides an implementation for the CN as used dftd4
+Coordination number implementation with single error function and EN-weighting for dftd4</p></td>
+               </tr>
+<!---->			   <tr class="active">
+                 <td><a href='../module/mctc_ncoord_erf_en.html'>mctc_ncoord_erf_en</a></td>
+                 <td><a href='../sourcefile/en.f90.html'>en.f90</a></td>
+                 <td><p>@file mctc/ncoord/erf/en.f90
+Provides an implementation for the electronegativity-weighted CN
+Coordination number implementation with single error function and EN-weighting.</p></td>
+               </tr>
+<!--active-->			   <tr class="">
+                 <td><a href='../module/mctc_ncoord_exp.html'>mctc_ncoord_exp</a></td>
+                 <td><a href='../sourcefile/exp.f90.html'>exp.f90</a></td>
+                 <td><p>@file mctc/ncoord/exp.f90
+Provides a coordination number implementation with exponential counting function
+Coordination number implementation using an exponential counting function as in dftd3. </p></td>
+               </tr>
+<!---->			   <tr class="active">
+                 <td><a href='../module/mctc_ncoord_type.html'>mctc_ncoord_type</a></td>
+                 <td><a href='../sourcefile/type.f90.html'>type.f90</a></td>
+                 <td><p>@file mctc/ncoord/type.f90
+Provides a coordination number evalulator base class
+Declaration of base class for coordination number evalulations</p></td>
+               </tr>
+<!--active-->			   <tr class="">
                  <td><a href='../module/mctc_version.html'>mctc_version</a></td>
                  <td><a href='../sourcefile/version.f90.html'>version.F90</a></td>
                  <td></td>
                </tr>
-<!--active-->			 </tbody></table>
+<!---->			 </tbody></table>
              
         </div>
       </div>
@@ -301,7 +408,7 @@ https://physics.nist.gov/cuu/Constants/Table/allascii.txt</p><a href="../module/
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2025-03-17 12:44 +0000             </p>
+ on 2025-03-19 08:33 +0000             </p>
           </div>
         </div>
         <br>
