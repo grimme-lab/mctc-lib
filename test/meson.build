@@ -13,7 +13,10 @@
 # limitations under the License.
 
 tests = [
+  'cutoff',
+  'data',
   'math',
+  'ncoord',
   'read',
   'read-aims',
   'read-cjson',

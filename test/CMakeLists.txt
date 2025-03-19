@@ -15,7 +15,10 @@
 # Unit testing
 set(
   tests
+  "cutoff"
+  "data"
   "math"
+  "ncoord"
   "read"
   "read-aims"
   "read-cjson"

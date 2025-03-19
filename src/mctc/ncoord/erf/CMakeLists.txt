@@ -12,16 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-subdir('data')
-subdir('env')
-subdir('io')
-subdir('ncoord')
+set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
-srcs += files(
-  'cutoff.f90',
-  'data.f90',
-  'env.f90',
-  'io.f90',
-  'ncoord.f90',
-  'version.F90',
+list(
+  APPEND srcs
+  "${dir}/dftd4.f90"
+  "${dir}/en.f90"
 )
+
+set(srcs "${srcs}" PARENT_SCOPE)
