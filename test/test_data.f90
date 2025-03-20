@@ -15,7 +15,7 @@
 module test_data
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
-   & test_failed
+   & test_failed, check
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
    use mctc_data, only : get_atomic_rad, get_covalent_rad, get_pauling_en, get_vdw_rad
@@ -38,15 +38,35 @@ contains
 
       testsuite = [ &
       & new_unittest("atomic_rad", test_atomic_rad), &
+      & new_unittest("atomic_rad_mb01", test_atomic_rad_mb01), &
       & new_unittest("covalent_rad", test_covalent_rad), &
+      & new_unittest("covalent_rad_mb02", test_covalent_rad_mb02), &
       & new_unittest("pauling_en", test_pauling_en), &
-      & new_unittest("vdw_rad", test_vdw_rad) &
+      & new_unittest("pauling_en_mb03", test_pauling_en_mb03), &
+      & new_unittest("vdw_rad", test_vdw_rad), &
+      & new_unittest("vdw_rad_mb04", test_vdw_rad_mb04) &
       & ]
 
    end subroutine collect_data
 
 
    subroutine test_atomic_rad(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      call check(error, get_atomic_rad("C"), get_atomic_rad(6))
+      if (allocated(error)) return
+      call check(error, get_atomic_rad("Am"), get_atomic_rad(95))
+      if (allocated(error)) return
+      call check(error, get_atomic_rad("Og"), get_atomic_rad(118))
+      if (allocated(error)) return
+      call check(error, get_atomic_rad("X"), get_atomic_rad(-1))
+   
+   end subroutine test_atomic_rad   
+
+
+   subroutine test_atomic_rad_mb01(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
@@ -74,10 +94,26 @@ contains
          print'(3es21.14)', ref
       end if
 
-   end subroutine test_atomic_rad
+   end subroutine test_atomic_rad_mb01
 
 
    subroutine test_covalent_rad(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      call check(error, get_covalent_rad("C"), get_covalent_rad(6))
+      if (allocated(error)) return
+      call check(error, get_covalent_rad("Am"), get_covalent_rad(95))
+      if (allocated(error)) return
+      call check(error, get_covalent_rad("Og"), get_covalent_rad(118))
+      if (allocated(error)) return
+      call check(error, get_covalent_rad("X"), get_covalent_rad(-1))
+   
+   end subroutine test_covalent_rad   
+
+
+   subroutine test_covalent_rad_mb02(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
@@ -105,10 +141,26 @@ contains
          print'(3es21.14)', ref
       end if
 
-   end subroutine test_covalent_rad
+   end subroutine test_covalent_rad_mb02
 
 
    subroutine test_pauling_en(error)
+      
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      call check(error, get_pauling_en("C"), get_pauling_en(6))
+      if (allocated(error)) return
+      call check(error, get_pauling_en("Am"), get_pauling_en(95))
+      if (allocated(error)) return
+      call check(error, get_pauling_en("Og"), get_pauling_en(118))
+      if (allocated(error)) return
+      call check(error, get_pauling_en("X"), get_pauling_en(-1))
+   
+   end subroutine test_pauling_en   
+
+
+   subroutine test_pauling_en_mb03(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
@@ -136,10 +188,26 @@ contains
          print'(3es21.14)', ref
       end if
 
-   end subroutine test_pauling_en
+   end subroutine test_pauling_en_mb03
 
 
    subroutine test_vdw_rad(error)
+      
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      call check(error, get_vdw_rad("C"), get_vdw_rad(6))
+      if (allocated(error)) return
+      call check(error, get_vdw_rad("Am"), get_vdw_rad(95))
+      if (allocated(error)) return
+      call check(error, get_vdw_rad("Og"), get_vdw_rad(118))
+      if (allocated(error)) return
+      call check(error, get_vdw_rad("X"), get_vdw_rad(-1))
+   
+   end subroutine test_vdw_rad 
+
+
+   subroutine test_vdw_rad_mb04(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
@@ -185,7 +253,7 @@ contains
          print'(3es21.14)', ref_pair
       end if
 
-   end subroutine test_vdw_rad
+   end subroutine test_vdw_rad_mb04
 
 
 end module test_data
