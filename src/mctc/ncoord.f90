@@ -20,7 +20,7 @@
 
 !> Proxy module to expose coordination number containers
 module mctc_ncoord
-   use mctc_env, only : wp
+   use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
    use mctc_ncoord_type, only : ncoord_type
    use mctc_ncoord_dexp, only : dexp_ncoord_type, new_dexp_ncoord
@@ -31,7 +31,7 @@ module mctc_ncoord
    implicit none
    private
 
-   public :: ncoord_type, new_ncoord, cn_count
+   public :: ncoord_type, new_ncoord, cn_count, get_cn_count_value
 
 
    !> Possible coordination number counting functions
@@ -60,7 +60,7 @@ module mctc_ncoord
 contains
 
 !> Create a new generic coordination number container
-subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm_exp)
+subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm_exp, error)
    !> Instance of the coordination number container
    class(ncoord_type), allocatable, intent(out) :: self
    !> Molecular structure data
@@ -79,8 +79,13 @@ subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm
    real(wp), intent(in), optional :: cut
    !> Optional exponent of the distance normalization
    real(wp), intent(in), optional :: norm_exp
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
    select case(cn_count_type)
+   case default 
+      call fatal_error(error, "Unsupported option for coordination number")
+      return 
    case(cn_count%exp)
       block
          type(exp_ncoord_type), allocatable :: tmp
@@ -122,5 +127,30 @@ subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm
    end select
 
 end subroutine new_ncoord
+
+!> Translate sting into coordination number type
+subroutine get_cn_count_value(cn_count_name, cn_count_type, error)
+   !> Type of coordination number counting function
+   character(len=*), intent(in) :: cn_count_name
+   !> Parametrization records
+   integer, intent(out) :: cn_count_type
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select case(cn_count_name)
+   case default
+      call fatal_error(error, "Unknown coordination number counting function: "//cn_count_name)
+      return
+   case("exp")
+      cn_count_type = cn_count%exp
+   case("dexp")
+      cn_count_type = cn_count%dexp
+   case("erf")
+      cn_count_type = cn_count%erf
+   case("erf_en")
+      cn_count_type = cn_count%erf_en
+   end select
+
+end subroutine get_cn_count_value
 
 end module mctc_ncoord
