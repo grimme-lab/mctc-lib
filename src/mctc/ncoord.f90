@@ -31,7 +31,7 @@ module mctc_ncoord
    implicit none
    private
 
-   public :: ncoord_type, new_ncoord, cn_count, get_cn_count_type
+   public :: ncoord_type, new_ncoord, cn_count, get_cn_count_id, get_cn_count_string
 
 
    !> Possible coordination number counting functions
@@ -129,11 +129,11 @@ subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm
 end subroutine new_ncoord
 
 !> Translate string into coordination number type
-subroutine get_cn_count_type(cn_count_name, cn_count_type, error)
-   !> Type of coordination number counting function
+subroutine get_cn_count_id(cn_count_name, cn_count_id, error)
+   !> String for coordination number counting function
    character(len=*), intent(in) :: cn_count_name
-   !> Parametrization records
-   integer, intent(out) :: cn_count_type
+   !> ID for coordination number counting function
+   integer, intent(out) :: cn_count_id
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
@@ -142,17 +142,44 @@ subroutine get_cn_count_type(cn_count_name, cn_count_type, error)
       call fatal_error(error, "Unknown coordination number counting function: "//cn_count_name)
       return
    case("exp")
-      cn_count_type = cn_count%exp
+      cn_count_id = cn_count%exp
    case("dexp")
-      cn_count_type = cn_count%dexp
+      cn_count_id = cn_count%dexp
    case("erf")
-      cn_count_type = cn_count%erf
+      cn_count_id = cn_count%erf
    case("erf_en")
-      cn_count_type = cn_count%erf_en
+      cn_count_id = cn_count%erf_en
    case("dftd4")
-      cn_count_type = cn_count%dftd4
+      cn_count_id = cn_count%dftd4
    end select
 
-end subroutine get_cn_count_type
+end subroutine get_cn_count_id
+
+!> Translate string into coordination number type
+subroutine get_cn_count_string(cn_count_id, cn_count_name, error)
+   !> ID for coordination number counting function
+   integer, intent(in) :: cn_count_id
+   !> String for coordination number counting function
+   character(len=*), intent(out) :: cn_count_name
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select case(cn_count_id)
+   case default
+      call fatal_error(error, "Unknown coordination number counting function ID.")
+      return
+   case(cn_count%exp)
+      cn_count_name = "exp"
+   case(cn_count%dexp)
+      cn_count_name = "dexp"
+   case(cn_count%erf)
+      cn_count_name = "erf"
+   case(cn_count%erf_en)
+      cn_count_name = "erf_en"
+   case(cn_count%dftd4)
+      cn_count_name = "dftd4"
+   end select
+
+end subroutine get_cn_count_string
 
 end module mctc_ncoord

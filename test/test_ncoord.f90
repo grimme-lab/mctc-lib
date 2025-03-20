@@ -27,7 +27,7 @@ module test_ncoord
    use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
    use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
    use mctc_ncoord_type, only : ncoord_type
-   use mctc_ncoord, only : new_ncoord, cn_count, get_cn_count_type
+   use mctc_ncoord, only : new_ncoord, cn_count, get_cn_count_id, get_cn_count_string
    implicit none
    private
 
@@ -102,8 +102,10 @@ contains
       & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
       & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
-      & new_unittest("name_to_cn_count_type", test_name_to_cn_count_type), &
-      & new_unittest("wrong_name_to_cn_count_type", test_wrong_name_to_cn_count_type, should_fail=.true.) &
+      & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
+      & new_unittest("cn_count_wrong_string_to_id", test_cn_count_wrong_string_to_id, should_fail=.true.), &
+      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string), &
+      & new_unittest("cn_count_wrong_id_to_string", test_cn_count_wrong_id_to_string, should_fail=.true.) &
       & ]
 
    end subroutine collect_ncoord
@@ -1866,52 +1868,100 @@ contains
    end subroutine test_dcndL_anthracene_erf_dftd4
 
 
-   subroutine test_name_to_cn_count_type(error)
+   subroutine test_cn_count_string_to_id(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      integer :: cn_count_id
+
+      call get_cn_count_id("exp", cn_count_id, error)
+      if (allocated(error)) return
+      call check(error, cn_count_id, cn_count%exp)
+      if (allocated(error)) return
+
+      call get_cn_count_id("dexp", cn_count_id, error)
+      if (allocated(error)) return
+      call check(error, cn_count_id, cn_count%dexp)
+      if (allocated(error)) return
+
+      call get_cn_count_id("erf", cn_count_id, error)
+      if (allocated(error)) return
+      call check(error, cn_count_id, cn_count%erf)
+      if (allocated(error)) return
+
+      call get_cn_count_id("erf_en", cn_count_id, error)
+      if (allocated(error)) return
+      call check(error, cn_count_id, cn_count%erf_en)
+      if (allocated(error)) return
+
+      call get_cn_count_id("dftd4", cn_count_id, error)
+      if (allocated(error)) return
+      call check(error, cn_count_id, cn_count%dftd4)
+      if (allocated(error)) return
+
+   end subroutine test_cn_count_string_to_id 
+
+
+   subroutine test_cn_count_wrong_string_to_id(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
    
       integer :: cn_count_type
 
-      call get_cn_count_type("exp", cn_count_type, error)
-      if (allocated(error)) return
-      call check(error, cn_count_type, cn_count%exp)
+      call get_cn_count_id("derf", cn_count_type, error)
       if (allocated(error)) return
 
-      call get_cn_count_type("dexp", cn_count_type, error)
-      if (allocated(error)) return
-      call check(error, cn_count_type, cn_count%dexp)
-      if (allocated(error)) return
+   end subroutine test_cn_count_wrong_string_to_id 
 
-      call get_cn_count_type("erf", cn_count_type, error)
-      if (allocated(error)) return
-      call check(error, cn_count_type, cn_count%erf)
-      if (allocated(error)) return
-
-      call get_cn_count_type("erf_en", cn_count_type, error)
-      if (allocated(error)) return
-      call check(error, cn_count_type, cn_count%erf_en)
-      if (allocated(error)) return
-
-      call get_cn_count_type("dftd4", cn_count_type, error)
-      if (allocated(error)) return
-      call check(error, cn_count_type, cn_count%dftd4)
-      if (allocated(error)) return
-
-   end subroutine test_name_to_cn_count_type 
-
-
-   subroutine test_wrong_name_to_cn_count_type(error)
+   
+   subroutine test_cn_count_id_to_string(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
    
-      integer :: cn_count_type
+      character(6) :: cn_count_name
 
-      call get_cn_count_type("derf", cn_count_type, error)
+      call get_cn_count_string(cn_count%exp, cn_count_name, error)
+      if (allocated(error)) return
+      call check(error, cn_count_name, "exp")
       if (allocated(error)) return
 
-   end subroutine test_wrong_name_to_cn_count_type 
+      call get_cn_count_string(cn_count%dexp, cn_count_name, error)
+      if (allocated(error)) return
+      call check(error, cn_count_name, "dexp")
+      if (allocated(error)) return
+
+      call get_cn_count_string(cn_count%erf, cn_count_name, error)
+      if (allocated(error)) return
+      call check(error, cn_count_name, "erf")
+      if (allocated(error)) return
+
+      call get_cn_count_string(cn_count%erf_en, cn_count_name, error)
+      if (allocated(error)) return
+      call check(error, cn_count_name, "erf_en")
+      if (allocated(error)) return
+
+      call get_cn_count_string(cn_count%dftd4, cn_count_name, error)
+      if (allocated(error)) return
+      call check(error, cn_count_name, "dftd4")
+      if (allocated(error)) return
+
+   end subroutine test_cn_count_id_to_string 
+
+
+   subroutine test_cn_count_wrong_id_to_string(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      character(6) :: cn_count_name
+
+      call get_cn_count_string(-1, cn_count_name, error)
+      if (allocated(error)) return
+
+   end subroutine test_cn_count_wrong_id_to_string 
 
 
 end module test_ncoord
