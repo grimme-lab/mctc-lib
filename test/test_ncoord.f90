@@ -15,7 +15,7 @@
 module test_ncoord
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
-   & test_failed
+   & test_failed, check
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
    use mctc_cutoff, only : get_lattice_points
@@ -27,7 +27,7 @@ module test_ncoord
    use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
    use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
    use mctc_ncoord_type, only : ncoord_type
-   use mctc_ncoord, only : new_ncoord, cn_count
+   use mctc_ncoord, only : new_ncoord, cn_count, get_cn_count_type
    implicit none
    private
 
@@ -101,7 +101,9 @@ contains
       & new_unittest("dcndr-ammonia_erf_dftd4", test_dcndr_ammonia_erf_dftd4), &
       & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
-      & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4) &
+      & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
+      & new_unittest("name_to_cn_count_type", test_name_to_cn_count_type), &
+      & new_unittest("wrong_name_to_cn_count_type", test_wrong_name_to_cn_count_type, should_fail=.true.) &
       & ]
 
    end subroutine collect_ncoord
@@ -1862,6 +1864,54 @@ contains
       call test_numsigma(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndL_anthracene_erf_dftd4
+
+
+   subroutine test_name_to_cn_count_type(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      integer :: cn_count_type
+
+      call get_cn_count_type("exp", cn_count_type, error)
+      if (allocated(error)) return
+      call check(error, cn_count_type, cn_count%exp)
+      if (allocated(error)) return
+
+      call get_cn_count_type("dexp", cn_count_type, error)
+      if (allocated(error)) return
+      call check(error, cn_count_type, cn_count%dexp)
+      if (allocated(error)) return
+
+      call get_cn_count_type("erf", cn_count_type, error)
+      if (allocated(error)) return
+      call check(error, cn_count_type, cn_count%erf)
+      if (allocated(error)) return
+
+      call get_cn_count_type("erf_en", cn_count_type, error)
+      if (allocated(error)) return
+      call check(error, cn_count_type, cn_count%erf_en)
+      if (allocated(error)) return
+
+      call get_cn_count_type("dftd4", cn_count_type, error)
+      if (allocated(error)) return
+      call check(error, cn_count_type, cn_count%dftd4)
+      if (allocated(error)) return
+
+   end subroutine test_name_to_cn_count_type 
+
+
+   subroutine test_wrong_name_to_cn_count_type(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      integer :: cn_count_type
+
+      call get_cn_count_type("derf", cn_count_type, error)
+      if (allocated(error)) return
+
+   end subroutine test_wrong_name_to_cn_count_type 
 
 
 end module test_ncoord

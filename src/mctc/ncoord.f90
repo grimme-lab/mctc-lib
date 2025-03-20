@@ -31,7 +31,7 @@ module mctc_ncoord
    implicit none
    private
 
-   public :: ncoord_type, new_ncoord, cn_count, get_cn_count_value
+   public :: ncoord_type, new_ncoord, cn_count, get_cn_count_type
 
 
    !> Possible coordination number counting functions
@@ -128,8 +128,8 @@ subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm
 
 end subroutine new_ncoord
 
-!> Translate sting into coordination number type
-subroutine get_cn_count_value(cn_count_name, cn_count_type, error)
+!> Translate string into coordination number type
+subroutine get_cn_count_type(cn_count_name, cn_count_type, error)
    !> Type of coordination number counting function
    character(len=*), intent(in) :: cn_count_name
    !> Parametrization records
@@ -149,8 +149,10 @@ subroutine get_cn_count_value(cn_count_name, cn_count_type, error)
       cn_count_type = cn_count%erf
    case("erf_en")
       cn_count_type = cn_count%erf_en
+   case("dftd4")
+      cn_count_type = cn_count%dftd4
    end select
 
-end subroutine get_cn_count_value
+end subroutine get_cn_count_type
 
 end module mctc_ncoord
