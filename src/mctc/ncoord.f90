@@ -129,18 +129,16 @@ subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm
 end subroutine new_ncoord
 
 !> Translate string into coordination number type
-subroutine get_cn_count_id(cn_count_name, cn_count_id, error)
+pure function get_cn_count_id(cn_count_name) result(cn_count_id)
    !> String for coordination number counting function
    character(len=*), intent(in) :: cn_count_name
    !> ID for coordination number counting function
-   integer, intent(out) :: cn_count_id
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
+   integer :: cn_count_id
 
    select case(cn_count_name)
    case default
-      call fatal_error(error, "Unknown coordination number counting function: "//cn_count_name)
-      return
+      ! Indicate unknown CN option
+      cn_count_id = -1 
    case("exp")
       cn_count_id = cn_count%exp
    case("dexp")
@@ -153,21 +151,19 @@ subroutine get_cn_count_id(cn_count_name, cn_count_id, error)
       cn_count_id = cn_count%dftd4
    end select
 
-end subroutine get_cn_count_id
+end function get_cn_count_id
 
 !> Translate string into coordination number type
-subroutine get_cn_count_string(cn_count_id, cn_count_name, error)
+pure function get_cn_count_string(cn_count_id) result(cn_count_name)
    !> ID for coordination number counting function
    integer, intent(in) :: cn_count_id
    !> String for coordination number counting function
-   character(len=*), intent(out) :: cn_count_name
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
+   character(len=:), allocatable :: cn_count_name
 
    select case(cn_count_id)
    case default
-      call fatal_error(error, "Unknown coordination number counting function ID.")
-      return
+      ! Empty string to indicate unknown CN option
+      cn_count_name = ""
    case(cn_count%exp)
       cn_count_name = "exp"
    case(cn_count%dexp)
@@ -180,6 +176,6 @@ subroutine get_cn_count_string(cn_count_id, cn_count_name, error)
       cn_count_name = "dftd4"
    end select
 
-end subroutine get_cn_count_string
+end function get_cn_count_string
 
 end module mctc_ncoord

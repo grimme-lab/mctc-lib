@@ -103,9 +103,7 @@ contains
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
       & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
       & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
-      & new_unittest("cn_count_wrong_string_to_id", test_cn_count_wrong_string_to_id, should_fail=.true.), &
-      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string), &
-      & new_unittest("cn_count_wrong_id_to_string", test_cn_count_wrong_id_to_string, should_fail=.true.) &
+      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string) &
       & ]
 
    end subroutine collect_ncoord
@@ -1875,45 +1873,26 @@ contains
    
       integer :: cn_count_id
 
-      call get_cn_count_id("exp", cn_count_id, error)
-      if (allocated(error)) return
-      call check(error, cn_count_id, cn_count%exp)
+      call check(error, get_cn_count_id("exp"), cn_count%exp)
       if (allocated(error)) return
 
-      call get_cn_count_id("dexp", cn_count_id, error)
-      if (allocated(error)) return
-      call check(error, cn_count_id, cn_count%dexp)
+      call check(error, get_cn_count_id("dexp"), cn_count%dexp)
       if (allocated(error)) return
 
-      call get_cn_count_id("erf", cn_count_id, error)
-      if (allocated(error)) return
-      call check(error, cn_count_id, cn_count%erf)
+      call check(error, get_cn_count_id("erf"), cn_count%erf)
       if (allocated(error)) return
 
-      call get_cn_count_id("erf_en", cn_count_id, error)
-      if (allocated(error)) return
-      call check(error, cn_count_id, cn_count%erf_en)
+      call check(error, get_cn_count_id("erf_en"), cn_count%erf_en)
       if (allocated(error)) return
 
-      call get_cn_count_id("dftd4", cn_count_id, error)
+      call check(error, get_cn_count_id("dftd4"), cn_count%dftd4)
       if (allocated(error)) return
-      call check(error, cn_count_id, cn_count%dftd4)
+
+      call check(error, get_cn_count_id("derf"), -1)
       if (allocated(error)) return
+
 
    end subroutine test_cn_count_string_to_id 
-
-
-   subroutine test_cn_count_wrong_string_to_id(error)
-
-      !> Error handling
-      type(error_type), allocatable, intent(out) :: error
-   
-      integer :: cn_count_type
-
-      call get_cn_count_id("derf", cn_count_type, error)
-      if (allocated(error)) return
-
-   end subroutine test_cn_count_wrong_string_to_id 
 
    
    subroutine test_cn_count_id_to_string(error)
@@ -1923,45 +1902,25 @@ contains
    
       character(6) :: cn_count_name
 
-      call get_cn_count_string(cn_count%exp, cn_count_name, error)
-      if (allocated(error)) return
-      call check(error, cn_count_name, "exp")
+      call check(error, get_cn_count_string(cn_count%exp), "exp")
       if (allocated(error)) return
 
-      call get_cn_count_string(cn_count%dexp, cn_count_name, error)
-      if (allocated(error)) return
-      call check(error, cn_count_name, "dexp")
+      call check(error, get_cn_count_string(cn_count%dexp), "dexp")
       if (allocated(error)) return
 
-      call get_cn_count_string(cn_count%erf, cn_count_name, error)
-      if (allocated(error)) return
-      call check(error, cn_count_name, "erf")
+      call check(error, get_cn_count_string(cn_count%erf), "erf")
       if (allocated(error)) return
 
-      call get_cn_count_string(cn_count%erf_en, cn_count_name, error)
-      if (allocated(error)) return
-      call check(error, cn_count_name, "erf_en")
+      call check(error, get_cn_count_string(cn_count%erf_en), "erf_en")
       if (allocated(error)) return
 
-      call get_cn_count_string(cn_count%dftd4, cn_count_name, error)
+      call check(error, get_cn_count_string(cn_count%dftd4), "dftd4")
       if (allocated(error)) return
-      call check(error, cn_count_name, "dftd4")
+
+      call check(error, get_cn_count_string(-1), "")
       if (allocated(error)) return
 
    end subroutine test_cn_count_id_to_string 
-
-
-   subroutine test_cn_count_wrong_id_to_string(error)
-
-      !> Error handling
-      type(error_type), allocatable, intent(out) :: error
-   
-      character(6) :: cn_count_name
-
-      call get_cn_count_string(-1, cn_count_name, error)
-      if (allocated(error)) return
-
-   end subroutine test_cn_count_wrong_id_to_string 
 
 
 end module test_ncoord
