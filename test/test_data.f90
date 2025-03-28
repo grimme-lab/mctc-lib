@@ -203,7 +203,9 @@ contains
       call check(error, get_vdw_rad("Og"), get_vdw_rad(118))
       if (allocated(error)) return
       call check(error, get_vdw_rad("X"), get_vdw_rad(-1))
-   
+      if (allocated(error)) return
+      call check(error, get_vdw_rad("C", "Og"), get_vdw_rad(118, 6))
+
    end subroutine test_vdw_rad 
 
 

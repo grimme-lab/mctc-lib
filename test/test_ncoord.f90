@@ -102,6 +102,7 @@ contains
       & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
       & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
+      & new_unittest("cn_unknown", test_cn_unknown, should_fail=.true.), &
       & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
       & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string) &
       & ]
@@ -1864,6 +1865,23 @@ contains
       call test_numsigma(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndL_anthracene_erf_dftd4
+
+
+   subroutine test_cn_unknown(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: ncoord
+
+      call get_structure(mol, "mindless01")
+
+      ! Test also the external interface
+      call new_ncoord(ncoord, mol, get_cn_count_id("unknown"), error=error)
+      if(allocated(error)) return
+
+   end subroutine test_cn_unknown
 
 
    subroutine test_cn_count_string_to_id(error)
