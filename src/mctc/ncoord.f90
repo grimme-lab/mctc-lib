@@ -60,13 +60,15 @@ module mctc_ncoord
 contains
 
 !> Create a new generic coordination number container
-subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm_exp, error)
+subroutine new_ncoord(self, mol, cn_count_type, error, kcn, cutoff, rcov, en, cut, norm_exp)
    !> Instance of the coordination number container
    class(ncoord_type), allocatable, intent(out) :: self
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Coordination number type
    integer, intent(in) :: cn_count_type
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
    !> Optional steepness of counting function
    real(wp), intent(in), optional :: kcn
    !> Optional real space cutoff
@@ -79,8 +81,6 @@ subroutine new_ncoord(self, mol, cn_count_type, kcn, cutoff, rcov, en, cut, norm
    real(wp), intent(in), optional :: cut
    !> Optional exponent of the distance normalization
    real(wp), intent(in), optional :: norm_exp
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
 
    select case(cn_count_type)
    case default 

@@ -265,8 +265,8 @@ contains
       allocate(rcov(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
       ! Test also the external interface
-      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, &
-         & cutoff=cutoff, rcov=rcov, error=error)
+      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, &
+         & cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
       call dexp_ncoord%get_cn(mol, cn)
 
@@ -299,7 +299,7 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, cut=cut, error=error)
+      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, cut=cut)
       if(allocated(error)) return
       call dexp_ncoord%get_cn(mol, cn)
 
@@ -564,8 +564,8 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(exp_ncoord, mol, cn_count%exp, &
-         & kcn=kcn, cutoff=cutoff, rcov=rcov, error=error)
+      call new_ncoord(exp_ncoord, mol, cn_count%exp, error, &
+         & kcn=kcn, cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
       call exp_ncoord%get_cn(mol, cn)
 
@@ -599,7 +599,7 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(exp_ncoord, mol, cn_count%exp, cut=cut, error=error)
+      call new_ncoord(exp_ncoord, mol, cn_count%exp, error, cut=cut)
       if(allocated(error)) return
       call exp_ncoord%get_cn(mol, cn)
 
@@ -865,8 +865,8 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_ncoord, mol, cn_count%erf, &
-         & kcn=kcn, cutoff=cutoff, rcov=rcov, error=error)
+      call new_ncoord(erf_ncoord, mol, cn_count%erf, error, &
+         & kcn=kcn, cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
       call erf_ncoord%get_cn(mol, cn)
 
@@ -900,7 +900,7 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(erf_ncoord, mol, cn_count%erf, cut=cut, error=error)
+      call new_ncoord(erf_ncoord, mol, cn_count%erf, error, cut=cut)
       if(allocated(error)) return
       call erf_ncoord%get_cn(mol, cn)
 
@@ -1178,8 +1178,8 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, &
-         & kcn=kcn, cutoff=cutoff, rcov=rcov, en=en, error=error)
+      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, &
+         & kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
       if(allocated(error)) return
       call erf_en_ncoord%get_cn(mol, cn)
 
@@ -1213,7 +1213,7 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, cut=cut, error=error)
+      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, cut=cut)
       if(allocated(error)) return
       call erf_en_ncoord%get_cn(mol, cn)
 
@@ -1505,8 +1505,8 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, &
-         & cutoff=cutoff, rcov=rcov, en=en, error=error)
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
+         & cutoff=cutoff, rcov=rcov, en=en)
       if(allocated(error)) return
       call erf_dftd4_ncoord%get_cn(mol, cn)
 
@@ -1540,7 +1540,7 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, cut=cut, error=error)
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, cut=cut)
       if(allocated(error)) return
       call erf_dftd4_ncoord%get_cn(mol, cn)
 
@@ -1601,8 +1601,8 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, &
-         & cutoff=cutoff, rcov=rcov, en=en, error=error)
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
+         & cutoff=cutoff, rcov=rcov, en=en)
       if(allocated(error)) return
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
       call erf_dftd4_ncoord%add_coordination_number_derivs(mol, lattr, &
@@ -1878,7 +1878,7 @@ contains
       call get_structure(mol, "mindless01")
 
       ! Test also the external interface
-      call new_ncoord(ncoord, mol, get_cn_count_id("unknown"), error=error)
+      call new_ncoord(ncoord, mol, get_cn_count_id("unknown"), error)
       if(allocated(error)) return
 
    end subroutine test_cn_unknown
