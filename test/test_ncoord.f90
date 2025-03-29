@@ -15,7 +15,7 @@
 module test_ncoord
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
-   & test_failed
+   & test_failed, check
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
    use mctc_cutoff, only : get_lattice_points
@@ -27,7 +27,7 @@ module test_ncoord
    use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
    use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
    use mctc_ncoord_type, only : ncoord_type
-   use mctc_ncoord, only : new_ncoord, cn_count
+   use mctc_ncoord, only : new_ncoord, cn_count, get_cn_count_id, get_cn_count_string
    implicit none
    private
 
@@ -101,7 +101,10 @@ contains
       & new_unittest("dcndr-ammonia_erf_dftd4", test_dcndr_ammonia_erf_dftd4), &
       & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
-      & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4) &
+      & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
+      & new_unittest("cn_unknown", test_cn_unknown, should_fail=.true.), &
+      & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
+      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string) &
       & ]
 
    end subroutine collect_ncoord
@@ -262,7 +265,9 @@ contains
       allocate(rcov(mol%nid), cn(mol%nat))
       rcov(:) = get_covalent_rad(mol%num)
       ! Test also the external interface
-      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, cutoff=cutoff, rcov=rcov)
+      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, &
+         & cutoff=cutoff, rcov=rcov)
+      if(allocated(error)) return
       call dexp_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -294,7 +299,8 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, cut=cut)
+      call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, cut=cut)
+      if(allocated(error)) return
       call dexp_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -558,7 +564,9 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(exp_ncoord, mol, cn_count%exp, kcn=kcn, cutoff=cutoff, rcov=rcov)
+      call new_ncoord(exp_ncoord, mol, cn_count%exp, error, &
+         & kcn=kcn, cutoff=cutoff, rcov=rcov)
+      if(allocated(error)) return
       call exp_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -591,7 +599,8 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(exp_ncoord, mol, cn_count%exp, cut=cut)
+      call new_ncoord(exp_ncoord, mol, cn_count%exp, error, cut=cut)
+      if(allocated(error)) return
       call exp_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -856,7 +865,9 @@ contains
       rcov(:) = get_covalent_rad(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_ncoord, mol, cn_count%erf, kcn=kcn, cutoff=cutoff, rcov=rcov)
+      call new_ncoord(erf_ncoord, mol, cn_count%erf, error, &
+         & kcn=kcn, cutoff=cutoff, rcov=rcov)
+      if(allocated(error)) return
       call erf_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -889,7 +900,8 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(erf_ncoord, mol, cn_count%erf, cut=cut)
+      call new_ncoord(erf_ncoord, mol, cn_count%erf, error, cut=cut)
+      if(allocated(error)) return
       call erf_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -1166,8 +1178,9 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, &
+      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
+      if(allocated(error)) return
       call erf_en_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -1200,7 +1213,8 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, cut=cut)
+      call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, cut=cut)
+      if(allocated(error)) return
       call erf_en_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -1491,8 +1505,9 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, &
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
          & cutoff=cutoff, rcov=rcov, en=en)
+      if(allocated(error)) return
       call erf_dftd4_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -1525,7 +1540,8 @@ contains
 
       allocate(cn(mol%nat))
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, cut=cut)
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, cut=cut)
+      if(allocated(error)) return
       call erf_dftd4_ncoord%get_cn(mol, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -1585,8 +1601,9 @@ contains
       en(:) = get_pauling_en(mol%num)
 
       ! Test also the external interface
-      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, &
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
          & cutoff=cutoff, rcov=rcov, en=en)
+      if(allocated(error)) return
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
       call erf_dftd4_ncoord%add_coordination_number_derivs(mol, lattr, &
          & dEdcn, gradient, sigma)
@@ -1848,6 +1865,80 @@ contains
       call test_numsigma(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndL_anthracene_erf_dftd4
+
+
+   subroutine test_cn_unknown(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: ncoord
+
+      call get_structure(mol, "mindless01")
+
+      ! Test also the external interface
+      call new_ncoord(ncoord, mol, get_cn_count_id("unknown"), error)
+      if(allocated(error)) return
+
+   end subroutine test_cn_unknown
+
+
+   subroutine test_cn_count_string_to_id(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      integer :: cn_count_id
+
+      call check(error, get_cn_count_id("exp"), cn_count%exp)
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_id("dexp"), cn_count%dexp)
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_id("erf"), cn_count%erf)
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_id("erf_en"), cn_count%erf_en)
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_id("dftd4"), cn_count%dftd4)
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_id("derf"), -1)
+      if (allocated(error)) return
+
+
+   end subroutine test_cn_count_string_to_id 
+
+   
+   subroutine test_cn_count_id_to_string(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      character(6) :: cn_count_name
+
+      call check(error, get_cn_count_string(cn_count%exp), "exp")
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_string(cn_count%dexp), "dexp")
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_string(cn_count%erf), "erf")
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_string(cn_count%erf_en), "erf_en")
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_string(cn_count%dftd4), "dftd4")
+      if (allocated(error)) return
+
+      call check(error, get_cn_count_string(-1), "")
+      if (allocated(error)) return
+
+   end subroutine test_cn_count_id_to_string 
 
 
 end module test_ncoord
