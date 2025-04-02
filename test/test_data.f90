@@ -72,7 +72,6 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      real(wp), allocatable :: lattr(:, :)
       real(wp), allocatable :: ratm_sym(:), ratm_num(:)
 
       real(wp), parameter :: ref(8) = [&
@@ -119,7 +118,6 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      real(wp), allocatable :: lattr(:, :)
       real(wp), allocatable :: rcov_sym(:), rcov_num(:)
 
       real(wp), parameter :: ref(8) = [&
@@ -166,7 +164,6 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      real(wp), allocatable :: lattr(:, :)
       real(wp), allocatable :: en_sym(:), en_num(:)
 
       real(wp), parameter :: ref(9) = [&
@@ -215,7 +212,6 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       type(structure_type) :: mol
-      real(wp), allocatable :: lattr(:, :)
       real(wp), allocatable :: rvdw_sym(:), rvdw_num(:), rvdw_pair_sym(:), rvdw_pair_num(:)
 
       real(wp), parameter :: ref(7) = [&

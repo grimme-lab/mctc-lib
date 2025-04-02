@@ -76,8 +76,6 @@ subroutine read_molfile(self, unit, error)
    character(len=:), allocatable :: comment
    integer :: stat, lnum, pos
    integer :: number_of_atoms, number_of_bonds
-   integer :: list7(7), list12(12)
-   real(wp) :: x, y, z
    character(len=2) :: sdf_dim
    logical :: two_dim, v3k
    type(token_type) :: token
@@ -297,10 +295,9 @@ subroutine read_molfile_v3k(self, unit, error)
    type(error_type), allocatable, intent(out) :: error
 
    character(len=:), allocatable :: line, group
-   integer :: i, iatom, jatom, ibond, btype, atomtype, aamap, equal
-   integer :: stat, charge(2, 15), lnum, pos, number_of_atoms, number_of_bonds, dummy
+   integer :: iatom, jatom, ibond, btype, aamap, equal
+   integer :: stat, lnum, pos, number_of_atoms, number_of_bonds, dummy
    real(wp) :: x, y, z
-   character(len=3) :: symbol
    integer, parameter :: ccc_to_charge(0:7) = [0, +3, +2, +1, 0, -1, -2, -3]
    type(token_type) :: token, tsym
    character(len=symbol_length), allocatable :: sym(:)
