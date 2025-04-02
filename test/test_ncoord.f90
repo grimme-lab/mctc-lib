@@ -1889,8 +1889,6 @@ contains
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
    
-      integer :: cn_count_id
-
       call check(error, get_cn_count_id("exp"), cn_count%exp)
       if (allocated(error)) return
 
@@ -1918,8 +1916,6 @@ contains
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
    
-      character(6) :: cn_count_name
-
       call check(error, get_cn_count_string(cn_count%exp), "exp")
       if (allocated(error)) return
 

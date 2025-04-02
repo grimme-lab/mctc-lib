@@ -43,10 +43,9 @@ subroutine read_genformat(mol, unit, error)
    type(error_type), allocatable, intent(out) :: error
 
    character(len=:), allocatable :: line
-   integer :: natoms, nspecies, iatom, dummy, isp, ilat, stat, istart, iend
+   integer :: natoms, nspecies, iatom, dummy, isp, ilat, stat
    logical :: cartesian, periodic(3)
    real(wp) :: coord(3), origin(3)
-   character(len=1) :: variant
    type(token_type) :: token
    character(len=symbol_length), allocatable :: species(:), sym(:)
    real(wp), allocatable :: xyz(:, :), abc(:, :), lattice(:, :)

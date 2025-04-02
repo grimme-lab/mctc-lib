@@ -47,7 +47,7 @@ subroutine read_cjson(self, unit, error)
 
 #if WITH_JSON
    type(json_core) :: json
-   type(json_value), pointer :: root, val, child, array
+   type(json_value), pointer :: root, val, child
 
    logical :: cartesian, found
    integer :: stat, schema_version, charge, multiplicity, ibond

@@ -117,8 +117,6 @@ function is_unix()
    !> Operating system seems to be Unix
    logical :: is_unix
 
-   character(len=:), allocatable :: tmp
-
    is_unix = .not. is_windows()
 
 end function is_unix

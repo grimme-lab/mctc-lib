@@ -31,7 +31,7 @@ subroutine write_sdf(self, unit, energy, gnorm)
    real(wp), intent(in), optional :: energy
    real(wp), intent(in), optional :: gnorm
    !type(tb_buffer) :: sd_values
-   character(len=:), allocatable :: line
+   !character(len=:), allocatable :: line
    character(len=*), parameter :: sd_format = &
       & '("> <", a, ">", /, f20.12, /)'
 
@@ -62,7 +62,7 @@ subroutine write_molfile(self, unit, comment_line)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: comment_line
    integer, parameter :: list4(4) = 0
-   integer :: iatom, ibond, iatoms(3), list12(12)
+   integer :: iatom, ibond, list12(12)
    logical :: has_sdf_data
    integer, parameter :: charge_to_ccc(-3:3) = [7, 6, 5, 0, 3, 2, 1]
    character(len=8)  :: date

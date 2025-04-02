@@ -49,8 +49,7 @@ subroutine read_qchem(mol, unit, error)
    character(len=:), allocatable :: line
    real(wp) :: x, y, z, zm(3), a12(3), a32(3), vec(3)
    character(len=symbol_length), allocatable :: sym(:)
-   real(wp), allocatable :: xyz(:, :), abc(:, :), lattice(:, :)
-   logical :: is_frac, periodic(3)
+   real(wp), allocatable :: xyz(:, :)
    real(wp), parameter :: deg_to_rad = pi / 180.0_wp
 
    iat = 0
