@@ -214,6 +214,9 @@ subroutine io_error(error, message, source, token, filename, line, label)
    offset = integer_width(lnum)
    width = token%last - token%first + 1
 
+   ! Fix print alignment for empty files
+   if (offset == 0) offset = 1
+   
    string = "Error: " // message
 
    if (present(filename)) then
@@ -386,8 +389,6 @@ subroutine read_next_token_int(line, pos, token, val, iostat, iomsg)
    integer, intent(out) :: val
    integer, intent(out) :: iostat
    character(len=:), allocatable, intent(out), optional :: iomsg
-
-   character(len=512) :: msg
 
    call next_token(line, pos, token)
    call read_token(line, token, val, iostat, iomsg)

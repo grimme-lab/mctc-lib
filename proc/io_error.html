@@ -95,7 +95,7 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title=" 1.1% of total for procedures.">31 statements</a>
+                 title=" 1.1% of total for procedures.">32 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
@@ -182,7 +182,7 @@
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-error~5"></span>
+              <span class="anchor" id="variable-error~11"></span>
               type(<a href='../type/error_type.html'>error_type</a>),
             </td>
 <td>intent(out),</td>
@@ -197,7 +197,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-message~3"></span>
+              <span class="anchor" id="variable-message"></span>
               character(len=*),
             </td>
 <td>intent(in)</td>
@@ -227,7 +227,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-token~3"></span>
+              <span class="anchor" id="variable-token~7"></span>
               type(<a href='../type/token_type.html'>token_type</a>),
             </td>
 <td>intent(in)</td>
@@ -257,7 +257,7 @@
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-line~4"></span>
+              <span class="anchor" id="variable-line~12"></span>
               integer,
             </td>
 <td>intent(in),</td>
@@ -334,6 +334,9 @@
 <span class="w">   </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">integer_width</span><span class="p">(</span><span class="n">lnum</span><span class="p">)</span>
 <span class="w">   </span><span class="n">width</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">token</span><span class="p">%</span><span class="n">last</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">token</span><span class="p">%</span><span class="n">first</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
 
+<span class="w">   </span><span class="c">! Fix print alignment for empty files</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">offset</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">offset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">   </span>
 <span class="w">   </span><span class="n">string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Error: &quot;</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="n">message</span>
 
 <span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">present</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
