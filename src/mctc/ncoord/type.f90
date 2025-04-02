@@ -192,9 +192,9 @@ contains
          end do
       end do
       !$omp end do
-      !$omp critical (ncoord)
+      !$omp critical (ncoord_)
       cn(:) = cn(:) + cn_local(:)
-      !$omp end critical (ncoord)
+      !$omp end critical (ncoord_)
       deallocate(cn_local)
       !$omp end parallel
 
@@ -270,11 +270,11 @@ contains
          end do
       end do
       !$omp end do
-      !$omp critical (ncoord_d)
+      !$omp critical (ncoord_d_)
       cn(:) = cn(:) + cn_local(:)
       dcndr(:, :, :) = dcndr(:, :, :) + dcndr_local(:, :, :)
       dcndL(:, :, :) = dcndL(:, :, :) + dcndL_local(:, :, :)
-      !$omp end critical (ncoord_d)
+      !$omp end critical (ncoord_d_)
       deallocate(cn_local, dcndr_local, dcndL_local)
       !$omp end parallel
 
@@ -344,10 +344,10 @@ contains
          end do
       end do
       !$omp end do
-      !$omp critical (add_coordination_number_derivs)
+      !$omp critical (add_coordination_number_derivs_)
       gradient(:, :) = gradient(:, :) + gradient_local(:, :)
       sigma(:, :) = sigma(:, :) + sigma_local(:, :)
-      !$omp end critical (add_coordination_number_derivs)
+      !$omp end critical (add_coordination_number_derivs_)
       deallocate(gradient_local, sigma_local)
       !$omp end parallel
 
