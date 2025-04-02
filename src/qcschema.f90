@@ -138,7 +138,7 @@ pure function json_array_int_1(array, indent) result(string)
    character(len=*), intent(in), optional :: indent
    character(len=:), allocatable :: string
 
-   integer :: i, j
+   integer :: i
 
    string = "["
    do i = 1, size(array)
@@ -155,7 +155,7 @@ pure function json_array_real_1(array, indent) result(string)
    character(len=*), intent(in), optional :: indent
    character(len=:), allocatable :: string
 
-   integer :: i, j
+   integer :: i
 
    string = "["
    do i = 1, size(array)
@@ -172,7 +172,7 @@ pure function json_array_char_1(array, indent) result(string)
    character(len=*), intent(in), optional :: indent
    character(len=:), allocatable :: string
 
-   integer :: i, j
+   integer :: i
 
    string = "["
    do i = 1, size(array)

@@ -274,14 +274,14 @@ contains
       real(wp), intent(inout) :: sigma(:, :)
    
       integer :: iat, jat, izp, jzp, itr
-      real(wp) :: r2, r1, rc, rij(3), countf, countd(3), ds(3, 3), cutoff2, den
+      real(wp) :: r2, r1, rij(3), countd(3), ds(3, 3), cutoff2, den
    
       cutoff2 = self%cutoff**2
    
       !$omp parallel do schedule(runtime) default(none) &
       !$omp reduction(+:gradient, sigma) &
       !$omp shared(self, mol, trans, cutoff2, dEdcn) &
-      !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, rc, countd, ds, den)
+      !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, countd, ds, den)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat
