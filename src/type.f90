@@ -305,16 +305,17 @@ contains
       real(wp) :: r2, r1, rij(3), countd(3), ds(3, 3), cutoff2, den
 
       ! Thread-private arrays for reduction
+      ! Set to zero explicitly as the shared variants are potentially non-zero (inout)
       real(wp), allocatable :: gradient_local(:, :), sigma_local(:, :)
    
       cutoff2 = self%cutoff**2
-   
+
       !$omp parallel default(none) &
       !$omp shared(self, mol, trans, cutoff2, dEdcn, gradient, sigma) &
       !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, countd, ds, den) &
       !$omp private(gradient_local, sigma_local)
-      allocate(gradient_local, source=gradient)
-      allocate(sigma_local, source=sigma)
+      allocate(gradient_local(size(gradient, 1), size(gradient, 2)), source=0.0_wp)
+      allocate(sigma_local(size(sigma, 1), size(sigma, 2)), source=0.0_wp)
       !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
