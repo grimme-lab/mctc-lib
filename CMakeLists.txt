@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.14)
 project(
   "mctc-lib"
   LANGUAGES "Fortran"
-  VERSION "0.4.0"
+  VERSION "0.4.1"
   DESCRIPTION "Modular computation tool chain"
 )
 
