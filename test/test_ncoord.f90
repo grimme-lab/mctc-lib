@@ -94,6 +94,7 @@ contains
       & new_unittest("cn-mb01_erf_dftd4-defaults", test_cn_mb01_erf_dftd4_defaults), &
       & new_unittest("dfdcn-mb01_erf_dftd4", test_dfdcn_mb01_erf_dftd4), &
       & new_unittest("cn-mb02_erf_dftd4", test_cn_mb02_erf_dftd4), &
+      & new_unittest("dfdcn-mb02_erf_dftd4", test_dfdcn_mb02_erf_dftd4), &
       & new_unittest("cn-mb03_erf_dftd4", test_cn_mb03_erf_dftd4), &
       & new_unittest("cn-acetic_erf_dftd4", test_cn_acetic_erf_dftd4), &
       & new_unittest("dcndr-mb04_erf_dftd4", test_dcndr_mb04_erf_dftd4), &
@@ -1652,6 +1653,76 @@ contains
       call test_cn_gen(error, mol, erf_dftd4_ncoord, ref)
 
    end subroutine test_cn_mb02_erf_dftd4
+
+
+   subroutine test_dfdcn_mb02_erf_dftd4(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: erf_dftd4_ncoord
+      real(wp), allocatable :: rcov(:)
+      real(wp), allocatable :: en(:)
+      real(wp) :: gradient(3, 16), sigma(3,3), dEdcn(16)
+      real(wp), allocatable :: cn(:)
+      real(wp), allocatable :: lattr(:, :)
+
+      real(wp), parameter :: cutoff = 30.0_wp
+      real(wp), parameter :: ref_gradient_sum(3, 16) = reshape([ &
+      &  2.79749285166706E-1_wp,  3.23279014603977E-1_wp,  4.74749890756763E-1_wp, &
+      &  1.02437156867081E+0_wp,  4.37155089119230E-1_wp, -1.13169437751526E-1_wp, &
+      &  2.54696077961347E-1_wp,  4.09066066212646E-1_wp, -1.12269299047491E-2_wp, &
+      &  2.51614630638352E-1_wp,  1.87222747939519E-1_wp,  2.76829286072773E-1_wp, &
+      &  4.40284680801481E-2_wp, -7.56166386161761E-1_wp,  7.01904086405679E-1_wp, &
+      &  1.58721720143057E-1_wp,  3.63440057577123E-1_wp,  1.83518080621616E-1_wp, &
+      &  2.13914184282644E-1_wp,  3.52649741628978E-1_wp,  1.68047797901627E-3_wp, &
+      &  2.29179262974525E-1_wp,  1.02874773836429E-1_wp, -1.37475215145587E-2_wp, &
+      & -1.34756354987157E+0_wp, -1.85608742158071E-1_wp, -2.84338045516046E-1_wp, &
+      &  1.76244408740674E-2_wp,  2.21601609485103E-1_wp,  2.15429160786252E-1_wp, &
+      &  1.59652700020135E+0_wp,  4.66835609245963E-1_wp,  1.13197638015800E-1_wp, &
+      &  5.07486065271068E-1_wp, -1.00280866066602E-2_wp,  4.34684154881412E-1_wp, &
+      &  2.03877223927068E-1_wp,  1.89357746763728E-1_wp,  2.05312698749555E-1_wp, &
+      &  6.50398980865652E-2_wp,  3.05967305503566E-1_wp,  1.26394855283175E-1_wp, &
+      & -4.47718726768925E-1_wp,  5.82778267363327E-1_wp,  6.43702044153264E-1_wp, &
+      &  1.48452450362789E-1_wp,  2.09575185646903E-1_wp,  2.45079560981574E-1_wp], &
+      & shape(ref_gradient_sum))
+      real(wp), parameter :: ref_sigma_sum(3, 3) = reshape([ &
+      & -1.11429548887998E+1_wp, -1.15390001770966E+0_wp, -5.03186565579172E-1_wp, &
+      & -1.15390001770966E+0_wp, -7.18355603112573E+0_wp,  1.24148995646507E+0_wp, &
+      & -5.03186565579172E-1_wp,  1.24148995646507E+0_wp, -5.13022598538117E+0_wp], &
+      & shape(ref_sigma_sum))
+
+      ! Include pervious gradient and sigma
+      dEdcn = 0.5_wp
+      gradient = 0.2_wp
+      sigma = 0.3_wp
+
+      call get_structure(mol, "mindless02")
+
+      allocate(rcov(mol%nid), en(mol%nid), cn(mol%nat))
+      rcov(:) = get_covalent_rad(mol%num)
+      en(:) = get_pauling_en(mol%num)
+
+      ! Test also the external interface
+      call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
+         & cutoff=cutoff, rcov=rcov, en=en)
+      if(allocated(error)) return
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+      call erf_dftd4_ncoord%add_coordination_number_derivs(mol, lattr, &
+         & dEdcn, gradient, sigma)
+
+      if (any(abs(gradient - ref_gradient_sum) > thr)) then
+         call test_failed(error, "Coordination number gradient does not match")
+         print'(3es21.14)', gradient - ref_gradient_sum
+      end if
+
+      if (any(abs(sigma - ref_sigma_sum) > thr)) then
+         call test_failed(error, "Coordination numbers sigma does not match")
+         print'(3es21.14)', sigma - ref_sigma_sum
+      end if
+
+   end subroutine test_dfdcn_mb02_erf_dftd4
 
 
    subroutine test_cn_mb03_erf_dftd4(error)
