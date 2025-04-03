@@ -305,6 +305,7 @@ contains
       real(wp) :: r2, r1, rij(3), countd(3), ds(3, 3), cutoff2, den
 
       ! Thread-private arrays for reduction
+      ! Set to zero explicitly as the shared variants are potentially non-zero (inout)
       real(wp), allocatable :: gradient_local(:, :), sigma_local(:, :)
    
       cutoff2 = self%cutoff**2
