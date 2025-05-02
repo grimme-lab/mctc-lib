@@ -29,8 +29,8 @@ add_subdirectory("config")
 
 # Dependencies
 if(NOT TARGET "jonquild::jonquil" AND WITH_JSON)
-  find_package("jonquil" REQUIRED)
   find_package("toml-f" REQUIRED)
+  find_package("jonquil" REQUIRED)
 endif()
 
 # Collect source of the project
