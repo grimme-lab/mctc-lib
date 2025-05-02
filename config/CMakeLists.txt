@@ -15,7 +15,7 @@
 option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
 
 option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" TRUE)
-option(WITH_JSON "Enable support for JSON parsing via json-fortran" FALSE)
+option(WITH_JSON "Enable support for JSON parsing via jonquil" FALSE)
 
 set(
   "${PROJECT_NAME}-module-dir"
@@ -87,7 +87,7 @@ else()
   set(PKG_CONFIG_REQUIRES "Requires")
 endif()
 if(WITH_JSON)
-  set(PKG_CONFIG_REQUIREMENTS "json-fortran")
+  set(PKG_CONFIG_REQUIREMENTS "jonquil toml-f")
 else()
   set(PKG_CONFIG_REQUIREMENTS)
 endif()

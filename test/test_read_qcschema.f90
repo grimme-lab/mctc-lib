@@ -55,10 +55,11 @@ subroutine test_valid1_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid1-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "schema_version": 1,', &
@@ -75,7 +76,7 @@ subroutine test_valid1_qcschema(error)
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")
@@ -95,10 +96,11 @@ subroutine test_valid2_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid2-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "schema_version": 1,', &
@@ -106,7 +108,7 @@ subroutine test_valid2_qcschema(error)
       '  "driver": "energy",', &
       '  "model": {', &
       '    "method": "xtb",', &
-      '    "basis": null', &
+      '    "basis": ""', &
       '  },', &
       '  "molecule": {', &
       '    "schema_version": 2,', &
@@ -178,7 +180,7 @@ subroutine test_valid2_qcschema(error)
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, .not.allocated(struc%comment), "Empty comment line should not be saved")
@@ -196,10 +198,11 @@ subroutine test_valid4_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid4-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       "3", &
       "WATER27, H2O", &
@@ -222,7 +225,7 @@ subroutine test_valid4_qcschema(error)
    if (.not.allocated(error)) then
       call read_qcschema(struc, unit, error)
    end if
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, struc%nat, 3, "Number of atoms does not match")
@@ -238,10 +241,11 @@ subroutine test_valid5_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid5-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       "3", &
       "WATER27, H2O", &
@@ -259,7 +263,7 @@ subroutine test_valid5_qcschema(error)
    if (.not.allocated(error)) then
       call read_qcschema(struc, unit, error)
    end if
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, struc%nat, 3, "Number of atoms does not match")
@@ -275,10 +279,11 @@ subroutine test_invalid1_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid1-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "schema_version": 2,', &
@@ -296,7 +301,7 @@ subroutine test_invalid1_qcschema(error)
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid1_qcschema
@@ -307,10 +312,11 @@ subroutine test_invalid2_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid2-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "schema_version": 0,', &
@@ -328,7 +334,7 @@ subroutine test_invalid2_qcschema(error)
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid2_qcschema
@@ -339,10 +345,11 @@ subroutine test_invalid3_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid3-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "schema_version": 1,', &
@@ -353,13 +360,13 @@ subroutine test_invalid3_qcschema(error)
       '      0.0, -1.4941,  1.0274,', &
       '      0.0,  1.4941,  1.0274', &
       '    ],', &
-      '    "symbols": ["O", "H", "H", "H"],', &
+      '    "symbols": ["O", "H", "H", "H"]', &
       '  }', &
       '}'
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid3_qcschema
@@ -370,10 +377,11 @@ subroutine test_invalid4_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid4-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "schema_version": 1,', &
@@ -384,13 +392,13 @@ subroutine test_invalid4_qcschema(error)
       '      0.0, -1.4941,  1.0274,', &
       '      0.0,  1.4941,  1.0274', &
       '    ],', &
-      '    "atomic_numbers": [8, 1, 1],', &
+      '    "atomic_numbers": [8, 1, 1]', &
       '  }', &
       '}'
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid4_qcschema
@@ -401,10 +409,11 @@ subroutine test_invalid5_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid5-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "schema_version": 1,', &
@@ -416,7 +425,7 @@ subroutine test_invalid5_qcschema(error)
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid5_qcschema
@@ -427,10 +436,11 @@ subroutine test_invalid6_qcschema(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid6-qcschema.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemical json": 0,', &
@@ -468,7 +478,7 @@ subroutine test_invalid6_qcschema(error)
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid6_qcschema

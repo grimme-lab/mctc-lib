@@ -59,10 +59,11 @@ subroutine test_valid1_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid1-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemical json": 0,', &
@@ -105,7 +106,7 @@ subroutine test_valid1_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")
@@ -127,10 +128,11 @@ subroutine test_valid2_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid2-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemical json": 0,', &
@@ -161,7 +163,7 @@ subroutine test_valid2_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")
@@ -181,10 +183,11 @@ subroutine test_valid3_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid3-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemical json": 0,', &
@@ -226,7 +229,7 @@ subroutine test_valid3_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")
@@ -248,10 +251,11 @@ subroutine test_valid4_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid4-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemical json": 1,', &
@@ -328,7 +332,7 @@ subroutine test_valid4_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
    call check(error, struc%nat, 24, "Number of atoms does not match")
    if (allocated(error)) return
@@ -345,10 +349,11 @@ subroutine test_valid5_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid5-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemicalJson": 1,', &
@@ -375,7 +380,7 @@ subroutine test_valid5_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
    call check(error, struc%nat, 2, "Number of atoms does not match")
    if (allocated(error)) return
@@ -392,10 +397,11 @@ subroutine test_valid6_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-valid6-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemicalJson": 1,', &
@@ -428,7 +434,7 @@ subroutine test_valid6_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
    call check(error, struc%nat, 3, "Number of atoms does not match")
    if (allocated(error)) return
@@ -445,10 +451,11 @@ subroutine test_invalid1_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid1-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemicalJson": -1,', &
@@ -471,7 +478,7 @@ subroutine test_invalid1_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid1_cjson
@@ -482,10 +489,11 @@ subroutine test_invalid2_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid2-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemicalJson": 1,', &
@@ -508,7 +516,7 @@ subroutine test_invalid2_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid2_cjson
@@ -519,10 +527,11 @@ subroutine test_invalid3_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid3-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemicalJson": 1,', &
@@ -538,7 +547,7 @@ subroutine test_invalid3_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid3_cjson
@@ -549,10 +558,11 @@ subroutine test_invalid4_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid4-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "atoms": {', &
@@ -574,7 +584,7 @@ subroutine test_invalid4_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid4_cjson
@@ -585,10 +595,11 @@ subroutine test_invalid5_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid5-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemicalJson": 1,', &
@@ -611,7 +622,7 @@ subroutine test_invalid5_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
 end subroutine test_invalid5_cjson
@@ -622,10 +633,11 @@ subroutine test_invalid6_cjson(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
+   character(len=*), parameter :: filename = ".test-invalid6-cjson.json"
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
+   open(file=filename, newunit=unit)
    write(unit, '(a)') &
       '{', &
       '  "chemical json": 0,', &
@@ -656,7 +668,7 @@ subroutine test_invalid6_cjson(error)
    rewind(unit)
 
    call read_cjson(struc, unit, error)
-   close(unit)
+   close(unit, status='delete')
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")
