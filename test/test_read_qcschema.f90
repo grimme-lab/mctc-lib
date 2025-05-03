@@ -39,6 +39,9 @@ subroutine collect_read_qcschema(testsuite)
    testsuite = [ &
       & new_unittest("valid1-qcschema", test_valid1_qcschema, should_fail=.not.with_json), &
       & new_unittest("valid2-qcschema", test_valid2_qcschema, should_fail=.not.with_json), &
+      & new_unittest("valid3-qcschema", test_valid3_qcschema, should_fail=.not.with_json), &
+      & new_unittest("valid4-qcschema", test_valid4_qcschema, should_fail=.not.with_json), &
+      & new_unittest("valid5-qcschema", test_valid5_qcschema, should_fail=.not.with_json), &
       & new_unittest("incomplete", test_incomplete, should_fail=.true.), &
       & new_unittest("mismatch-schema", test_mismatch_schema, should_fail=.true.), &
       & new_unittest("mismatch-geometry-symbols", test_mismatch_geometry_symbols, should_fail=.true.), &
@@ -46,6 +49,9 @@ subroutine collect_read_qcschema(testsuite)
       & new_unittest("invalid-molecule", test_invalid_molecule, should_fail=.true.), &
       & new_unittest("invalid-symbols", test_invalid_symbols, should_fail=.true.), &
       & new_unittest("invalid-geometry", test_invalid_geometry, should_fail=.true.), &
+      & new_unittest("invalid-connectivity1", test_invalid_connectivity1, should_fail=.true.), &
+      & new_unittest("invalid-connectivity2", test_invalid_connectivity2, should_fail=.true.), &
+      & new_unittest("invalid-connectivity3", test_invalid_connectivity3, should_fail=.true.), &
       & new_unittest("invalid-comment", test_invalid_comment, should_fail=.true.), &
       & new_unittest("invalid-charge", test_invalid_charge, should_fail=.true.), &
       & new_unittest("invalid-multiplicity", test_invalid_multiplicity, should_fail=.true.), &
@@ -206,6 +212,45 @@ subroutine test_valid2_qcschema(error)
 end subroutine test_valid2_qcschema
 
 
+subroutine test_valid3_qcschema(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-valid3-qcschema.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "schema_version": 2,', &
+      '  "geometry": [', &
+      '    0.0,  0.0000, -0.1294,', &
+      '    0.0, -1.4941,  1.0274,', &
+      '    0.0,  1.4941,  1.0274', &
+      '  ],', &
+      '  "symbols": ["O", "H", "H"],', &
+      '  "comment": "Water molecule"', &
+      '}'
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+   call check(error, allocated(struc%comment), "Comment line should be preserved")
+   if (allocated(error)) return
+   call check(error, struc%comment, "Water molecule")
+   if (allocated(error)) return
+   call check(error, struc%nat, 3, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid3_qcschema
+
+
 subroutine test_valid4_qcschema(error)
 
    !> Error handling
@@ -217,31 +262,87 @@ subroutine test_valid4_qcschema(error)
 
    open(file=filename, newunit=unit)
    write(unit, '(a)') &
-      "3", &
-      "WATER27, H2O", &
-      "O     1.1847029    1.1150792   -0.0344641 ", &
-      "H     0.4939088    0.9563767    0.6340089 ", &
-      "H     2.0242676    1.0811246    0.4301417 ", &
-      "3", &
-      "WATER27, H2O", &
-      "O    -1.1469443    0.0697649    1.1470196 ", &
-      "H    -1.2798308   -0.5232169    1.8902833 ", &
-      "H    -1.0641398   -0.4956693    0.3569250 ", &
-      "3", &
-      "WATER27, H2O", &
-      "O    -0.1633508   -1.0289346   -1.2401808 ", &
-      "H     0.4914771   -0.3248733   -1.0784838 ", &
-      "H    -0.5400907   -0.8496512   -2.1052499 "
+      '{', &
+      '  "schema_version": 1,', &
+      '  "schema_name": "qcschema_input",', &
+      '  "driver": "gradient",', &
+      '  "model": {', &
+      '    "method": "r2scan",', &
+      '    "basis": "def2-svp"', &
+      '  },', &
+      '  "molecule": {', &
+      '    "schema_version": 1,', &
+      '    "schema_name": "qcschema_molecule",', &
+      '    "molecule": {', &
+      '      "symbols": [', &
+      '        "C", "C", "C", "C", "C", "C", "H", "H", "H", "H", "H", "H",', &
+      '        "H", "H", "H", "H", "H", "C", "C", "C", "C", "C", "C", "H",', &
+      '        "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H", "H",', &
+      '        "H", "H"', &
+      '      ],', &
+      '      "geometry": [', &
+      '         1.1910941154998063E+00, 8.0445623507578545E-01, 0.0000000000000000E+00,', &
+      '         3.6246828858324265E+00,-7.2565467293657882E-01, 0.0000000000000000E+00,', &
+      '         6.0068711168320394E+00, 8.8306882464391478E-01, 0.0000000000000000E+00,', &
+      '         8.4393260517381972E+00,-6.4779797365275837E-01, 0.0000000000000000E+00,', &
+      '         1.0824537843875046E+01, 9.5827990793265394E-01, 0.0000000000000000E+00,', &
+      '         1.3237906549102401E+01,-5.9564154403544178E-01, 0.0000000000000000E+00,', &
+      '         1.4916738870552548E+01, 5.9753126974621407E-01, 0.0000000000000000E+00,', &
+      '         1.3341085572910570E+01,-1.8126249017728293E+00,-1.6605019820556557E+00,', &
+      '         1.3341085572910570E+01,-1.8126249017728293E+00, 1.6605019820556557E+00,', &
+      '         1.0802428053059009E+01, 2.2054988770423987E+00,-1.6484077375067128E+00,', &
+      '         1.0802428053059009E+01, 2.2054988770423987E+00, 1.6484077375067128E+00,', &
+      '         8.4618137876963875E+00,-1.8965287233311212E+00, 1.6491636277910218E+00,', &
+      '         8.4618137876963875E+00,-1.8965287233311212E+00,-1.6491636277910218E+00,', &
+      '         5.9874069420110843E+00, 2.1312326566090456E+00,-1.6493526003620989E+00,', &
+      '         5.9874069420110843E+00, 2.1312326566090456E+00, 1.6493526003620989E+00,', &
+      '         3.6452808960798451E+00,-1.9740074774727869E+00, 1.6491636277910218E+00,', &
+      '         3.6452808960798451E+00,-1.9740074774727869E+00,-1.6491636277910218E+00,', &
+      '        -1.1910941154998063E+00,-8.0445623507578545E-01, 0.0000000000000000E+00,', &
+      '        -3.6246828858324265E+00, 7.2565467293657882E-01, 0.0000000000000000E+00,', &
+      '        -6.0068711168320394E+00,-8.8306882464391478E-01, 0.0000000000000000E+00,', &
+      '        -8.4393260517381972E+00, 6.4779797365275837E-01, 0.0000000000000000E+00,', &
+      '        -1.0824537843875046E+01,-9.5827990793265394E-01, 0.0000000000000000E+00,', &
+      '        -1.3237906549102401E+01, 5.9564154403544178E-01, 0.0000000000000000E+00,', &
+      '        -1.4916738870552548E+01,-5.9753126974621407E-01, 0.0000000000000000E+00,', &
+      '        -1.3341085572910570E+01, 1.8126249017728293E+00, 1.6605019820556557E+00,', &
+      '        -1.3341085572910570E+01, 1.8126249017728293E+00,-1.6605019820556557E+00,', &
+      '        -1.0802428053059009E+01,-2.2054988770423987E+00,-1.6484077375067128E+00,', &
+      '        -1.0802428053059009E+01,-2.2054988770423987E+00, 1.6484077375067128E+00,', &
+      '        -8.4618137876963875E+00, 1.8965287233311212E+00, 1.6491636277910218E+00,', &
+      '        -8.4618137876963875E+00, 1.8965287233311212E+00,-1.6491636277910218E+00,', &
+      '        -5.9874069420110843E+00,-2.1312326566090456E+00,-1.6493526003620989E+00,', &
+      '        -5.9874069420110843E+00,-2.1312326566090456E+00, 1.6493526003620989E+00,', &
+      '        -3.6452808960798451E+00, 1.9740074774727869E+00,-1.6491636277910218E+00,', &
+      '        -3.6452808960798451E+00, 1.9740074774727869E+00, 1.6491636277910218E+00,', &
+      '        -1.1706850778234652E+00,-2.0526200670409165E+00, 1.6491636277910218E+00,', &
+      '        -1.1706850778234652E+00,-2.0526200670409165E+00,-1.6491636277910218E+00,', &
+      '         1.1706850778234652E+00, 2.0526200670409165E+00,-1.6491636277910218E+00,', &
+      '         1.1706850778234652E+00, 2.0526200670409165E+00, 1.6491636277910218E+00', &
+      '      ],', &
+      '      "molecular_charge": 0,', &
+      '      "connectivity": [', &
+      '        [ 0, 1, 1],  [ 1, 2, 1],  [ 2, 3, 1],  [ 3, 4, 1],  [ 4, 5, 1],', &
+      '        [ 5, 6, 1],  [ 5, 7, 1],  [ 5, 8, 1],  [ 4, 9, 1],  [ 4,10, 1],', &
+      '        [ 3,11, 1],  [ 3,12, 1],  [ 2,13, 1],  [ 2,14, 1],  [ 1,15, 1],', &
+      '        [ 1,16, 1],  [ 0,17, 1],  [17,18, 1],  [18,19, 1],  [19,20, 1],', &
+      '        [20,21, 1],  [21,22, 1],  [22,23, 1],  [22,24, 1],  [22,25, 1],', &
+      '        [21,26, 1],  [21,27, 1],  [20,28, 1],  [20,29, 1],  [19,30, 1],', &
+      '        [19,31, 1],  [18,32, 1],  [18,33, 1],  [17,34, 1],  [17,35, 1],', &
+      '        [ 0,36, 1],  [ 0,37, 1]', &
+      '      ]', &
+      '    }', &
+      '  }', &
+      '}'
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   if (.not.allocated(error)) then
-      call read_qcschema(struc, unit, error)
-   end if
    close(unit, status='delete')
    if (allocated(error)) return
 
-   call check(error, struc%nat, 3, "Number of atoms does not match")
+   call check(error, .not.allocated(struc%comment), "Empty comment line should not be saved")
+   if (allocated(error)) return
+   call check(error, struc%nat, 38, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
    if (allocated(error)) return
@@ -260,25 +361,27 @@ subroutine test_valid5_qcschema(error)
 
    open(file=filename, newunit=unit)
    write(unit, '(a)') &
-      "3", &
-      "WATER27, H2O", &
-      "8     1.1847029    1.1150792   -0.0344641 ", &
-      "1     0.4939088    0.9563767    0.6340089 ", &
-      "1     2.0242676    1.0811246    0.4301417 ", &
-      "3", &
-      "WATER27, H2O", &
-      "8    -1.1469443    0.0697649    1.1470196 ", &
-      "1    -1.2798308   -0.5232169    1.8902833 ", &
-      "1    -1.0641398   -0.4956693    0.3569250 "
+      '{', &
+      '  "schema_version": 2,', &
+      '  "geometry": [', &
+      '    0.0,  0.0000, -0.1294,', &
+      '    0.0, -1.4941,  1.0274,', &
+      '    0.0,  1.4941,  1.0274', &
+      '  ],', &
+      '  "symbols": ["O", "H", "H"],', &
+      '  "connectivity": [[ 0, 1, 1],  [ 0, 2, 1]],', &
+      '  "comment": "Water molecule"', &
+      '}'
    rewind(unit)
 
    call read_qcschema(struc, unit, error)
-   if (.not.allocated(error)) then
-      call read_qcschema(struc, unit, error)
-   end if
    close(unit, status='delete')
    if (allocated(error)) return
 
+   call check(error, allocated(struc%comment), "Comment line should be preserved")
+   if (allocated(error)) return
+   call check(error, struc%comment, "Water molecule")
+   if (allocated(error)) return
    call check(error, struc%nat, 3, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
@@ -409,6 +512,108 @@ subroutine test_invalid_geometry(error)
    if (allocated(error)) return
 
 end subroutine test_invalid_geometry
+
+
+subroutine test_invalid_connectivity1(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-connectivity1-qcschema.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "schema_version": 1,', &
+      '  "schema_name": "qcschema_molecule",', &
+      '  "molecule": {', &
+      '    "connectivity": {"bonds": [[ 0, 1, 1],  [ 0, 2, 1]]},', &
+      '    "geometry": [', &
+      '      0.0,  0.0000, -0.1294,', &
+      '      0.0, -1.4941,  1.0274,', &
+      '      0.0,  1.4941,  1.0274', &
+      '    ],', &
+      '    "symbols": ["O", "H",  "H"],', &
+      '    "comment": "Water molecule"', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+end subroutine test_invalid_connectivity1
+
+
+subroutine test_invalid_connectivity2(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-connectivity-qcschema.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "schema_version": 1,', &
+      '  "schema_name": "qcschema_molecule",', &
+      '  "molecule": {', &
+      '    "geometry": [', &
+      '      0.0,  0.0000, -0.1294,', &
+      '      0.0, -1.4941,  1.0274,', &
+      '      0.0,  1.4941,  1.0274', &
+      '    ],', &
+      '    "connectivity": [[ 0, 1, "single"],  [ 0, 2, "single"]],', &
+      '    "symbols": ["O", "H",  "H"],', &
+      '    "comment": "Water molecule"', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+end subroutine test_invalid_connectivity2
+
+
+subroutine test_invalid_connectivity3(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-connectivity3-qcschema.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "schema_version": 1,', &
+      '  "schema_name": "qcschema_molecule",', &
+      '  "molecule": {', &
+      '    "geometry": [', &
+      '      0.0,  0.0000, -0.1294,', &
+      '      0.0, -1.4941,  1.0274,', &
+      '      0.0,  1.4941,  1.0274', &
+      '    ],', &
+      '    "symbols": ["O", "H",  "H"],', &
+      '    "connectivity": ["0-1", "0-2"],', &
+      '    "comment": "Water molecule"', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+end subroutine test_invalid_connectivity3
 
 
 subroutine test_invalid_comment(error)
@@ -695,6 +900,79 @@ subroutine test_invalid_schema_version_type2(error)
    if (allocated(error)) return
 
 end subroutine test_invalid_schema_version_type2
+
+
+subroutine test_invalid_schema_name_value1(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-schema-name-value1-qcschema.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "schema_version": 1,', &
+      '  "schema_name": "qcschema_geometry",', &
+      '  "molecule": {', &
+      '    "geometry": [', &
+      '      0.0,  0.0000, -0.1294,', &
+      '      0.0, -1.4941,  1.0274,', &
+      '      0.0,  1.4941,  1.0274', &
+      '    ],', &
+      '    "symbols": ["O", "H", "H"],', &
+      '    "comment": "Water molecule"', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+end subroutine test_invalid_schema_name_value1
+
+
+subroutine test_invalid_schema_name_value2(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-schema-name-value2-qcschema.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "schema_version": 1,', &
+      '  "schema_name": "qcschema_input",', &
+      '  "molecule": {', &
+      '    "schema_version": 2,', &
+      '    "schema_name": "qcschema_structure,', &
+      '    "geometry": [', &
+      '      0.0,  0.0000, -0.1294,', &
+      '      0.0, -1.4941,  1.0274,', &
+      '      0.0,  1.4941,  1.0274', &
+      '    ],', &
+      '    "symbols": ["O", "H", "H"],', &
+      '    "comment": "Water molecule"', &
+      '  },', &
+      '  "driver": "energy",', &
+      '  "model": {', &
+      '    "method": "r2scan",', &
+      '    "basis": "def2-tzvp"', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+end subroutine test_invalid_schema_name_value2
 
 
 subroutine test_invalid_schema_name_type1(error)

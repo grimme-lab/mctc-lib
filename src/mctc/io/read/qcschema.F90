@@ -209,6 +209,10 @@ subroutine read_qcschema(self, unit, error)
             call get_value(child_array, list, stat=stat, origin=origin)
          end if
          if (stat /= json_stat%success) then
+            if (origin == 0) then
+               call get_value(array, ibond, val)
+               if (associated(val)) origin = val%origin_value
+            end if
             call fatal_error(error, ctx%report("Could not read bond", origin=origin))
             return
          end if

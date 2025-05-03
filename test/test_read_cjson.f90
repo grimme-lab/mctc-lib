@@ -50,13 +50,16 @@ subroutine collect_read_cjson(testsuite)
       & new_unittest("invalid-coordinate-type2", test_invalid_coordinate_type2, should_fail=.true.), &
       & new_unittest("missing-schema", test_missing_schema, should_fail=.true.), &
       & new_unittest("missing-coords", test_missing_coords, should_fail=.true.), &
+      & new_unittest("missing-bonds", test_missing_bonds, should_fail=.true.), &
+      & new_unittest("mismatch-bonds", test_mismatch_bonds, should_fail=.true.), &
       & new_unittest("invalid-root-data", test_invalid_root_data, should_fail=.true.), &
       & new_unittest("invalid-atoms-type", test_invalid_atoms_type, should_fail=.true.), &
       & new_unittest("invalid-element-type1", test_invalid_element_type1, should_fail=.true.), &
       & new_unittest("invalid-element-type2", test_invalid_element_type2, should_fail=.true.), &
       & new_unittest("invalid-element-number", test_invalid_element_number, should_fail=.true.), &
       & new_unittest("invalid-unit-cell-type", test_invalid_unit_cell_type, should_fail=.true.), &
-      & new_unittest("invalid-schema-version-type", test_invalid_schema_version_type, should_fail=.true.) &
+      & new_unittest("invalid-schema-version-type", test_invalid_schema_version_type, should_fail=.true.), &
+      & new_unittest("incomplete", test_incomplete, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_cjson
@@ -1036,5 +1039,162 @@ subroutine test_invalid_element_number(error)
    if (allocated(error)) return
 
 end subroutine test_invalid_element_number
+
+
+subroutine test_mismatch_bonds(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-mismatch-bonds-cjson.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "chemical json": 0,', &
+      '  "name": "ethane",', &
+      '  "inchi": "1/C2H6/c1-2/h1-2H3",', &
+      '  "formula": "C 2 H 6",', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [  1,   6,   1,   1,   6,   1,   1,   1 ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": [  1.185080, -0.003838,  0.987524,', &
+      '               0.751621, -0.022441, -0.020839,', &
+      '               1.166929,  0.833015, -0.569312,', &
+      '               1.115519, -0.932892, -0.514525,', &
+      '              -0.751587,  0.022496,  0.020891,', &
+      '              -1.166882, -0.833372,  0.568699,', &
+      '              -1.115691,  0.932608,  0.515082,', &
+      '              -1.184988,  0.004424, -0.987522 ]', &
+      '    }', &
+      '  },', &
+      '  "bonds": {', &
+      '    "connections": {', &
+      '      "index": [ 0, 1,', &
+      '                 1, 2,', &
+      '                 1, 3,', &
+      '                 1, 4,', &
+      '                 4, 5,', &
+      '                 4, 6,', &
+      '                 4, 7 ]', &
+      '    },', &
+      '    "order": [ 1, 1, 1, 1, 1, 1 ]', &
+      '  },', &
+      '  "properties": {', &
+      '    "molecular mass": 30.0690,', &
+      '    "melting point": -172,', &
+      '    "boiling point": -88', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+   call check(error, allocated(struc%comment), "Comment line should be preserved")
+   if (allocated(error)) return
+   call check(error, struc%comment, "ethane")
+   if (allocated(error)) return
+   call check(error, struc%nat, 8, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 7, "Number of bonds does not match")
+   if (allocated(error)) return
+
+end subroutine test_mismatch_bonds
+
+
+subroutine test_missing_bonds(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-missing-bonds-cjson.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "chemical json": 0,', &
+      '  "name": "ethane",', &
+      '  "inchi": "1/C2H6/c1-2/h1-2H3",', &
+      '  "formula": "C 2 H 6",', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [  1,   6,   1,   1,   6,   1,   1,   1 ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": [  1.185080, -0.003838,  0.987524,', &
+      '               0.751621, -0.022441, -0.020839,', &
+      '               1.166929,  0.833015, -0.569312,', &
+      '               1.115519, -0.932892, -0.514525,', &
+      '              -0.751587,  0.022496,  0.020891,', &
+      '              -1.166882, -0.833372,  0.568699,', &
+      '              -1.115691,  0.932608,  0.515082,', &
+      '              -1.184988,  0.004424, -0.987522 ]', &
+      '    }', &
+      '  },', &
+      '  "bonds": [],', &
+      '  "properties": {', &
+      '    "molecular mass": 30.0690,', &
+      '    "melting point": -172,', &
+      '    "boiling point": -88', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+   call check(error, allocated(struc%comment), "Comment line should be preserved")
+   if (allocated(error)) return
+   call check(error, struc%comment, "ethane")
+   if (allocated(error)) return
+   call check(error, struc%nat, 8, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 7, "Number of bonds does not match")
+   if (allocated(error)) return
+
+end subroutine test_missing_bonds
+
+
+subroutine test_incomplete(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-incomplete-cjson.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "atoms": {', &
+      '    "elements": {', &
+      '      "number": [  1,   6,   1,   1,   6,   1,   1,   1 ]', &
+      '    },', &
+      '    "coords": {', &
+      '      "3d": [  1.185080, -0.003838,  0.987524,', &
+      '               0.751621, -0.022441, -0.020839,', &
+      '               1.166929,  0.833015, -0.569312,', &
+      '               1.115519, -0.932892, -0.514525,'
+   rewind(unit)
+
+   call read_cjson(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+end subroutine test_incomplete
 
 end module test_read_cjson
