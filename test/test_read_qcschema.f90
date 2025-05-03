@@ -60,6 +60,8 @@ subroutine collect_read_qcschema(testsuite)
       & new_unittest("invalid-schema-version-value3", test_invalid_schema_version_value3, should_fail=.true.), &
       & new_unittest("invalid-schema-version-type1", test_invalid_schema_version_type1, should_fail=.true.), &
       & new_unittest("invalid-schema-version-type2", test_invalid_schema_version_type2, should_fail=.true.), &
+      & new_unittest("invalid-schema-name-value1", test_invalid_schema_name_value1, should_fail=.true.), &
+      & new_unittest("invalid-schema-name-value2", test_invalid_schema_name_value2, should_fail=.true.), &
       & new_unittest("invalid-schema-name-type1", test_invalid_schema_name_type1, should_fail=.true.), &
       & new_unittest("invalid-schema-name-type2", test_invalid_schema_name_type2, should_fail=.true.), &
       & new_unittest("invalid-root-data", test_invalid_root_data, should_fail=.true.), &
@@ -951,7 +953,7 @@ subroutine test_invalid_schema_name_value2(error)
       '  "schema_name": "qcschema_input",', &
       '  "molecule": {', &
       '    "schema_version": 2,', &
-      '    "schema_name": "qcschema_structure,', &
+      '    "schema_name": "qcschema_structure",', &
       '    "geometry": [', &
       '      0.0,  0.0000, -0.1294,', &
       '      0.0, -1.4941,  1.0274,', &
