@@ -167,6 +167,7 @@ subroutine read_qcschema(self, unit, error)
       call get_value(array, geo, stat=stat, origin=origin)
    end if
    if (stat /= json_stat%success .or. .not.associated(array)) then
+      if (associated(array) .and. origin == 0) origin = array%origin
       call fatal_error(error, ctx%report("Could not read geometry", origin=origin))
       return
    end if

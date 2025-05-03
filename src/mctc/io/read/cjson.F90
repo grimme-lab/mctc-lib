@@ -106,19 +106,19 @@ subroutine read_cjson(self, unit, error)
    if (associated(child)) then
       call get_value(child, "a", cellpar(1), stat=stat, origin=origin)
       if (stat == json_stat%success) then
-      call get_value(child, "b", cellpar(2), stat=stat, origin=origin)
+         call get_value(child, "b", cellpar(2), stat=stat, origin=origin)
       end if
       if (stat == json_stat%success) then
-      call get_value(child, "c", cellpar(3), stat=stat, origin=origin)
+         call get_value(child, "c", cellpar(3), stat=stat, origin=origin)
       end if
       if (stat == json_stat%success) then
-      call get_value(child, "alpha", cellpar(4), stat=stat, origin=origin)
+         call get_value(child, "alpha", cellpar(4), stat=stat, origin=origin)
       end if
       if (stat == json_stat%success) then
-      call get_value(child, "beta",  cellpar(5), stat=stat, origin=origin)
+         call get_value(child, "beta",  cellpar(5), stat=stat, origin=origin)
       end if
       if (stat == json_stat%success) then
-      call get_value(child, "gamma", cellpar(6), stat=stat, origin=origin)
+         call get_value(child, "gamma", cellpar(6), stat=stat, origin=origin)
       end if
       if (stat /= json_stat%success) then
          call fatal_error(error, ctx%report("Could not read unit cell parameters", origin, &
