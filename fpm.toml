@@ -8,7 +8,7 @@ description = "Modular computation tool chain library"
 keywords = ["computational-chemistry", "io"]
 
 [dependencies]
-json-fortran.git = "https://github.com/jacobwilliams/json-fortran.git"
+jonquil.git = "https://github.com/toml-f/jonquil.git"
 
 [[executable]]
 name = "mctc-convert"

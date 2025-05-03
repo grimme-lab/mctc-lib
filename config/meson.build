@@ -52,13 +52,13 @@ if get_option('openmp')
   lib_deps += omp_dep
 endif
 
-jsonfortran_dep = dependency(
-  'json-fortran',
+jonquil_dep = dependency(
+  'jonquil',
   required: get_option('json'),
-  fallback: ['json-fortran-8.2.5','jsonfortran_dep'],
+  fallback: ['jonquil','jonquil_dep'],
   default_options: [
     'default_library=static',
   ],
   static: get_option('default_library') != 'dynamic',
 )
-lib_deps += jsonfortran_dep
+lib_deps += jonquil_dep

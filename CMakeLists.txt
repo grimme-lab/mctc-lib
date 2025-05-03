@@ -28,8 +28,9 @@ include(GNUInstallDirs)
 add_subdirectory("config")
 
 # Dependencies
-if(NOT TARGET "jsonfortran::jsonfortran" AND WITH_JSON)
-  find_package("jsonfortran" REQUIRED)
+if(NOT TARGET "jonquild::jonquil" AND WITH_JSON)
+  find_package("toml-f" REQUIRED)
+  find_package("jonquil" REQUIRED)
 endif()
 
 # Collect source of the project
@@ -58,7 +59,8 @@ if(WITH_JSON)
   target_link_libraries(
     "${PROJECT_NAME}-lib"
     PRIVATE
-    "jsonfortran::jsonfortran"
+    "jonquil::jonquil"
+    "toml-f::toml-f"
   )
 endif()
 set_target_properties(

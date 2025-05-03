@@ -41,7 +41,7 @@ mctc_lib = library(
   include_directories: include_directories('include'),
   dependencies: lib_deps,
   fortran_args: [
-    '-DWITH_JSON=@0@'.format(jsonfortran_dep.found() ? '1' : '0'),
+    '-DWITH_JSON=@0@'.format(jonquil_dep.found() ? '1' : '0'),
   ],
   install: install,
 )
