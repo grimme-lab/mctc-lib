@@ -420,7 +420,6 @@ subroutine test_mismatch_schema(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_mismatch_schema
 
@@ -445,7 +444,6 @@ subroutine test_invalid_molecule(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_molecule
 
@@ -478,7 +476,6 @@ subroutine test_invalid_symbols(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_symbols
 
@@ -511,7 +508,6 @@ subroutine test_invalid_geometry(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_geometry
 
@@ -545,7 +541,6 @@ subroutine test_invalid_connectivity1(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_connectivity1
 
@@ -579,7 +574,6 @@ subroutine test_invalid_connectivity2(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_connectivity2
 
@@ -613,7 +607,6 @@ subroutine test_invalid_connectivity3(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_connectivity3
 
@@ -646,7 +639,6 @@ subroutine test_invalid_comment(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_comment
 
@@ -680,7 +672,6 @@ subroutine test_invalid_charge(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_charge
 
@@ -714,7 +705,6 @@ subroutine test_invalid_multiplicity(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_multiplicity
 
@@ -747,7 +737,6 @@ subroutine test_invalid_schema_version_value1(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_version_value1
 
@@ -787,7 +776,6 @@ subroutine test_invalid_schema_version_value2(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_version_value2
 
@@ -826,7 +814,6 @@ subroutine test_invalid_schema_version_value3(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_version_value3
 
@@ -859,7 +846,6 @@ subroutine test_invalid_schema_version_type1(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_version_type1
 
@@ -899,7 +885,6 @@ subroutine test_invalid_schema_version_type2(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_version_type2
 
@@ -932,7 +917,6 @@ subroutine test_invalid_schema_name_value1(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_name_value1
 
@@ -972,7 +956,6 @@ subroutine test_invalid_schema_name_value2(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_name_value2
 
@@ -1005,7 +988,6 @@ subroutine test_invalid_schema_name_type1(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_name_type1
 
@@ -1045,7 +1027,6 @@ subroutine test_invalid_schema_name_type2(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_name_type2
 
@@ -1078,7 +1059,6 @@ subroutine test_invalid_root_data(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_root_data
 
@@ -1110,7 +1090,6 @@ subroutine test_mismatch_geometry_symbols(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_mismatch_geometry_symbols
 
@@ -1142,7 +1121,6 @@ subroutine test_missing_symbols(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_missing_symbols
 
@@ -1169,7 +1147,6 @@ subroutine test_incomplete(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_incomplete
 
@@ -1222,7 +1199,6 @@ subroutine test_cjson_qcschema(error)
 
    call read_qcschema(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_cjson_qcschema
 

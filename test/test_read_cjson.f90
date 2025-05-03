@@ -490,7 +490,6 @@ subroutine test_invalid_schema_value(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_value
 
@@ -528,7 +527,6 @@ subroutine test_numbers_coords_mismatch1(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_numbers_coords_mismatch1
 
@@ -559,7 +557,6 @@ subroutine test_invalid_coordinate_type1(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_coordinate_type1
 
@@ -600,7 +597,6 @@ subroutine test_invalid_coordinate_type2(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_invalid_coordinate_type2
 
@@ -637,7 +633,6 @@ subroutine test_missing_schema(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_missing_schema
 
@@ -666,7 +661,6 @@ subroutine test_missing_coords(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_missing_coords
 
@@ -704,7 +698,6 @@ subroutine test_numbers_coords_mismatch2(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_numbers_coords_mismatch2
 
@@ -750,16 +743,6 @@ subroutine test_invalid_root_data(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "TiO2 rutile")
-   if (allocated(error)) return
-   call check(error, struc%nat, 6, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
 
 end subroutine test_invalid_root_data
 
@@ -804,16 +787,6 @@ subroutine test_invalid_schema_version_type(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "TiO2 rutile")
-   if (allocated(error)) return
-   call check(error, struc%nat, 6, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
 
 end subroutine test_invalid_schema_version_type
 
@@ -851,16 +824,6 @@ subroutine test_invalid_unit_cell_type(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "TiO2 rutile")
-   if (allocated(error)) return
-   call check(error, struc%nat, 6, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
 
 end subroutine test_invalid_unit_cell_type
 
@@ -893,16 +856,6 @@ subroutine test_invalid_atoms_type(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "TiO2 rutile")
-   if (allocated(error)) return
-   call check(error, struc%nat, 6, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
 
 end subroutine test_invalid_atoms_type
 
@@ -939,16 +892,6 @@ subroutine test_invalid_element_type1(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "TiO2 rutile")
-   if (allocated(error)) return
-   call check(error, struc%nat, 6, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
 
 end subroutine test_invalid_element_type1
 
@@ -983,16 +926,6 @@ subroutine test_invalid_element_type2(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "TiO2 rutile")
-   if (allocated(error)) return
-   call check(error, struc%nat, 6, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
 
 end subroutine test_invalid_element_type2
 
@@ -1027,16 +960,6 @@ subroutine test_invalid_element_number(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "TiO2 rutile")
-   if (allocated(error)) return
-   call check(error, struc%nat, 6, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
 
 end subroutine test_invalid_element_number
 
@@ -1094,18 +1017,6 @@ subroutine test_mismatch_bonds(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "ethane")
-   if (allocated(error)) return
-   call check(error, struc%nat, 8, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
-   call check(error, struc%nbd, 7, "Number of bonds does not match")
-   if (allocated(error)) return
 
 end subroutine test_mismatch_bonds
 
@@ -1152,18 +1063,6 @@ subroutine test_missing_bonds(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
-
-   call check(error, allocated(struc%comment), "Comment line should be preserved")
-   if (allocated(error)) return
-   call check(error, struc%comment, "ethane")
-   if (allocated(error)) return
-   call check(error, struc%nat, 8, "Number of atoms does not match")
-   if (allocated(error)) return
-   call check(error, struc%nid, 2, "Number of species does not match")
-   if (allocated(error)) return
-   call check(error, struc%nbd, 7, "Number of bonds does not match")
-   if (allocated(error)) return
 
 end subroutine test_missing_bonds
 
@@ -1193,7 +1092,6 @@ subroutine test_incomplete(error)
 
    call read_cjson(struc, unit, error)
    close(unit, status='delete')
-   if (allocated(error)) return
 
 end subroutine test_incomplete
 
