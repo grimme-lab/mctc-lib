@@ -25,6 +25,11 @@ project(
 )
 install = not (meson.is_subproject() and get_option('default_library') == 'static')
 
+# Check for specific unsupported meson versions
+if meson.version().version_compare('==1.8.0')
+  error('Meson version 1.8.0 has a known issue — please use any other version ≥ 0.55.0')
+endif
+
 # General configuration information
 lib_deps = []
 subdir('config')
