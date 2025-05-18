@@ -95,20 +95,20 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title="<p> 0.2% of total for procedures.</p>Including implementation: 124 statements,  4.4% of total for procedures.">7 statements</a>
+                 title="<p> 0.1% of total for procedures.</p>Including implementation: 29 statements,  1.0% of total for procedures.">3 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
               <i class="fa fa-code"></i>
-              <a href="../src/resize.f90"> Source File</a>
+              <a href="../src/info.f90"> Source File</a>
             </li>
         </ul>
       </div>
       <div class="col">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb justify-content-end mb-0">
-                <li class="breadcrumb-item"><a href='../sourcefile/resize.f90.html'>resize.f90</a></li>
-                <li class="breadcrumb-item"><a href='../module/mctc_io_resize.html'>mctc_io_resize</a></li>
+                <li class="breadcrumb-item"><a href='../sourcefile/info.f90.html'>info.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></li>
             <li class="breadcrumb-item active" aria-current="page">resize</li>
           </ol>
         </nav>
@@ -154,11 +154,7 @@
       </a>
       <div id="modprocs-0" class="collapse">
         <div class="list-group list-group-flush">
-            <a class="list-group-item" href="../interface/resize.html#moduleprocedure-resize_char">resize_char</a>
-            <a class="list-group-item" href="../interface/resize.html#moduleprocedure-resize_int">resize_int</a>
-            <a class="list-group-item" href="../interface/resize.html#moduleprocedure-resize_logical">resize_logical</a>
-            <a class="list-group-item" href="../interface/resize.html#moduleprocedure-resize_real">resize_real</a>
-            <a class="list-group-item" href="../interface/resize.html#moduleprocedure-resize_real_2d">resize_real_2d</a>
+            <a class="list-group-item" href="../interface/resize.html#moduleprocedure-resize_pdb_data">resize_pdb_data</a>
         </div>
       </div>
     </div>
@@ -172,16 +168,16 @@
 
     <div class="col-md-9" id='text'>
       <h2>public interface resize</h2>
-      <p>Overloaded resize interface</p>
-<br>
+      
+
 
 
         <h2>Module Procedures</h2>
             <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-resize_char"></span> <h3>private pure subroutine resize_char(var, n)  
+    <div class="card-header codesum"><span class="anchor" id="proc-resize_pdb_data"></span> <h3>private  subroutine resize_pdb_data(var, n)  
 </h3></div>
     <div class="card-body">
-        <p>Reallocate list of characters</p>
+        
 
   <h4>Arguments</h4>
       <table class="table table-striped varlist">
@@ -197,7 +193,7 @@
         <tr>
             <td>
               <span class="anchor" id="variable-var~2"></span>
-              character(len=*),
+              type(<a href='../type/pdb_data.html'>pdb_data</a>),
             </td>
 <td>intent(inout),</td>
               <td></td>            <td>
@@ -206,7 +202,7 @@
             <td>::</td>
             <td><strong>var</strong>(:)</td>
             <td>
-                <p>Instance of the array to be resized</p>
+                
             </td>
         </tr>
         <tr>
@@ -221,223 +217,7 @@
             <td>::</td>
             <td><strong>n</strong></td>
             <td>
-                <p>Dimension of the final array size</p>
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-    </div>
-  </div>
-
-            <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-resize_int"></span> <h3>private pure subroutine resize_int(var, n)  
-</h3></div>
-    <div class="card-body">
-        <p>Reallocate list of integers</p>
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-var"></span>
-              integer,
-            </td>
-<td>intent(inout),</td>
-              <td></td>            <td>
-              allocatable
-            </td>
-            <td>::</td>
-            <td><strong>var</strong>(:)</td>
-            <td>
-                <p>Instance of the array to be resized</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-n"></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>n</strong></td>
-            <td>
-                <p>Dimension of the final array size</p>
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-    </div>
-  </div>
-
-            <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-resize_logical"></span> <h3>private pure subroutine resize_logical(var, n)  
-</h3></div>
-    <div class="card-body">
-        <p>Reallocate list of logicals</p>
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-var~3"></span>
-              logical,
-            </td>
-<td>intent(inout),</td>
-              <td></td>            <td>
-              allocatable
-            </td>
-            <td>::</td>
-            <td><strong>var</strong>(:)</td>
-            <td>
-                <p>Instance of the array to be resized</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-n~3"></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>n</strong></td>
-            <td>
-                <p>Dimension of the final array size</p>
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-    </div>
-  </div>
-
-            <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-resize_real"></span> <h3>private pure subroutine resize_real(var, n)  
-</h3></div>
-    <div class="card-body">
-        <p>Reallocate list of reals</p>
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-var~4"></span>
-              real(kind=wp),
-            </td>
-<td>intent(inout),</td>
-              <td></td>            <td>
-              allocatable
-            </td>
-            <td>::</td>
-            <td><strong>var</strong>(:)</td>
-            <td>
-                <p>Instance of the array to be resized</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-n~4"></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>n</strong></td>
-            <td>
-                <p>Dimension of the final array size</p>
-            </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-    </div>
-  </div>
-
-            <div class="card">
-    <div class="card-header codesum"><span class="anchor" id="proc-resize_real_2d"></span> <h3>private pure subroutine resize_real_2d(var, n)  
-</h3></div>
-    <div class="card-body">
-        <p>Reallocate list of reals</p>
-
-  <h4>Arguments</h4>
-      <table class="table table-striped varlist">
-    <thead>
-      <tr>
-        <th scope="col">Type</th>
-<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
-        <th scope="col"></th>
-        <th scope="col">Name</th>
-        <th scope="col"></th>
-    </thead>
-    <tbody>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-var~5"></span>
-              real(kind=wp),
-            </td>
-<td>intent(inout),</td>
-              <td></td>            <td>
-              allocatable
-            </td>
-            <td>::</td>
-            <td><strong>var</strong>(:,:)</td>
-            <td>
-                <p>Instance of the array to be resized</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-n~5"></span>
-              integer,
-            </td>
-<td>intent(in),</td>
-              <td>optional</td>            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>n</strong></td>
-            <td>
-                <p>Dimension of the final array size</p>
+                
             </td>
         </tr>
     </tbody>
@@ -464,7 +244,7 @@
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2025-05-18 11:26 +0000             </p>
+ on 2025-05-18 11:48 +0000             </p>
           </div>
         </div>
         <br>
