@@ -1,14 +1,15 @@
 name = "mctc-lib"
-version = "0.4.1"
+version = "0.4.2"
 license = "Apache-2.0"
 maintainer = ["@awvwgk"]
 author = ["Sebastian Ehlert"]
-copyright = "2020-2024 Sebastian Ehlert"
+copyright = "2020-2025 Sebastian Ehlert"
 description = "Modular computation tool chain library"
 keywords = ["computational-chemistry", "io"]
 
 [dependencies]
 jonquil.git = "https://github.com/toml-f/jonquil.git"
+jonquil.tag = "v0.3.0"
 
 [[executable]]
 name = "mctc-convert"
