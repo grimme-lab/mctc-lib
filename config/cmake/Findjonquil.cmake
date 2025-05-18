@@ -15,7 +15,7 @@
 set(_lib "jonquil")
 set(_pkg "JONQUIL")
 set(_url "https://github.com/toml-f/jonquil")
-set(_rev "v0.2.0")
+set(_rev "v0.3.0")
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")
