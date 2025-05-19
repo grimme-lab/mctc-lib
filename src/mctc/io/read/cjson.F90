@@ -31,6 +31,14 @@ module mctc_io_read_cjson
    private
 
    public :: read_cjson
+#if WITH_JSON
+   public :: read_cjson_from_object
+
+   interface read_cjson
+      module procedure :: read_cjson
+      module procedure :: read_cjson_from_object
+   end interface read_cjson
+#endif
 
 
 contains
@@ -49,6 +57,37 @@ subroutine read_cjson(self, unit, error)
 
 #if WITH_JSON
    class(json_value), allocatable :: root
+   type(json_error), allocatable :: parse_error
+   type(json_context) :: ctx
+
+   call json_load(root, unit, config=json_parser_config(context_detail=1), &
+      & context=ctx, error=parse_error)
+   if (allocated(parse_error)) then
+      allocate(error)
+      call move_alloc(parse_error%message, error%message)
+      return
+   end if
+   call read_cjson_from_object(self, root, ctx, error)
+#else
+   call fatal_error(error, "JSON support not enabled")
+#endif
+end subroutine read_cjson
+
+#if WITH_JSON
+subroutine read_cjson_from_object(self, root, context, error)
+
+   !> Instance of the molecular structure data
+   type(structure_type), intent(out) :: self
+
+   !> Top-level object
+   class(json_value), intent(inout) :: root
+
+   !> Context for error reporting
+   type(json_context), intent(in), optional :: context
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
    type(json_object), pointer :: object, child, child2
    type(json_array), pointer :: array, child_array
    type(json_keyval), pointer :: val
@@ -65,13 +104,8 @@ subroutine read_cjson(self, unit, error)
    real(wp), allocatable, target :: geo(:)
    real(wp), pointer :: xyz(:, :)
 
-   call json_load(root, unit, config=json_parser_config(context_detail=1), &
-      & context=ctx, error=parse_error)
-   if (allocated(parse_error)) then
-      allocate(error)
-      call move_alloc(parse_error%message, error%message)
-      return
-   end if
+   if (present(context)) ctx = context
+
    object => cast_to_object(root)
    if (.not.associated(object)) then
       call fatal_error(error, ctx%report("Invalid JSON object", root%origin, "Expected JSON object"))
@@ -247,10 +281,8 @@ subroutine read_cjson(self, unit, error)
       call move_alloc(bond, self%bond)
    end if
 
-#else
-   call fatal_error(error, "JSON support not enabled")
+end subroutine read_cjson_from_object
 #endif
-end subroutine read_cjson
 
 #if WITH_JSON
 subroutine cjson_get_child(object, key1, key2, child, stat, origin)
