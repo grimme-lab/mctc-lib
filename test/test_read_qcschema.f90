@@ -67,7 +67,8 @@ subroutine collect_read_qcschema(testsuite)
       & new_unittest("invalid-schema-name-type2", test_invalid_schema_name_type2, should_fail=.true.), &
       & new_unittest("invalid-root-data", test_invalid_root_data, should_fail=.true.), &
       & new_unittest("extras-incomplete-lattice", test_extras_incomplete_lattice, should_fail=.true.), &
-      & new_unittest("extras-incompatible-lattice", test_extras_incompatible_lattice, should_fail=.true.), &
+      & new_unittest("extras-incompatible-lattice1", test_extras_incompatible_lattice1, should_fail=.true.), &
+      & new_unittest("extras-incompatible-lattice2", test_extras_incompatible_lattice2, should_fail=.true.), &
       & new_unittest("extras-incompatible-periodic", test_extras_incompatible_periodic, should_fail=.true.), &
       & new_unittest("extras-type-mismatch", test_extras_type_mismatch, should_fail=.true.), &
       & new_unittest("cjson", test_cjson_qcschema, should_fail=.true.) &
@@ -1318,7 +1319,7 @@ subroutine test_extras_incomplete_lattice(error)
 end subroutine test_extras_incomplete_lattice
 
 
-subroutine test_extras_incompatible_lattice(error)
+subroutine test_extras_incompatible_lattice1(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -1365,7 +1366,60 @@ subroutine test_extras_incompatible_lattice(error)
    close(unit, status='delete')
    if (allocated(error)) return
 
-end subroutine test_extras_incompatible_lattice
+end subroutine test_extras_incompatible_lattice1
+
+
+subroutine test_extras_incompatible_lattice2(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-valid5-qcschema.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "schema_version": 2,', &
+      '  "schema_name": "qcschema_molecule",', &
+      '  "provenance": {', &
+      '    "creator": "mctc-lib",', &
+      '    "version": "0.4.2",', &
+      '    "routine": "mctc_io_write_qcschema::write_qcschema"', &
+      '  },', &
+      '  "comment": "TiO2 rutile",', &
+      '  "symbols": ["Ti", "Ti", "O", "O", "O", "O"],', &
+      '  "atomic_numbers": [22, 22, 8, 8, 8, 8],', &
+      '  "geometry": [', &
+      '     0.0000000000000000E+00, 0.0000000000000000E+00, 0.0000000000000000E+00,', &
+      '     5.2818191416515159E+00, 8.2022538117381334E+00, 8.2022538117381334E+00,', &
+      '     6.1333938828927657E-16, 5.0082961774473045E+00, 5.0082961774473045E+00,', &
+      '     1.3956333869785798E-15, 1.1396211446028962E+01, 1.1396211446028962E+01,', &
+      '     5.2818191416515150E+00, 3.1939576342908298E+00, 1.3210549989185438E+01,', &
+      '     5.2818191416515150E+00, 1.3210549989185438E+01, 3.1939576342908289E+00', &
+      '  ],', &
+      '  "molecular_charge": 0,', &
+      '  "extras": {', &
+      '    "periodic": {', &
+      '      "lattice": {', &
+      '         "a": 5.5900366437622173E+00,', &
+      '         "b": 8.6808915904526547E+00,', &
+      '         "c": 8.6808915904526547E+00,', &
+      '         "alpha": 90.0,', &
+      '         "beta":  90.0,', &
+      '         "gamma": 90.0', &
+      '      ]', &
+      '    }', &
+      '  }', &
+      '}'
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit, status='delete')
+   if (allocated(error)) return
+
+end subroutine test_extras_incompatible_lattice2
 
 
 subroutine test_extras_incompatible_periodic(error)
