@@ -95,7 +95,7 @@ pure function json_string(mol, indent) result(string)
 
    string = string // ","
    if (present(indent)) string = string // nl // indent
-   string = string // json_key("geometry", indent) // json_array([mol%xyz], indent)
+   string = string // json_key("geometry", indent) // json_array([mol%xyz], indent, group=3)
 
    string = string // ","
    if (present(indent)) string = string // nl // indent
@@ -129,6 +129,28 @@ pure function json_string(mol, indent) result(string)
       string = string // "]"
    end if
 
+   if (allocated(mol%lattice) .and. any(mol%periodic)) then
+      ! place in "extras": {"periodic": {"lattice": [flattened list...]}
+      string = string // ","
+      if (present(indent)) string = string // nl // indent
+      string = string // json_key("extras", indent) // "{"
+      if (present(indent)) string = string // nl // indent // indent
+      string = string // json_key("periodic", indent) // "{"
+      if (present(indent)) string = string // nl // indent // indent // indent
+      block
+         character(len=:), allocatable :: indent3, indent4
+         if (present(indent)) then
+            indent3 = indent // indent // indent
+            indent4 = indent // indent // indent // indent
+         endif
+         string = string // json_key("lattice", indent) // json_array([mol%lattice], indent3, indent4, group=3)
+      end block
+      if (present(indent)) string = string // nl // indent // indent
+      string = string // "}"
+      if (present(indent)) string = string // nl // indent
+      string = string // "}"
+   end if
+
    if (present(indent)) string = string // nl
    string = string // "}"
 end function json_string
@@ -150,18 +172,29 @@ pure function json_array_int_1(array, indent) result(string)
    string = string // "]"
 end function json_array_int_1
 
-pure function json_array_real_1(array, indent) result(string)
+pure function json_array_real_1(array, indent, indent2, group) result(string)
    real(wp), intent(in) :: array(:)
    character(len=*), intent(in), optional :: indent
+   character(len=*), intent(in), optional :: indent2
+   integer, intent(in), optional :: group
    character(len=:), allocatable :: string
 
-   integer :: i
+   integer :: i, j, step
+
+   step = 1
+   if (present(group)) step = group
 
    string = "["
-   do i = 1, size(array)
-      if (present(indent)) string = string // nl // indent // indent
-      string = string // json_value(array(i), '(es23.16)')
-      if (i /= size(array)) string = string // ","
+   do i = 1, size(array), step
+      if (present(indent2)) then
+         string = string // nl // indent2
+      else if (present(indent)) then
+         string = string // nl // indent // indent
+      end if
+      do j = 1, step, 1
+         string = string // json_value(array(i + j - 1), '(es23.16)')
+         if (i + j - 1 /= size(array)) string = string // ","
+      end do
    end do
    if (present(indent)) string = string // nl // indent
    string = string // "]"

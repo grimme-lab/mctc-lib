@@ -40,6 +40,7 @@ set(
   "write-genformat"
   "write-pdb"
   "write-qchem"
+  "write-qcschema"
   "write-turbomole"
   "write-vasp"
   "write-xyz"

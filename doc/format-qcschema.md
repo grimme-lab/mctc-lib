@@ -85,6 +85,24 @@ Caffeine molecule in ``qcschema_molecule`` format.
 }
 ```
 
+## Extensions
+
+The reader supports the following extensions:
+
+- Periodic boundary conditions are specified by providing the lattice vectors in Bohr
+  as extras to the molecule in periodic.lattice as flattened array.
+
+```json
+"extras": {
+  "periodic": {
+    "lattice": [
+       5.5900366437622173, 0.0000000000000000, 0.0000000000000000,
+       0.0000000000000000, 8.6808915904526547, 0.0000000000000000,
+       0.0000000000000000, 0.0000000000000000, 8.6808915904526547
+    ]
+  }
+}
+```
 
 ## Missing features
 
