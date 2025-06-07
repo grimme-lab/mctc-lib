@@ -47,7 +47,7 @@ subroutine read_qcschema(self, unit, error)
 
 #if WITH_JSON
    class(json_value), allocatable :: root
-   type(json_object), pointer :: object, child
+   type(json_object), pointer :: object, child, extras, child2
    type(json_array), pointer :: array, child_array
    type(json_error), allocatable :: parse_error
    type(json_keyval), pointer :: val
@@ -58,8 +58,8 @@ subroutine read_qcschema(self, unit, error)
    character(len=:), allocatable :: symbol, message, schema_name, comment
    character(len=symbol_length), allocatable :: sym(:)
    integer, allocatable :: bond(:, :), list(:)
-   real(wp), allocatable, target :: geo(:)
-   real(wp), pointer :: xyz(:, :)
+   real(wp), allocatable, target :: geo(:), lat(:)
+   real(wp), pointer :: xyz(:, :), lattice(:, :)
 
    call json_load(root, unit, config=json_parser_config(context_detail=1), &
       & context=ctx, error=parse_error)
@@ -222,8 +222,45 @@ subroutine read_qcschema(self, unit, error)
       end do
    end if
 
+   nullify(lattice)
+   nullify(array)
+   call get_value(child, "extras", extras, stat=stat, origin=origin)
+   if (stat /= json_stat%success) then
+      call fatal_error(error, ctx%report("Could not read extras", origin=origin, &
+        & label="Expected object"))
+      return
+   end if
+   call get_value(extras, "periodic", child2, requested=.false., stat=stat, origin=origin)
+   if (stat /= json_stat%success) then
+      call fatal_error(error, ctx%report("Could not read periodic extras", origin=origin, &
+         & label="Expected object with 'lattice' key"))
+      return
+   end if
+   if (associated(child2)) then
+      call get_value(child2, "lattice", array, requested=.false., stat=stat, origin=origin)
+      if (stat /= json_stat%success) then
+         call fatal_error(error, ctx%report("Could not read lattice from extras", origin=origin, &
+            & label="Expected array with 9 elements"))
+         return
+      end if
+   end if
+   if (associated(array)) then
+      call get_value(array, lat, stat=stat, origin=origin)
+      if (stat /= json_stat%success) then
+         call fatal_error(error, ctx%report("Could not read lattice from extras", origin=origin, &
+            & label="Expected array with 9 elements"))
+         return
+      end if
+      if (size(lat) /= 9) then
+         call fatal_error(error, ctx%report("Lattice must have 9 elements", origin=array%origin, &
+            & label="Got "//to_string(size(lat))//" elements"))
+         return
+      end if
+      lattice(1:3, 1:3) => lat(1:9)
+   end if
+
    xyz(1:3, 1:size(geo)/3) => geo
-   call new(self, sym, xyz, charge=real(charge, wp), uhf=multiplicity-1)
+   call new(self, sym, xyz, charge=real(charge, wp), uhf=multiplicity-1, lattice=lattice)
    if (len(comment) > 0) self%comment = comment
    if (allocated(bond)) then
       self%nbd = size(bond, 2)
