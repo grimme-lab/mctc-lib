@@ -36,6 +36,7 @@ subroutine collect_read_ctfile(testsuite)
       & new_unittest("valid2-mol", test_valid2_mol), &
       & new_unittest("valid3-mol", test_valid3_mol), &
       & new_unittest("valid4-mol", test_valid4_mol), &
+      & new_unittest("valid5-mol", test_valid5_mol), &
       & new_unittest("invalid1-mol", test_invalid1_mol, should_fail=.true.), &
       & new_unittest("invalid2-mol", test_invalid2_mol, should_fail=.true.), &
       & new_unittest("invalid3-mol", test_invalid3_mol, should_fail=.true.), &
@@ -384,6 +385,63 @@ subroutine test_valid4_mol(error)
    if (allocated(error)) return
 
 end subroutine test_valid4_mol
+
+
+subroutine test_valid5_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "", &
+      "  Mrv1823 10191918163D          ", &
+      "", &
+      " 12 12  0  0  0  0            999 V2000", &
+      "   -0.0090   -0.0157   -0.0000 C   0                                 ", &
+      "   -0.7131    1.2038   -0.0000 C   0                                 ", &
+      "    1.3990   -0.0157   -0.0000 C   0                                 ", &
+      "   -0.0090    2.4232   -0.0000 C   0                                 ", &
+      "    2.1031    1.2038   -0.0000 C   0                                 ", &
+      "    1.3990    2.4232    0.0000 C   0                                 ", &
+      "   -0.5203   -0.9011   -0.0000 H   0                                 ", &
+      "   -1.7355    1.2038    0.0000 H   0                                 ", &
+      "    1.9103   -0.9011    0.0000 H   0                                 ", &
+      "   -0.5203    3.3087    0.0000 H   0                                 ", &
+      "    3.1255    1.2038    0.0000 H   0                                 ", &
+      "    1.9103    3.3087   -0.0000 H   0                                 ", &
+      "  2  1  4  0         ", &
+      "  3  1  4  0         ", &
+      "  4  2  4  0         ", &
+      "  5  3  4  0         ", &
+      "  6  4  4  0         ", &
+      "  6  5  4  0         ", &
+      "  1  7  1  0         ", &
+      "  2  8  1  0         ", &
+      "  3  9  1  0         ", &
+      "  4 10  1  0         ", &
+      "  5 11  1  0         ", &
+      "  6 12  1  0         ", &
+      "M  END"
+   rewind(unit)
+
+   call read_molfile(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, .not.allocated(struc%comment), "Empty comment line should not be saved")
+   if (allocated(error)) return
+   call check(error, struc%nat, 12, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, struc%nbd, 12, "Number of bonds does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid5_mol
 
 
 subroutine test_invalid1_mol(error)
