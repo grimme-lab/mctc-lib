@@ -30,12 +30,6 @@ module mctc_io_write_pymatgen
       module procedure :: json_value_real
    end interface json_value
 
-   interface json_array
-      module procedure :: json_array_char_1
-      module procedure :: json_array_int_1
-      module procedure :: json_array_real_1
-   end interface json_array
-
    character(len=*), parameter :: nl = new_line('a')
 
 contains
@@ -178,68 +172,6 @@ pure function json_string(mol, indent) result(string)
    string = string // "}"
 end function json_string
 
-pure function json_array_int_1(array, indent) result(string)
-   integer, intent(in) :: array(:)
-   character(len=*), intent(in), optional :: indent
-   character(len=:), allocatable :: string
-
-   integer :: i
-
-   string = "["
-   do i = 1, size(array)
-      if (present(indent)) string = string // nl // indent // indent
-      string = string // json_value(array(i))
-      if (i /= size(array)) string = string // ","
-   end do
-   if (present(indent)) string = string // nl // indent
-   string = string // "]"
-end function json_array_int_1
-
-pure function json_array_real_1(array, indent, indent2, group) result(string)
-   real(wp), intent(in) :: array(:)
-   character(len=*), intent(in), optional :: indent
-   character(len=*), intent(in), optional :: indent2
-   integer, intent(in), optional :: group
-   character(len=:), allocatable :: string
-
-   integer :: i, j, step
-
-   step = 1
-   if (present(group)) step = group
-
-   string = "["
-   do i = 1, size(array), step
-      if (present(indent2)) then
-         string = string // nl // indent2
-      else if (present(indent)) then
-         string = string // nl // indent // indent
-      end if
-      do j = 1, step, 1
-         string = string // json_value(array(i + j - 1), '(es23.16)')
-         if (i + j - 1 /= size(array)) string = string // ","
-      end do
-   end do
-   if (present(indent)) string = string // nl // indent
-   string = string // "]"
-end function json_array_real_1
-
-pure function json_array_char_1(array, indent) result(string)
-   character(len=*), intent(in) :: array(:)
-   character(len=*), intent(in), optional :: indent
-   character(len=:), allocatable :: string
-
-   integer :: i
-
-   string = "["
-   do i = 1, size(array)
-      if (present(indent)) string = string // nl // indent // indent
-      string = string // json_value(trim(array(i)))
-      if (i /= size(array)) string = string // ","
-   end do
-   if (present(indent)) string = string // nl // indent
-   string = string // "]"
-end function json_array_char_1
-
 pure function json_key(key, indent) result(string)
    character(len=*), intent(in) :: key
    character(len=*), intent(in), optional :: indent
@@ -329,4 +261,3 @@ pure subroutine dlat_to_cell(lattice,cellpar)
 end subroutine dlat_to_cell
 
 end module mctc_io_write_pymatgen
-
