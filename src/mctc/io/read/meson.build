@@ -21,6 +21,7 @@ srcs += files(
   'qchem.f90',
   'qcschema.F90',
   'pdb.f90',
+  'pymatgen.f90',
   'turbomole.f90',
   'vasp.f90',
   'xyz.f90',

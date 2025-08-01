@@ -24,6 +24,7 @@ tests = [
   'read-gaussian',
   'read-genformat',
   'read-pdb',
+  'read-pymatgen',
   'read-qchem',
   'read-qcschema',
   'read-turbomole',

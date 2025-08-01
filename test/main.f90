@@ -29,6 +29,7 @@ program tester
    use test_read_gaussian, only : collect_read_gaussian
    use test_read_genformat, only : collect_read_genformat
    use test_read_pdb, only : collect_read_pdb
+   use test_read_pymatgen, only : collect_read_pymatgen
    use test_read_qchem, only : collect_read_qchem
    use test_read_qcschema, only : collect_read_qcschema
    use test_read_turbomole, only : collect_read_turbomole
@@ -68,6 +69,7 @@ program tester
       & new_testsuite("read-gaussian", collect_read_gaussian), &
       & new_testsuite("read-genformat", collect_read_genformat), &
       & new_testsuite("read-pdb", collect_read_pdb), &
+      & new_testsuite("read-pymatgen", collect_read_pymatgen), &
       & new_testsuite("read-qchem", collect_read_qchem), &
       & new_testsuite("read-qcschema", collect_read_qcschema), &
       & new_testsuite("read-turbomole", collect_read_turbomole), &
