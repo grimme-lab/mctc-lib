@@ -52,10 +52,13 @@ subroutine collect_read_pymatgen(testsuite)
       & new_unittest("incorrect-xyz", test_incorrect_xyz, should_fail=.true.), &
       & new_unittest("incorrect-xyz-value", test_incorrect_xyz_value, should_fail=.true.), &
       & new_unittest("incorrect-xyz-size", test_incorrect_xyz_size, should_fail=.true.), &
+      & new_unittest("incorrect-root", test_incorrect_root, should_fail=.true.), &
       & new_unittest("incorrect-lattice", test_incorrect_lattice, should_fail=.true.), &
+      & new_unittest("incorrect-lattice-table", test_incorrect_lattice_table, should_fail=.true.), &
       & new_unittest("incorrect-lattice-value", test_incorrect_lattice_value, should_fail=.true.), &
       & new_unittest("incorrect-lattice-size", test_incorrect_lattice_size, should_fail=.true.), &
-      & new_unittest("incorrect-lattice-dim", test_incorrect_lattice_dim, should_fail=.true.) &
+      & new_unittest("incorrect-lattice-dim", test_incorrect_lattice_dim, should_fail=.true.), &
+      & new_unittest("incorrect-lattice-rank", test_incorrect_lattice_rank, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_pymatgen
@@ -801,6 +804,51 @@ subroutine test_incorrect_xyz_value(error)
 
 end subroutine test_incorrect_xyz_value
 
+subroutine test_incorrect_root(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol13.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '[{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}]'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_root
+
 subroutine test_incorrect_lattice(error)
 
    !> Error handling
@@ -1127,5 +1175,157 @@ subroutine test_incorrect_lattice_dim(error)
    close(unit, status='delete')
 
 end subroutine test_incorrect_lattice_dim
+
+subroutine test_incorrect_lattice_rank(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-sol5.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Structure",', &
+      '  "charge": 0.0,', &
+      '  "lattice": {', &
+      '    "matrix": [', &
+      '      5.59003664376222,', &
+      '      8.68089159045265,', &
+      '      8.68089159045265', &
+      '    ],', &
+      '    "pbc": [true, true, true],', &
+      '    "a": 5.59003664376222,', &
+      '    "b": 8.68089159045265,', &
+      '    "c": 8.68089159045265,', &
+      '    "alpha": 90.0,', &
+      '    "beta": 90.0,', &
+      '    "gamma": 90.0,', &
+      '    "volume": 421.253303917213', &
+      '  },', &
+      '  "properties": {},', &
+      '  "sites": [', &
+      '    {', &
+      '      "species": [{"element": "Ti", "occu": 1}],', &
+      '      "abc": [0.0, 0.0, 0.0],', &
+      '      "properties": {},', &
+      '      "label": "Ti",', &
+      '      "xyz": [0.0, 0.0, 0.0]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "Ti", "occu": 1}],', &
+      '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
+      '      "properties": {},', &
+      '      "label": "Ti",', &
+      '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
+      '    }', &
+      '  ]', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_lattice_rank
+
+subroutine test_incorrect_lattice_table(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-sol6.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Structure",', &
+      '  "charge": 0.0,', &
+      '  "lattice": [],', &
+      '  "properties": {},', &
+      '  "sites": [', &
+      '    {', &
+      '      "species": [{"element": "Ti", "occu": 1}],', &
+      '      "abc": [0.0, 0.0, 0.0],', &
+      '      "properties": {},', &
+      '      "label": "Ti",', &
+      '      "xyz": [0.0, 0.0, 0.0]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "Ti", "occu": 1}],', &
+      '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
+      '      "properties": {},', &
+      '      "label": "Ti",', &
+      '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
+      '    },', &
+      '    {', &
+      '      "species": [{"element": "O", "occu": 1}], ', &
+      '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
+      '      "properties": {},', &
+      '      "label": "O",', &
+      '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
+      '    }', &
+      '  ]', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_lattice_table
 
 end module test_read_pymatgen

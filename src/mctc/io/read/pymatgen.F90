@@ -48,18 +48,17 @@ subroutine read_pymatgen(self, unit, error)
 
 #if WITH_JSON
    class(json_value), allocatable :: root
-   type(json_object), pointer :: object, child, extras, child2
+   type(json_object), pointer :: object, child
    type(json_array), pointer :: array, child_array
    type(json_error), allocatable :: parse_error
    type(json_keyval), pointer :: val
    type(json_context) :: ctx
 
-   integer :: stat, origin, charge, multiplicity, iat, ilt
-   integer :: origin_symbols, origin_geometry
-   character(len=:), allocatable :: symbol, message, module_name, class_name, comment
+   integer :: stat, origin, multiplicity, iat, ilt
+   character(len=:), allocatable :: symbol, module_name, class_name
    character(len=symbol_length), allocatable :: sym(:)
    logical :: periodic
-   integer, allocatable :: bond(:, :), list(:)
+   real(wp) :: charge
    real(wp), allocatable :: xyz(:, :), lattice(:, :), vec(:)
 
    call json_load(root, unit, config=json_parser_config(context_detail=1), &
@@ -101,13 +100,14 @@ subroutine read_pymatgen(self, unit, error)
    end if
    periodic = class_name == "Structure"
 
+   call get_value(object, "charge", charge, default=0.0_wp, stat=stat, origin=origin)
+   if (stat /= json_stat%success) then
+      call fatal_error(error, ctx%report("Could not read charge", origin=origin, &
+         & label="Expected integer value"))
+      return
+   end if
+
    if (.not.periodic) then
-      call get_value(object, "charge", charge, default=0, stat=stat, origin=origin)
-      if (stat /= json_stat%success) then
-         call fatal_error(error, ctx%report("Could not read charge", origin=origin, &
-            & label="Expected integer value"))
-         return
-      end if
       call get_value(object, "spin_multiplicity", multiplicity, default=1, &
          & stat=stat, origin=origin)
       if (stat /= json_stat%success) then
@@ -213,8 +213,7 @@ subroutine read_pymatgen(self, unit, error)
       end do
    end if
 
-   call new(self, sym, xyz, charge=real(charge, wp), &
-      & uhf=multiplicity-1, lattice=lattice)
+   call new(self, sym, xyz, charge=charge, uhf=multiplicity-1, lattice=lattice)
 
 #else
    call fatal_error(error, "JSON support not enabled")
