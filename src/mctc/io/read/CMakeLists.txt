@@ -24,6 +24,7 @@ list(
   "${dir}/qchem.f90"
   "${dir}/qcschema.F90"
   "${dir}/pdb.f90"
+  "${dir}/pymatgen.F90"
   "${dir}/turbomole.f90"
   "${dir}/vasp.f90"
   "${dir}/xyz.f90"

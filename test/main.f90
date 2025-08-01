@@ -29,6 +29,7 @@ program tester
    use test_read_gaussian, only : collect_read_gaussian
    use test_read_genformat, only : collect_read_genformat
    use test_read_pdb, only : collect_read_pdb
+   use test_read_pymatgen, only : collect_read_pymatgen
    use test_read_qchem, only : collect_read_qchem
    use test_read_qcschema, only : collect_read_qcschema
    use test_read_turbomole, only : collect_read_turbomole
@@ -42,6 +43,7 @@ program tester
    use test_write_gaussian, only : collect_write_gaussian
    use test_write_genformat, only : collect_write_genformat
    use test_write_pdb, only : collect_write_pdb
+   use test_write_pymatgen, only : collect_write_pymatgen
    use test_write_qchem, only : collect_write_qchem
    use test_write_qcschema, only : collect_write_qcschema
    use test_write_turbomole, only : collect_write_turbomole
@@ -68,6 +70,7 @@ program tester
       & new_testsuite("read-gaussian", collect_read_gaussian), &
       & new_testsuite("read-genformat", collect_read_genformat), &
       & new_testsuite("read-pdb", collect_read_pdb), &
+      & new_testsuite("read-pymatgen", collect_read_pymatgen), &
       & new_testsuite("read-qchem", collect_read_qchem), &
       & new_testsuite("read-qcschema", collect_read_qcschema), &
       & new_testsuite("read-turbomole", collect_read_turbomole), &
@@ -80,6 +83,7 @@ program tester
       & new_testsuite("write-gaussian", collect_write_gaussian), &
       & new_testsuite("write-genformat", collect_write_genformat), &
       & new_testsuite("write-pdb", collect_write_pdb), &
+      & new_testsuite("write-pymatgen", collect_write_pymatgen), &
       & new_testsuite("write-qchem", collect_write_qchem), &
       & new_testsuite("write-qcschema", collect_write_qcschema), &
       & new_testsuite("write-turbomole", collect_write_turbomole), &

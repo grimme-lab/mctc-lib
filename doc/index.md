@@ -13,5 +13,6 @@ This library supports reading and writing of the following formats:
 - [Gaussian external format](./format-ein.html)
 - [Chemical JSON format](./format-cjson.html)
 - [QCSchema JSON format](./format-qcschema.html)
+- [Pymatgen JSON format](./format-pymatgen.html)
 - [FHI-aims geometry.in](./format-aims.html)
 - [Q-Chem molecule format](./format-qchem.html)

@@ -63,6 +63,9 @@ module mctc_io_filetype
       !> Chemical JSON format (avogadro)
       integer :: cjson = 12
 
+      !> Pymatgen JSON format
+      integer :: pymatgen = 13
+
    end type enum_filetype
 
    !> File type enumerator
@@ -110,6 +113,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%cjson
       case('qchem')
          ftype = filetype%qchem
+      case('pmgjson')
+         ftype = filetype%pymatgen
       end select
       if (ftype /= filetype%unknown) return
    else

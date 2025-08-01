@@ -23,6 +23,7 @@ module mctc_io_read
    use mctc_io_read_qchem, only : read_qchem
    use mctc_io_read_qcschema, only : read_qcschema
    use mctc_io_read_pdb, only : read_pdb
+   use mctc_io_read_pymatgen, only : read_pymatgen
    use mctc_io_read_turbomole, only : read_coord
    use mctc_io_read_vasp, only : read_vasp
    use mctc_io_read_xyz, only : read_xyz
@@ -155,6 +156,9 @@ subroutine get_structure_reader(reader, ftype)
 
    case(filetype%pdb)
       reader => read_pdb
+
+   case(filetype%pymatgen)
+      reader => read_pymatgen
 
    case(filetype%gen)
       reader => read_genformat

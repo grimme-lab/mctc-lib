@@ -21,6 +21,7 @@ module mctc_io_write
    use mctc_io_write_gaussian, only : write_gaussian_external
    use mctc_io_write_genformat, only : write_genformat
    use mctc_io_write_pdb, only : write_pdb
+   use mctc_io_write_pymatgen, only : write_pymatgen
    use mctc_io_write_qchem, only : write_qchem
    use mctc_io_write_qcschema, only : write_qcschema
    use mctc_io_write_turbomole, only : write_coord
@@ -116,6 +117,9 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
 
    case(filetype%pdb)
       call write_pdb(self, unit)
+
+   case(filetype%pymatgen)
+      call write_pymatgen(self, unit)
 
    case(filetype%gen)
       call write_genformat(self, unit)
