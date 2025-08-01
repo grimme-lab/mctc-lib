@@ -38,7 +38,18 @@ subroutine collect_read_pymatgen(testsuite)
 
    testsuite = [ &
       & new_unittest("valid-pymatgen-mol1", test_valid_mol1, should_fail=.not.with_json), &
-      & new_unittest("valid-pymatgen-sol1", test_valid_sol1, should_fail=.not.with_json) &
+      & new_unittest("valid-pymatgen-sol1", test_valid_sol1, should_fail=.not.with_json), &
+      & new_unittest("missing-module", test_missing_module, should_fail=.true.), &
+      & new_unittest("incorrect-module", test_incorrect_module, should_fail=.true.), &
+      & new_unittest("missing-class", test_missing_class, should_fail=.true.), &
+      & new_unittest("incorrect-class", test_incorrect_class, should_fail=.true.), &
+      & new_unittest("incorrect-charge", test_incorrect_charge, should_fail=.true.), &
+      & new_unittest("incorrect-multiplicity", test_incorrect_multiplicity, should_fail=.true.), &
+      & new_unittest("unphysical-multiplicity", test_unphysical_multiplicity, should_fail=.true.), &
+      & new_unittest("incorrect-sites", test_incorrect_sites, should_fail=.true.), &
+      & new_unittest("incorrect-sites-entry", test_incorrect_sites_entry, should_fail=.true.), &
+      & new_unittest("incorrect-label", test_incorrect_label, should_fail=.true.), &
+      & new_unittest("incorrect-xyz", test_incorrect_xyz, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_pymatgen
@@ -232,5 +243,466 @@ subroutine test_valid_sol1(error)
 
 end subroutine test_valid_sol1
 
+
+subroutine test_missing_module(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol1.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_missing_module
+
+
+subroutine test_incorrect_module(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol2.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "mctc.io.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_module
+
+subroutine test_missing_class(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol3.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_missing_class
+
+
+subroutine test_incorrect_class(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol4.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Geometry",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_class
+
+subroutine test_incorrect_charge(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol5.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": "neutral",', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_charge
+
+subroutine test_incorrect_multiplicity(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol5.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": "singlet",', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_multiplicity
+
+subroutine test_unphysical_multiplicity(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol6.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 0,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_unphysical_multiplicity
+
+subroutine test_incorrect_sites(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol7.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": "missing",', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_sites
+
+subroutine test_incorrect_sites_entry(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol8.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    ["O", 1.1847029, 1.1150792,-0.0344641],', &
+      '    ["H", 0.4939088, 0.9563767, 0.6340089],', &
+      '    ["H", 2.0242676, 1.0811246, 0.4301417]', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_sites_entry
+
+subroutine test_incorrect_label(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol9.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": 8, "label": 8', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": 1, "label": 1', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": 1, "label": 1', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_label
+
+subroutine test_incorrect_xyz(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: filename = ".test-invalid-pmg-mol10.json"
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   write(unit, '(a)') &
+      '{', &
+      '  "@module": "pymatgen.core.structure",', &
+      '  "@class": "Molecule",', &
+      '  "charge": 0,', &
+      '  "spin_multiplicity": 1,', &
+      '  "sites": [', &
+      '    {', &
+      '      "name": "O", "label": "O",', &
+      '      "species": [{"element": "O", "occu": 1}],', &
+      '      "xyz": "1.1847029, 1.1150792, -0.0344641",', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": "0.4939088, 0.9563767, 0.6340089",', &
+      '      "properties": {}', &
+      '    },', &
+      '    {', &
+      '      "name": "H", "label": "H",', &
+      '      "species": [{"element": "H", "occu": 1}],', &
+      '      "xyz": "2.0242676, 1.0811246, 0.4301417",', &
+      '      "properties": {}', &
+      '    }', &
+      '  ],', &
+      '  "properties": {}', &
+      '}'
+   rewind(unit)
+
+   call read_pymatgen(struc, unit, error)
+   close(unit, status='delete')
+
+end subroutine test_incorrect_xyz
 
 end module test_read_pymatgen

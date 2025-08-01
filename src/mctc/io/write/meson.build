@@ -19,6 +19,7 @@ srcs += files(
   'gaussian.f90',
   'genformat.f90',
   'pdb.f90',
+  'pymatgen.f90',
   'qchem.f90',
   'qcschema.f90',
   'turbomole.f90',

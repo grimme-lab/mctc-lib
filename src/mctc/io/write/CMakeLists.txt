@@ -22,6 +22,7 @@ list(
   "${dir}/gaussian.f90"
   "${dir}/genformat.f90"
   "${dir}/pdb.f90"
+  "${dir}/pymatgen.f90"
   "${dir}/qchem.f90"
   "${dir}/qcschema.f90"
   "${dir}/turbomole.f90"

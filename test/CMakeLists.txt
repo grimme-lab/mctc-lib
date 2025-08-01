@@ -40,6 +40,7 @@ set(
   "write-gaussian"
   "write-genformat"
   "write-pdb"
+  "write-pymatgen"
   "write-qchem"
   "write-qcschema"
   "write-turbomole"
