@@ -6,7 +6,7 @@ title: Pymatgen JSON
 
 @Note [Reference](https://pymatgen.org)
 
-Pymatgen formatted JSON files are identified by the extension ``pmgjson`` and parsed following the ``Molecule`` or ``Structure`` format.
+Pymatgen formatted JSON files are identified by the extension ``pmgjson`` or ``json`` and parsed following the ``Molecule`` or ``Structure`` format.
 
 
 ## Example

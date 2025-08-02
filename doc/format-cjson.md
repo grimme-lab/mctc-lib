@@ -6,7 +6,7 @@ title: Chemical JSON
 
 @Note [Reference](https://github.com/OpenChemistry/avogadrolibs/blob/master/avogadro/io/cjsonformat.cpp)
 
-Chemical JSON files are identified by the extension ``cjson`` and parsed following the format implemented in Avogadro 2.
+Chemical JSON files are identified by the extension ``cjson`` or ``json`` and parsed following the format implemented in Avogadro 2.
 The entries *name*, *atoms.elements.number*, *atoms.coords.3d*, *atoms.coords.3d fractional*, *unit cell*, *atoms.formalCharges*, *bonds.connections.index*, and *bonds.order* are recognized by the reader.
 
 
