@@ -18,6 +18,7 @@ srcs += files(
   'ctfile.f90',
   'gaussian.f90',
   'genformat.f90',
+  'json.F90',
   'qchem.f90',
   'qcschema.F90',
   'pdb.f90',

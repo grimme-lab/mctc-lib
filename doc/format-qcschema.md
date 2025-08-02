@@ -6,7 +6,7 @@ title: QCSchema JSON
 
 @Note [Reference](https://molssi-qc-schema.readthedocs.io)
 
-JSON files are identified by the extension ``json`` and parsed following the ``qcschema_molecule`` or ``qcschema_input`` format.
+JSON files are identified by the extension ``qcjson`` or ``json`` and parsed following the ``qcschema_molecule`` or ``qcschema_input`` format.
 The ``molecule`` entry from a ``qcschema_input`` will be extracted, but there is no guarantee that the input information will be used by the program.
 
 

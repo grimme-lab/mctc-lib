@@ -25,6 +25,7 @@ set(
   "read-ctfile"
   "read-gaussian"
   "read-genformat"
+  "read-json"
   "read-pdb"
   "read-pymatgen"
   "read-qchem"

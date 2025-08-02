@@ -32,6 +32,13 @@ module mctc_io_read_cjson
 
    public :: read_cjson
 
+#if WITH_JSON
+   interface read_cjson
+      module procedure read_cjson
+      module procedure load_cjson
+   end interface read_cjson
+#endif
+
 
 contains
 
@@ -49,21 +56,9 @@ subroutine read_cjson(self, unit, error)
 
 #if WITH_JSON
    class(json_value), allocatable :: root
-   type(json_object), pointer :: object, child, child2
-   type(json_array), pointer :: array, child_array
-   type(json_keyval), pointer :: val
+   type(json_object), pointer :: object
    type(json_error), allocatable :: parse_error
    type(json_context) :: ctx
-
-   logical :: cartesian, found
-   integer :: stat, origin, schema_version, charge, multiplicity, ibond
-   integer :: origin_elements, origin_coords
-   character(len=:), allocatable :: input, line, message, comment
-   integer, allocatable :: num(:), bond(:, :), list(:), order(:)
-   real(wp) :: cellpar(6)
-   real(wp), allocatable :: lattice(:, :)
-   real(wp), allocatable, target :: geo(:)
-   real(wp), pointer :: xyz(:, :)
 
    call json_load(root, unit, config=json_parser_config(context_detail=1), &
       & context=ctx, error=parse_error)
@@ -77,6 +72,42 @@ subroutine read_cjson(self, unit, error)
       call fatal_error(error, ctx%report("Invalid JSON object", root%origin, "Expected JSON object"))
       return
    end if
+
+   call load_cjson(self, object, ctx, error)
+#else
+   call fatal_error(error, "JSON support not enabled")
+#endif
+end subroutine read_cjson
+
+
+#if WITH_JSON
+subroutine load_cjson(self, object, ctx, error)
+
+   !> Instance of the molecular structure data
+   type(structure_type), intent(out) :: self
+
+   !> JSON object representing the structure
+   type(json_object), intent(inout) :: object
+
+   !> JSON context for error reporting
+   type(json_context), intent(inout) :: ctx
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(json_object), pointer :: child, child2
+   type(json_array), pointer :: array, child_array
+   type(json_keyval), pointer :: val
+
+   logical :: cartesian, found
+   integer :: stat, origin, schema_version, charge, multiplicity, ibond
+   integer :: origin_elements, origin_coords
+   character(len=:), allocatable :: input, line, message, comment
+   integer, allocatable :: num(:), bond(:, :), list(:), order(:)
+   real(wp) :: cellpar(6)
+   real(wp), allocatable :: lattice(:, :)
+   real(wp), allocatable, target :: geo(:)
+   real(wp), pointer :: xyz(:, :)
 
    call cjson_get_value(object, "chemicalJson", "chemical json", val, stat=stat, origin=origin)
    if (.not.associated(val) .or. stat /= json_stat%success) then
@@ -247,10 +278,8 @@ subroutine read_cjson(self, unit, error)
       call move_alloc(bond, self%bond)
    end if
 
-#else
-   call fatal_error(error, "JSON support not enabled")
+end subroutine load_cjson
 #endif
-end subroutine read_cjson
 
 #if WITH_JSON
 subroutine cjson_get_child(object, key1, key2, child, stat, origin)

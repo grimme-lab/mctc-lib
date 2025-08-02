@@ -28,6 +28,7 @@ program tester
    use test_read_ctfile, only : collect_read_ctfile
    use test_read_gaussian, only : collect_read_gaussian
    use test_read_genformat, only : collect_read_genformat
+   use test_read_json, only : collect_read_json
    use test_read_pdb, only : collect_read_pdb
    use test_read_pymatgen, only : collect_read_pymatgen
    use test_read_qchem, only : collect_read_qchem
@@ -69,6 +70,7 @@ program tester
       & new_testsuite("read-ctfile", collect_read_ctfile), &
       & new_testsuite("read-gaussian", collect_read_gaussian), &
       & new_testsuite("read-genformat", collect_read_genformat), &
+      & new_testsuite("read-json", collect_read_json), &
       & new_testsuite("read-pdb", collect_read_pdb), &
       & new_testsuite("read-pymatgen", collect_read_pymatgen), &
       & new_testsuite("read-qchem", collect_read_qchem), &

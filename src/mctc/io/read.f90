@@ -20,6 +20,7 @@ module mctc_io_read
    use mctc_io_read_ctfile, only : read_molfile, read_sdf
    use mctc_io_read_gaussian, only : read_gaussian_external
    use mctc_io_read_genformat, only : read_genformat
+   use mctc_io_read_json, only : read_json
    use mctc_io_read_qchem, only : read_qchem
    use mctc_io_read_qcschema, only : read_qcschema
    use mctc_io_read_pdb, only : read_pdb
@@ -180,6 +181,9 @@ subroutine get_structure_reader(reader, ftype)
 
    case(filetype%qchem)
       reader => read_qchem
+
+   case(filetype%json)
+      reader => read_json
 
    end select
 

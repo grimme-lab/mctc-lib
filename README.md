@@ -7,6 +7,47 @@
 [![codecov](https://codecov.io/gh/grimme-lab/mctc-lib/branch/main/graph/badge.svg)](https://codecov.io/gh/grimme-lab/mctc-lib)
 
 
+## Supported formats
+
+This library supports reading and writing in more than ten different geometry formats, including general ASCII formats, like xyz, JSON based formats, like QCSchema, and program specific formats, for example compatible with Turbomole or Vasp.
+
+*General geometry formats*
+
+- [xyz][xyz] file format with ``xyz`` extension
+- [Protein data base][pdb] file format with ``pdb`` extension
+- [mol][ctfile] and [structure data][ctfile] connection table file formats with ``mol`` and ``sdf`` extension, respectively
+
+[xyz]: http://www.ccl.net/chemistry/resources/messages/1996/10/21.005-dir/index.html
+[pdb]: http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
+[ctfile]: https://www.daylight.com/meetings/mug05/Kappler/ctfile.pdf
+
+*JSON based formats*
+
+- [Pymatgen JSON][pmg] with ``pmgjson`` or ``json`` extension
+- [QCSchema JSON][qcsk] with ``qcjson`` or ``json`` extension
+- [Chemical JSON][cjson] with ``cjson`` or ``json`` extension
+
+[pmg]: https://pymatgen.org
+[qcsk]: https://molssi-qc-schema.readthedocs.io
+[cjson]: https://github.com/OpenChemistry/avogadrolibs/blob/master/avogadro/io/cjsonformat.cpp
+
+*Program specific formats*
+
+- [Q-Chem molecule][qchem] file format with ``qchem`` extension
+- [Turbomole coord][tmol] file format with ``tmol`` or ``coord`` extension
+- [VASP POSCAR and CONTCAR][vasp] files with ``vasp``, ``poscar``, or ``contcar`` extension
+- [DFTB+ gen][gen] format with ``gen`` extension
+- [Gaussian external][ein] format with ``ein`` extension
+- [FHI-aims][aims] ``geometry.in`` input files
+
+[aims]: https://fhi-aims.org
+[qchem]: https://manual.q-chem.com
+[tmol]: https://www.turbomole.org
+[gen]: https://dftbplus.org
+[ein]: https://gaussian.com/external/
+[vasp]: https://www.vasp.at/wiki/index.php
+
+
 ## Installation
 
 To build this project from the source code in this repository you need to have
