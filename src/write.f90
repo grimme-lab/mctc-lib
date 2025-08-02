@@ -139,7 +139,7 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
    case(filetype%cjson)
       call write_cjson(self, unit)
 
-   case(filetype%qcschema)
+   case(filetype%qcschema, filetype%json)
       call write_qcschema(self, unit)
 
    case(filetype%aims)

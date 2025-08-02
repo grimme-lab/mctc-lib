@@ -30,6 +30,12 @@ module mctc_io_read_qcschema
 
    public :: read_qcschema
 
+#if WITH_JSON
+   interface read_qcschema
+      module procedure read_qcschema
+      module procedure load_qcschema
+   end interface read_qcschema
+#endif
 
 contains
 
@@ -47,19 +53,9 @@ subroutine read_qcschema(self, unit, error)
 
 #if WITH_JSON
    class(json_value), allocatable :: root
-   type(json_object), pointer :: object, child, extras, child2
-   type(json_array), pointer :: array, child_array
+   type(json_object), pointer :: object
    type(json_error), allocatable :: parse_error
-   type(json_keyval), pointer :: val
    type(json_context) :: ctx
-
-   integer :: stat, origin, schema_version, charge, multiplicity, iat, ibond
-   integer :: origin_symbols, origin_geometry
-   character(len=:), allocatable :: symbol, message, schema_name, comment
-   character(len=symbol_length), allocatable :: sym(:)
-   integer, allocatable :: bond(:, :), list(:)
-   real(wp), allocatable, target :: geo(:), lat(:)
-   real(wp), pointer :: xyz(:, :), lattice(:, :)
 
    call json_load(root, unit, config=json_parser_config(context_detail=1), &
       & context=ctx, error=parse_error)
@@ -73,6 +69,39 @@ subroutine read_qcschema(self, unit, error)
       call fatal_error(error, ctx%report("Invalid JSON object", root%origin, "Expected JSON object"))
       return
    end if
+
+   call load_qcschema(self, object, ctx, error)
+#else
+   call fatal_error(error, "JSON support not enabled")
+#endif
+end subroutine read_qcschema
+
+#if WITH_JSON
+subroutine load_qcschema(self, object, ctx, error)
+
+   !> Instance of the molecular structure data
+   type(structure_type), intent(out) :: self
+
+   !> JSON object representing the structure
+   type(json_object), target, intent(inout) :: object
+
+   !> JSON context for error reporting
+   type(json_context), intent(inout) :: ctx
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(json_object), pointer :: root, child, extras, child2
+   type(json_array), pointer :: array, child_array
+   type(json_keyval), pointer :: val
+
+   integer :: stat, origin, schema_version, charge, multiplicity, iat, ibond
+   integer :: origin_symbols, origin_geometry
+   character(len=:), allocatable :: symbol, message, schema_name, comment
+   character(len=symbol_length), allocatable :: sym(:)
+   integer, allocatable :: bond(:, :), list(:)
+   real(wp), allocatable, target :: geo(:), lat(:)
+   real(wp), pointer :: xyz(:, :), lattice(:, :)
 
    call get_value(object, "schema_version", schema_version, default=2, stat=stat, origin=origin)
    if (stat /= json_stat%success) then
@@ -127,20 +156,22 @@ subroutine read_qcschema(self, unit, error)
          return
       end if
 
-      object => child
+      root => child
+   else
+      root => object
    end if
 
    select case(schema_version)
    case(1)
-      call get_value(object, "molecule", child, stat=stat, origin=origin)
+      call get_value(root, "molecule", child, stat=stat, origin=origin)
       if (stat /= json_stat%success) then
          call fatal_error(error, ctx%report("Could not read molecule", origin=origin))
          return
       end if
    case(2)
-      child => object
+      child => root
    case default
-      call get_value(object, "schema_version", val, requested=.false.)
+      call get_value(root, "schema_version", val, requested=.false.)
       if (associated(val)) origin = val%origin_value
       call fatal_error(error, ctx%report("Unsupported schema version for 'qcschema_molecule'", &
          & origin, "Expected 1 or 2"))
@@ -267,10 +298,8 @@ subroutine read_qcschema(self, unit, error)
       call move_alloc(bond, self%bond)
    end if
 
-#else
-   call fatal_error(error, "JSON support not enabled")
+end subroutine load_qcschema
 #endif
-end subroutine read_qcschema
 
 
 end module mctc_io_read_qcschema

@@ -10,7 +10,7 @@
     <meta name="author" content="Grimme group, Bonn" >
     <link rel="icon" href="../favicon.png">
 
-    <title>sdf_data &ndash; MCTC-library </title>
+    <title>mctc_io_read_json &ndash; MCTC-library</title>
 
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
@@ -84,8 +84,8 @@
 
     <div class="container">
   <div class="row">
-    <h1>sdf_data
-      <small>Derived Type</small>
+    <h1>mctc_io_read_json
+      <small>Module</small>
       
     </h1>
       <div class="container p-2 mb-4 bg-light border rounded-3">
@@ -95,21 +95,20 @@
 
             <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
               <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
-                 title="<p> 5.7% of total for derived types.</p>Including implementation: 6 statements,  0.5% of total for derived types.">6 statements</a>
+                 title=" 0.3% of total for modules and submodules.">20 statements</a>
             </li>
 
             <li class="list-inline-item" id="source-file">
               <i class="fa fa-code"></i>
-              <a href="../src/info.f90"> Source File</a>
+              <a href="../src/json.F90"> Source File</a>
             </li>
         </ul>
       </div>
       <div class="col">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb justify-content-end mb-0">
-                <li class="breadcrumb-item"><a href='../sourcefile/info.f90.html'>info.f90</a></li>
-                <li class="breadcrumb-item"><a href='../module/mctc_io_structure_info.html'>mctc_io_structure_info</a></li>
-            <li class="breadcrumb-item active" aria-current="page">sdf_data</li>
+                <li class="breadcrumb-item"><a href='../sourcefile/json.f90.html'>json.F90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">mctc_io_read_json</li>
           </ol>
         </nav>
       </div>
@@ -124,23 +123,31 @@
   </script>
 
   </div>
-  
+
   <div class="row">
-    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
-      <div id="sidebar">
+    <div class="col-md-3">
+        <div id="sidebar">
       <h3>Contents</h3>
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
       <div class="card mb-4">
-      <a data-bs-toggle="collapse" href="#vars-0"
-         aria-expanded="false" aria-controls="vars-0">
-         <h4 class="card-header bg-primary text-white">Variables</h4>
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
       </a>
-      <div id="vars-0" class="collapse">
+      <div id="subs-0" class="collapse">
         <div class="list-group list-group-flush">
-            <a class="list-group-item" href="../type/sdf_data.html#variable-charge~9">charge</a>
-            <a class="list-group-item" href="../type/sdf_data.html#variable-hydrogens">hydrogens</a>
-            <a class="list-group-item" href="../type/sdf_data.html#variable-isotope">isotope</a>
-            <a class="list-group-item" href="../type/sdf_data.html#variable-valence">valence</a>
+            <a class="list-group-item" href="../module/mctc_io_read_json.html#proc-read_json">read_json</a>
         </div>
       </div>
     </div>
@@ -152,138 +159,121 @@
   
   
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-    <div class="card card-primary">
-      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
-      <div class="list-group">
-        <a class="list-group-item" href="../type/sdf_data.html#src">sdf_data</a>
-      </div>
-    </div>
 
 
   </div>
 
     </div>
-    
-    <div class="col-md-9" id='text'>
-      <h2 id="type-def-statement">
-        type, public :: sdf_data</h2>
-    <p>SDF atomic data.</p>
-<p>We only support some entries, the rest is simply dropped.
-the format is: ddcccssshhhbbbvvvHHHrrriiimmmnnneee</p>
-    <br>
 
-    <section>
-    <h2>Components</h2>
+    <div class="col-md-9" id='text'>
+      
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='mctc_io_read_pymatgen.html'>mctc_io_read_pymatgen</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_structure.html'>mctc_io_structure</a></li>
+                  <li class="list-inline-item"><a href='mctc_env_accuracy.html'>mctc_env_accuracy</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_utils.html'>mctc_io_utils</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_qcschema.html'>mctc_io_read_qcschema</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_read_cjson.html'>mctc_io_read_cjson</a></li>
+                  <li class="list-inline-item"><a href='mctc_env_error.html'>mctc_env_error</a></li>
+                  <li class="list-inline-item"><a href='mctc_io_symbols.html'>mctc_io_symbols</a></li>
+              </ul>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      
+      <br>
+
+
+
+
+
+
+
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-read_json"></span> <h3>public  subroutine <a href='../proc/read_json.html'>read_json</a>(self, unit, error)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
       <table class="table table-striped varlist">
     <thead>
       <tr>
         <th scope="col">Type</th>
-<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
         <th scope="col"></th>
         <th scope="col">Name</th>
-<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+        <th scope="col"></th>
     </thead>
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-charge~9"></span>
-              integer,
+              <span class="anchor" id="variable-self~11"></span>
+              type(<a href='../type/structure_type.html'>structure_type</a>),
             </td>
-              <td>public</td>
-            <td>
+<td>intent(out)</td>
+              <td></td>            <td>
               
             </td>
             <td>::</td>
-            <td><strong>charge</strong></td>
-<td> =</td>
-                <td>0</td>
+            <td><strong>self</strong></td>
             <td>
-                <p>c field</p>
+<p>Instance of the molecular structure data</p>
             </td>
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-hydrogens"></span>
+              <span class="anchor" id="variable-unit~12"></span>
               integer,
             </td>
-              <td>public</td>
-            <td>
+<td>intent(in)</td>
+              <td></td>            <td>
               
             </td>
             <td>::</td>
-            <td><strong>hydrogens</strong></td>
-<td> =</td>
-                <td>0</td>
+            <td><strong>unit</strong></td>
             <td>
-                <p>h field</p>
+<p>File handle</p>
             </td>
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-isotope"></span>
-              integer,
+              <span class="anchor" id="variable-error~8"></span>
+              type(<a href='../type/error_type.html'>error_type</a>),
             </td>
-              <td>public</td>
-            <td>
-              
-            </td>
-            <td>::</td>
-            <td><strong>isotope</strong></td>
-<td> =</td>
-                <td>0</td>
-            <td>
-                <p>d field</p>
-            </td>
-        </tr>
-        <tr>
-            <td>
-              <span class="anchor" id="variable-valence"></span>
-              integer,
-            </td>
-              <td>public</td>
-            <td>
-              
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
             </td>
             <td>::</td>
-            <td><strong>valence</strong></td>
-<td> =</td>
-                <td>0</td>
+            <td><strong>error</strong></td>
             <td>
-                <p>v field</p>
+<p>Error handling</p>
             </td>
         </tr>
     </tbody>
   </table>
 
-    </section>
-    <br>
-    
+
+    </div>
+  </div>
+
+        </section>
+        <br>
 
 
 
-    <section>
-    <h3><span class="anchor" id="src"></span>Source Code</h3>
-    <div class="hl codehilite"><pre><span></span><span class="w">   </span><span class="k">type</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sdf_data</span>
-<span class="w">      </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">isotope</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">   </span><span class="c">!&lt; d field</span>
-<span class="w">      </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">charge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">    </span><span class="c">!&lt; c field</span>
-<span class="w">      </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">hydrogens</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="c">!&lt; h field</span>
-<span class="w">      </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">valence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">   </span><span class="c">!&lt; v field</span>
-<span class="w">   </span><span class="k">end type </span><span class="n">sdf_data</span>
-</pre></div>
-
-    </section>
-    
     </div>
   </div>
 

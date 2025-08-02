@@ -66,6 +66,9 @@ module mctc_io_filetype
       !> Pymatgen JSON format
       integer :: pymatgen = 13
 
+      !> General JSON format
+      integer :: json = 14
+
    end type enum_filetype
 
    !> File type enumerator
@@ -107,7 +110,7 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%gen
       case('ein')
          ftype = filetype%gaussian
-      case('json')
+      case('qcjson')
          ftype = filetype%qcschema
       case('cjson')
          ftype = filetype%cjson
@@ -115,6 +118,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%qchem
       case('pmgjson')
          ftype = filetype%pymatgen
+      case('json')
+         ftype = filetype%json
       end select
       if (ftype /= filetype%unknown) return
    else

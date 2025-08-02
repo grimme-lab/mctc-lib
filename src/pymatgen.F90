@@ -31,6 +31,13 @@ module mctc_io_read_pymatgen
 
    public :: read_pymatgen
 
+#if WITH_JSON
+   interface read_pymatgen
+      module procedure read_pymatgen
+      module procedure load_pymatgen
+   end interface read_pymatgen
+#endif
+
 
 contains
 
@@ -48,18 +55,9 @@ subroutine read_pymatgen(self, unit, error)
 
 #if WITH_JSON
    class(json_value), allocatable :: root
-   type(json_object), pointer :: object, child
-   type(json_array), pointer :: array, child_array
+   type(json_object), pointer :: object
    type(json_error), allocatable :: parse_error
-   type(json_keyval), pointer :: val
    type(json_context) :: ctx
-
-   integer :: stat, origin, multiplicity, iat, ilt
-   character(len=:), allocatable :: symbol, module_name, class_name
-   character(len=symbol_length), allocatable :: sym(:)
-   logical :: periodic
-   real(wp) :: charge
-   real(wp), allocatable :: xyz(:, :), lattice(:, :), vec(:)
 
    call json_load(root, unit, config=json_parser_config(context_detail=1), &
       & context=ctx, error=parse_error)
@@ -73,6 +71,39 @@ subroutine read_pymatgen(self, unit, error)
       call fatal_error(error, ctx%report("Invalid JSON object", root%origin, "Expected JSON object"))
       return
    end if
+
+   call load_pymatgen(self, object, ctx, error)
+#else
+   call fatal_error(error, "JSON support not enabled")
+#endif
+end subroutine read_pymatgen
+
+
+#if WITH_JSON
+subroutine load_pymatgen(self, object, ctx, error)
+
+   !> Instance of the molecular structure data
+   type(structure_type), intent(out) :: self
+
+   !> JSON object representing the structure
+   type(json_object), intent(inout) :: object
+
+   !> JSON context for error reporting
+   type(json_context), intent(inout) :: ctx
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(json_object), pointer :: child
+   type(json_array), pointer :: array, child_array
+   type(json_keyval), pointer :: val
+
+   integer :: stat, origin, multiplicity, iat, ilt
+   character(len=:), allocatable :: symbol, module_name, class_name
+   character(len=symbol_length), allocatable :: sym(:)
+   logical :: periodic
+   real(wp) :: charge
+   real(wp), allocatable :: xyz(:, :), lattice(:, :), vec(:)
 
    call get_value(object, "@module", module_name, stat=stat, origin=origin)
    if (stat /= json_stat%success .or. .not.allocated(module_name)) then
@@ -215,10 +246,8 @@ subroutine read_pymatgen(self, unit, error)
 
    call new(self, sym, xyz, charge=charge, uhf=multiplicity-1, lattice=lattice)
 
-#else
-   call fatal_error(error, "JSON support not enabled")
+end subroutine load_pymatgen
 #endif
-end subroutine read_pymatgen
 
 
 end module mctc_io_read_pymatgen
