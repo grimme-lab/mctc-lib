@@ -378,6 +378,7 @@ subroutine test_valid5_qcschema(error)
       '  ],', &
       '  "symbols": ["O", "H", "H"],', &
       '  "connectivity": [[ 0, 1, 1],  [ 0, 2, 1]],', &
+      '  "molecular_charge": 0.0,', &
       '  "comment": "Water molecule",', &
       '  "extras": null', &
       '}'
