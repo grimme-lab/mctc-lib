@@ -95,11 +95,12 @@ subroutine load_qcschema(self, object, ctx, error)
    type(json_array), pointer :: array, child_array
    type(json_keyval), pointer :: val
 
-   integer :: stat, origin, schema_version, charge, multiplicity, iat, ibond
+   integer :: stat, origin, schema_version, multiplicity, iat, ibond
    integer :: origin_symbols, origin_geometry
    character(len=:), allocatable :: symbol, message, schema_name, comment
    character(len=symbol_length), allocatable :: sym(:)
    integer, allocatable :: bond(:, :), list(:)
+   real(wp) :: charge
    real(wp), allocatable, target :: geo(:), lat(:)
    real(wp), pointer :: xyz(:, :), lattice(:, :)
 
@@ -216,14 +217,14 @@ subroutine load_qcschema(self, object, ctx, error)
       call fatal_error(error, ctx%report("Could not read comment", origin=origin))
       return
    end if
-   call get_value(child, "molecular_charge", charge, default=0, stat=stat, origin=origin)
+   call get_value(child, "molecular_charge", charge, default=0.0_wp, stat=stat, origin=origin)
    if (stat /= json_stat%success) then
-      call fatal_error(error, ctx%report("Could not read charge", origin=origin))
+      call fatal_error(error, ctx%report("Could not read charge", origin=origin, label="Expected float or integer"))
       return
    end if
    call get_value(child, "molecular_multiplicity", multiplicity, default=1, stat=stat, origin=origin)
    if (stat /= json_stat%success) then
-      call fatal_error(error, ctx%report("Could not read multiplicity", origin=origin))
+      call fatal_error(error, ctx%report("Could not read multiplicity", origin=origin, label="Expected integer"))
       return
    end if
 
@@ -291,7 +292,7 @@ subroutine load_qcschema(self, object, ctx, error)
    end if
 
    xyz(1:3, 1:size(geo)/3) => geo
-   call new(self, sym, xyz, charge=real(charge, wp), uhf=multiplicity-1, lattice=lattice)
+   call new(self, sym, xyz, charge=charge, uhf=multiplicity-1, lattice=lattice)
    if (len(comment) > 0) self%comment = comment
    if (allocated(bond)) then
       self%nbd = size(bond, 2)
