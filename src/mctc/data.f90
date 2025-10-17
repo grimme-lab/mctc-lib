@@ -22,9 +22,10 @@
 module mctc_data
    use mctc_data_atomicrad, only : get_atomic_rad
    use mctc_data_covrad, only : get_covalent_rad
+   use mctc_data_mass, only : get_atomic_mass
    use mctc_data_paulingen, only : get_pauling_en
    use mctc_data_vdwrad, only : get_vdw_rad
    implicit none
 
-   public :: get_atomic_rad, get_covalent_rad, get_pauling_en, get_vdw_rad
+   public :: get_atomic_rad, get_covalent_rad, get_pauling_en, get_vdw_rad, get_atomic_mass
 end module mctc_data
