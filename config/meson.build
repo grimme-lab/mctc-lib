@@ -54,6 +54,7 @@ endif
 
 jonquil_dep = dependency(
   'jonquil',
+  version: '>=0.3.0',
   required: get_option('json'),
   fallback: ['jonquil','jonquil_dep'],
   default_options: [
