@@ -10,6 +10,8 @@ keywords = ["computational-chemistry", "io"]
 [dependencies]
 jonquil.git = "https://github.com/toml-f/jonquil.git"
 jonquil.tag = "v0.3.0"
+toml-f.git = "https://github.com/toml-f/toml-f.git"
+toml-f.tag = "v0.4.3"
 
 [[executable]]
 name = "mctc-convert"
