@@ -25,7 +25,7 @@ jobs:
         build: [meson, cmake]
         build-type: [debug]
         compiler: [gnu]
-        version: [12]
+        version: [14]
 
         include:
         - os: ubuntu-latest
