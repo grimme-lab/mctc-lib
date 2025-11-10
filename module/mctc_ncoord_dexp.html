@@ -177,8 +177,7 @@
     </div>
 
     <div class="col-md-9" id='text'>
-      <p>@file mctc/ncoord/dexp.f90
-Provides a coordination number implementation with double exponential counting function
+      <p>Provides a coordination number implementation with double exponential counting function
 Coordination number implementation using a double exponential counting function as in GFN2-xTB</p>
 <br>          <div class="card mb-4">
       <h3 class="card-header card-title bg-light">Uses</h3>
@@ -186,10 +185,10 @@ Coordination number implementation using a double exponential counting function 
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
               <ul class="list-inline">
-                  <li class="list-inline-item"><a href='mctc_io.html'>mctc_io</a></li>
-                  <li class="list-inline-item"><a href='mctc_ncoord_type.html'>mctc_ncoord_type</a></li>
-                  <li class="list-inline-item"><a href='mctc_data_covrad.html'>mctc_data_covrad</a></li>
                   <li class="list-inline-item"><a href='mctc_env.html'>mctc_env</a></li>
+                  <li class="list-inline-item"><a href='mctc_ncoord_type.html'>mctc_ncoord_type</a></li>
+                  <li class="list-inline-item"><a href='mctc_io.html'>mctc_io</a></li>
+                  <li class="list-inline-item"><a href='mctc_data_covrad.html'>mctc_data_covrad</a></li>
               </ul>
             </li>
         </ul>
@@ -231,7 +230,7 @@ Coordination number implementation using a double exponential counting function 
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-cut~7"></span>
+              <span class="anchor" id="variable-cut~3"></span>
               real(kind=wp),
             </td>
               <td>public</td>
@@ -248,7 +247,7 @@ Coordination number implementation using a double exponential counting function 
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-cutoff~7"></span>
+              <span class="anchor" id="variable-cutoff~3"></span>
               real(kind=wp),
             </td>
               <td>public</td>
@@ -284,7 +283,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-kcn~6"></span>
+              <span class="anchor" id="variable-kcn~3"></span>
               real(kind=wp),
             </td>
               <td>public</td>
@@ -301,7 +300,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-rcov~7"></span>
+              <span class="anchor" id="variable-rcov~5"></span>
               real(kind=wp),
             </td>
               <td>public,</td>
@@ -342,7 +341,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
               </tr>
               <tr>
                 <td>  procedure, public ::
-  <strong><a href='../type/ncoord_type.html#boundprocedure-get_en_factor~3'>get_en_factor</a></strong></td>
+  <strong><a href='../type/ncoord_type.html#boundprocedure-get_en_factor'>get_en_factor</a></strong></td>
                   <td><p>Evaluates pairwise electronegativity factor</p></td>
               </tr>
               <tr>
@@ -352,7 +351,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
               </tr>
               <tr>
                 <td>  procedure, public ::
-  <strong><a href='../type/dexp_ncoord_type.html#boundprocedure-ncoord_count~3'>ncoord_count</a></strong></td>
+  <strong><a href='../type/dexp_ncoord_type.html#boundprocedure-ncoord_count~4'>ncoord_count</a></strong></td>
                   <td><p>Evaluates the dexp counting function </p></td>
               </tr>
               <tr>
@@ -362,7 +361,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
               </tr>
               <tr>
                 <td>  procedure, public ::
-  <strong><a href='../type/dexp_ncoord_type.html#boundprocedure-ncoord_dcount~3'>ncoord_dcount</a></strong></td>
+  <strong><a href='../type/dexp_ncoord_type.html#boundprocedure-ncoord_dcount~4'>ncoord_dcount</a></strong></td>
                   <td><p>Evaluates the derivative of the dexp counting function</p></td>
               </tr>
           </tbody>
@@ -396,7 +395,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
     <tbody>
         <tr>
             <td>
-              <span class="anchor" id="variable-self~35"></span>
+              <span class="anchor" id="variable-self~33"></span>
               type(<a href='../type/dexp_ncoord_type.html'>dexp_ncoord_type</a>),
             </td>
 <td>intent(out)</td>
@@ -426,7 +425,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-cutoff~5"></span>
+              <span class="anchor" id="variable-cutoff~4"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -441,7 +440,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-rcov~8"></span>
+              <span class="anchor" id="variable-rcov~6"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -456,7 +455,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
         </tr>
         <tr>
             <td>
-              <span class="anchor" id="variable-cut~5"></span>
+              <span class="anchor" id="variable-cut~4"></span>
               real(kind=wp),
             </td>
 <td>intent(in),</td>
@@ -499,7 +498,7 @@ if -1 (i.e. with the EN-dep.) it is added to one and subtracted from the other</
             <p class="text-end">
               Documentation generated by
               <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
- on 2025-09-04 07:52 +0000             </p>
+ on 2025-11-10 11:57 +0000             </p>
           </div>
         </div>
         <br>
