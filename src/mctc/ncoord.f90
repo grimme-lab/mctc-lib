@@ -40,8 +40,10 @@
 !>```f90
 !> use mctc_ncoord
 !> use mctc_io, only : structure_type
-!> use mctc_env, only : wp
+!> use mctc_env, only : wp, error_type
 !> class(ncoord_type), allocatable :: ncoord
+!> type(structure_type) :: mol
+!> type(error_type), allocatable :: error
 !> real(wp), allocatable :: cn(:)
 !>
 !> call new_ncoord(ncoord, mol, cn_count%exp, error)
