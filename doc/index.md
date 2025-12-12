@@ -1,18 +1,36 @@
 ---
-title: Formats
+title: Supported Geometry Formats
 ---
 
-This library supports reading and writing of the following formats:
+This library supports reading and writing molecular structures in the following formats.
+All formats can be auto-detected by file extension or explicitly specified using the `filetype` enumerator.
 
-- [xyz with extensions](./format-xyz.html)
-- [Turbomole's coord](./format-tmol.html)
-- [connection table files: molfile, structure data format](./format-ctfile.html)
-- [Vasp's POSCAR format](./format-vasp.html)
-- [a subset of PDB format](./format-pdb.html)
-- [DFTB+ general format](./format-gen.html)
-- [Gaussian external format](./format-ein.html)
-- [Chemical JSON format](./format-cjson.html)
-- [QCSchema JSON format](./format-qcschema.html)
-- [Pymatgen JSON format](./format-pymatgen.html)
-- [FHI-aims geometry.in](./format-aims.html)
-- [Q-Chem molecule format](./format-qchem.html)
+## General ASCII Formats
+
+- [xyz format](./format-xyz.html) - Simple Cartesian coordinate format (`.xyz`, `.log`)
+- [Connection table files](./format-ctfile.html) - MDL molfile and SDF formats (`.mol`, `.sdf`)
+- [Protein Data Bank](./format-pdb.html) - PDB format for biomolecules (`.pdb`)
+
+## JSON-based Formats
+
+- [QCSchema JSON](./format-qcschema.html) - MolSSI QCSchema format (`.qcjson`, `.json`)
+- [Chemical JSON](./format-cjson.html) - Avogadro Chemical JSON (`.cjson`, `.json`)
+- [Pymatgen JSON](./format-pymatgen.html) - Pymatgen Molecule/Structure (`.pmgjson`, `.json`)
+
+## Program-specific Formats
+
+- [Turbomole coord](./format-tmol.html) - Turbomole/riper coordinate format (`.tmol`, `.coord`)
+- [VASP POSCAR](./format-vasp.html) - VASP geometry input (`.vasp`, `.poscar`, `.contcar`)
+- [DFTB+ gen format](./format-gen.html) - DFTB+ general format (`.gen`)
+- [Gaussian external](./format-ein.html) - Gaussian external program input (`.ein`)
+- [FHI-aims geometry.in](./format-aims.html) - FHI-aims input format (`geometry.in`)
+- [Q-Chem molecule](./format-qchem.html) - Q-Chem molecule block (`.qchem`)
+
+## Format Detection
+
+File formats are detected automatically based on:
+
+1. File extension (e.g., `.xyz`, `.mol`, `.vasp`)
+2. Basename (e.g., `coord`, `POSCAR`, `CONTCAR`, `geometry.in`)
+
+When automatic detection is not possible (e.g., reading from stdin), use the format hint options in `mctc-convert` or the `filetype` enumerator in the library API.

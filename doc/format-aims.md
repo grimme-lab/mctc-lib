@@ -1,19 +1,48 @@
 ---
-title: FHI-aims geometry.in format
+title: FHI-aims Geometry Format
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extension | (none, typically `geometry.in`) |
+| Coordinate units | Ångström |
+| Supports periodicity | Yes (via `lattice_vector`) |
+| Format hint | `aims` |
 
 ## Specification
 
-Format used by FHI-aims program.
-Atoms are specified by ``atom`` or ``atom_frac`` keyword followed by three real numbers and an character identifier.
-Lattice parameters are given with the ``lattice_vector`` keyword followed by three real numbers.
+The FHI-aims geometry format is the native input format for the FHI-aims all-electron DFT code.
 
+### Format Detection
 
-## Example
+The format is identified by:
+- Basename: `geometry.in` (case-insensitive)
+- Format specifier: `aims`
 
-Caffeine molecule in xyz format
+### Keywords
 
+| Keyword | Description |
+|---------|-------------|
+| `atom` | Cartesian coordinates in Ångström |
+| `atom_frac` | Fractional coordinates (periodic systems) |
+| `lattice_vector` | Lattice vector (3 reals, one per line) |
+
+### Atom Specification
+
+```text
+atom  x  y  z  element
+atom_frac  a  b  c  element
 ```
+
+## Examples
+
+### Molecular System
+
+Caffeine molecule:
+
+```text
 atom         1.07320000000000        0.04890000000000       -0.07570000000000 C
 atom         2.51370000000000        0.01260000000000       -0.07580000000000 N
 atom         3.35200000000000        1.09590000000000       -0.07530000000000 C
@@ -40,9 +69,11 @@ atom         4.40230000000000       -5.15920000000000        0.82840000000000 H
 atom         4.40020000000000       -5.16930000000000       -0.94780000000000 H
 ```
 
+### 3D Periodic System
+
 Carbondioxide in FHI-aims format:
 
-```
+```text
 atom         6.62447969041000        6.62412068645100        6.63464984519600 C
 atom         9.39832080661700        6.63600723231600        9.41199064870100 C
 atom         9.39627410479100        9.39525191972100        6.64954571641900 C
@@ -60,10 +91,9 @@ lattice_vector         0.00000000000000        5.68032472285798        0.0000000
 lattice_vector         0.00000000000000        0.00000000000000        5.68032472285798
 ```
 
-
-## Missing Features
+## Limitations
 
 The implementation of this format is (to our knowledge) feature-complete.
 
-@Note Feel free to contribute support for missing features
-      or bring missing features to our attention by opening an issue.
+@Note Feel free to bring missing features to our attention by opening an issue.
+

@@ -1,77 +1,77 @@
 ---
-title: Turbomole's coordinate data group
+title: Turbomole Coordinate Format
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extensions | `.tmol`, `.coord` |
+| Coordinate units | Bohr (default), Ångström (`angs`), or fractional (`frac`) |
+| Supports periodicity | Yes (0D, 1D, 2D, 3D) |
+| Supports charge/spin | Yes (via `$eht` data group) |
+| Format hints | `tmol`, `coord` |
 
 ## Specification
 
 @Note [Reference](https://www.turbomole.org/wp-content/uploads/2019/11/Turbomole_Manual_7-4-1.pdf)
 
-The Turbomole format mainly builds around the ``control`` file.
-The ``control`` file contains several data groups which are delimited by
-their identifier, groups are either present in the ``control`` file or
-references from the ``control`` file.
-This format is defined by the geometry related information from the
-``control`` file, mainly the:
+The Turbomole coordinate format uses data groups delimited by `$` identifiers.
+This format supports molecules and periodic systems (1D, 2D, 3D).
 
-- ``coord`` data group
-- ``lattice`` data group
-- ``cell`` data group
-- ``periodic`` data group
-- ``eht`` data group
+### Format Detection
 
-For simplicity file references are not allowed and all data groups should be
-in the same file. The data groups are not required to be in any particular order.
+The format is identified by:
+- File extension: `.tmol`, `.coord`
+- Basename: `coord` (case-insensitive)
 
-A group is started by a ``$`` symbol and accept modifiers. It is terminated by
-another group or the ``end`` group which stops the scanning for further groups:
+### Data Groups
+
+| Data Group | Purpose |
+|------------|---------|
+| `$coord` | Cartesian or fractional atomic coordinates |
+| `$lattice` | Lattice vectors (Bohr or Ångström) |
+| `$cell` | Cell parameters (lengths and angles) |
+| `$periodic` | Periodicity (0, 1, 2, or 3) |
+| `$eht` | Charge and unpaired electrons |
+| `$end` | End of file marker |
+
+### Coordinate Data Group
 
 ```text
-$group1 [modifier]...
-[entries]...
-$group2 [modifier]...
-[entries]...
-$end
+$coord [bohr|angs|frac]
+   x1   y1   z1   element1
+   x2   y2   z2   element2
+   ...
 ```
 
-The ``coord`` data group contains the cartesian coordinates of all atoms and
-their element symbols at the end of each line.
-Atomic coordinates can either be specified in Bohr, by default or with the ``bohr``
-modifier on the ``coord`` data group, in Ångström with the modifier ``angs`` or
-as fractions of the lattice vectors with the modifier ``frac``.
-Fractional coordinates can only be present for periodicities greater than zero.
+- **Default**: Bohr (atomic units)
+- **`angs`**: Ångström
+- **`frac`**: Fractional coordinates (periodic systems only)
 
-The periodicity of the system is specified as modifier to the ``periodic`` data
-group, the group itself is empty.
+### Lattice Specification
 
-The lattice parameters can either be specified in the ``lattice`` or the ``cell``
-data group, which require different amounts of entries depending on the systems
-periodicity. Both data groups are either given in atomic units (Bohr) or in
-Ångström with the ``angs`` modifier.
+Lattice vectors via `$lattice` data group:
+- **3D**: Three lines, three values each (3×3 matrix)
+- **2D**: Two lines, two values each (z-axis is aperiodic)
+- **1D**: One value (translation in x-direction)
 
-For 3D periodic systems three lines with each three reals are required in the
-``lattice`` data group. For a 2D periodic system two lines with each two reals
-are required and the aperiodic direction is the z-axis.
-Finally, for 1D periodic systems one real is required, giving the translation
-vector in the x-direction.
-The periodic directions are fixed in this format.
+Cell parameters via `$cell` data group:
+- **3D**: a, b, c, α, β, γ (lengths in Bohr/Å, angles in degrees)
+- **2D**: a, b, γ
+- **1D**: a
 
-Similarly, the ``cell`` data groups allows for six, three, and one entries for
-3D, 2D, and 1D periodic systems, respectively. The cell parameters are given
-as the length of the lattice vectors and their angles, with the angles given
-in degrees.
-
-Charge and spin can be given in the ``eht`` data group with
+### Charge and Spin
 
 ```text
 $eht charge=<int> unpaired=<int>
 ```
 
-The format is identified by ``coord`` or ``tmol`` extension or by using ``coord``
-as basename.
+## Examples
 
-## Example
+### Molecular System
 
-Caffeine molecule in Turbomole's coord format
+Caffeine molecule:
 
 ```text
 $coord
@@ -101,6 +101,8 @@ $coord
     8.31511438076913E+00   -9.76854021943835E+00   -1.79108202867002E+00      H
 $end
 ```
+
+### 3D Periodic System
 
 Ammonia molecular crystal:
 
@@ -132,18 +134,17 @@ $end
 
 ## Extensions
 
-The original format does only allow for the ``periodic`` or ``eht`` group to
-appear in the ``control`` file, to make the format self-contained, all groups
-must appear in the same file.
+This implementation extends the original Turbomole format:
 
-The ``coord`` group only supports the ``frac`` modifier in Turbomole, but this
-reader also allows ``angs`` and ``bohr``.
+- All data groups can appear in the same file (original format requires some groups in separate `control` file)
+- The `$coord` group supports `angs` and `bohr` modifiers (original only supports `frac`)
 
-## Missing Features
+## Limitations
 
 The following features are currently not supported:
 
-- Preserving information about frozen atoms from ``coord`` data group
+- Preserving information about frozen atoms from `$coord` data group
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+

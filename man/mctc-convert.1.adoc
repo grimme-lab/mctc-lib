@@ -2,63 +2,198 @@
 :doctype: manpage
 
 == Name
-mctc-convert - Convert between supported input formats of the tool chain library
+mctc-convert - Convert between supported geometry file formats
 
 
 == Synopsis
 *mctc-convert* [_options_] _input_ _output_
 
+*mctc-convert* *--help*
+
+*mctc-convert* *--version*
+
 
 == Description
 
-Read structure from input file and writes it to output file.
-The format is determined by the file extension or the format hint.
-The input structure can be read from standard input by providing - as argument.
-Similarly, the output structure can be written to standard output with - as argument.
-Standard input and standard output should be combined with a format hint option.
+The *mctc-convert* program reads molecular structure data from an input file and writes it to an output file, optionally converting between different geometry file formats.
+The format is automatically determined by the file extension, or can be explicitly specified using format hint options.
 
-Supported formats:
+The program supports reading from standard input and writing to standard output by using `-` as the file argument.
+When using standard input/output, a format hint option should be provided.
 
-- Xmol/xyz files (xyz, log)
-- Turbomole's coord, riper's periodic coord (tmol, coord)
-- DFTB+ genFormat geometry inputs as cluster, supercell or fractional (gen)
-- VASP's POSCAR/CONTCAR input files (vasp, poscar, contcar)
-- Protein Database files, only single files (pdb)
-- Connection table files, molfile (mol) and structure data format (sdf)
-- Gaussian's external program input (ein)
-- JSON input with `qcschema_molecule` or `qcschema_input` structure (qcjson, json)
-- Chemical JSON input (cjson, json)
-- Pymatgen JSON with `Molecule` or `Structure` schema (pmgjson, json)
-- FHI-AIMS' input files (geometry.in)
-- Q-Chem molecule block inputs (qchem)
+
+== Supported Formats
+
+The following geometry formats are supported for both reading and writing:
+
+[cols="1,3,2"]
+|===
+|Format hint |Description |File extensions
+
+|xyz
+|Xmol/xyz coordinate files
+|.xyz, .log
+
+|tmol, coord
+|Turbomole coord files (including periodic/riper)
+|.tmol, .coord
+
+|gen
+|DFTB+ genFormat (cluster, supercell, fractional)
+|.gen
+
+|vasp, poscar, contcar
+|VASP POSCAR/CONTCAR geometry files
+|.vasp, .poscar, .contcar
+
+|pdb
+|Protein Data Bank files (single structures only)
+|.pdb
+
+|mol
+|MDL Molfile connection table
+|.mol
+
+|sdf
+|MDL Structure Data Format
+|.sdf
+
+|ein
+|Gaussian external program input
+|.ein
+
+|qcjson, json
+|QCSchema JSON (`qcschema_molecule` or `qcschema_input`)
+|.qcjson, .json
+
+|cjson, json
+|Chemical JSON (Avogadro)
+|.cjson, .json
+
+|pmgjson, json
+|Pymatgen JSON (`Molecule` or `Structure` schema)
+|.pmgjson, .json
+
+|aims
+|FHI-aims geometry input
+|geometry.in
+
+|qchem
+|Q-Chem molecule block
+|.qchem
+|===
+
+NOTE: JSON format support requires mctc-lib to be compiled with the jonquil dependency.
 
 
 == Options
 
 *-i, --input* _format_::
-Hint for the format of the input file
+Specify the format of the input file.
+Use this option when the input file has a non-standard extension or when reading from standard input.
+See <<Supported Formats>> for valid format hints.
 
 *-o, --output* _format_::
-Hint for the format of the output file
+Specify the format of the output file.
+Use this option when the output file should have a non-standard extension or when writing to standard output.
+See <<Supported Formats>> for valid format hints.
 
 *--normalize*::
-Normalize all element symbols to capitalized format
+Normalize all element symbols to standard capitalized format (e.g., "CL" becomes "Cl", "h" becomes "H").
+Useful when working with files that have non-standard element symbol casing.
 
 *--template* _file_::
-File to use as template to fill in meta data (useful to add back SDF or PDB annotions).
-Transfers lattice, periodicity, comments and format specific annotations from the template
-to the input structure.
-If the standard input, -, is provided the template structure will
-be read _before_ the input structure.
+Use the specified file as a template to transfer metadata to the output.
+This option transfers lattice parameters, periodicity information, comments, and format-specific annotations (such as PDB residue information or SDF bond data) from the template to the input structure.
+The input and template structures must have the same number of atoms.
++
+If `-` is provided as the template file, the template structure is read from standard input _before_ the input structure.
 
 *--template-format* _format_::
-Hint for the format of the template file (only used if template file name is provided)
+Specify the format of the template file.
+Only used when a template file is provided via *--template*.
 
 *--ignore-dot-files*::
-Do not read charge and spin from .CHRG and .UHF files
+Do not read molecular charge from `.CHRG` files or spin state from `.UHF` files in the input file's directory.
+By default, these files are read if present.
 
 *--version*::
-Print program version and exit
+Print the program version and exit.
 
 *--help*::
-Show this help message
+Display a brief help message and exit.
+
+
+== Examples
+
+Convert an xyz file to Turbomole coord format::
++
+----
+mctc-convert molecule.xyz molecule.coord
+----
+
+Convert a VASP POSCAR to xyz format::
++
+----
+mctc-convert POSCAR structure.xyz
+----
+
+Read from standard input and write to standard output::
++
+----
+cat molecule.xyz | mctc-convert -i xyz -o mol - -
+----
+
+Convert format while preserving SDF bond information::
++
+----
+mctc-convert optimized.xyz final.sdf --template original.sdf
+----
+
+Normalize element symbols during conversion::
++
+----
+mctc-convert --normalize input.xyz output.xyz
+----
+
+Force input format for non-standard extension::
++
+----
+mctc-convert -i xyz geometry.dat output.mol
+----
+
+
+== Environment
+
+*.CHRG*::
+If a file named `.CHRG` exists in the same directory as the input file, the molecular charge is read from it (unless *--ignore-dot-files* is specified).
+
+*.UHF*::
+If a file named `.UHF` exists in the same directory as the input file, the number of unpaired electrons is read from it (unless *--ignore-dot-files* is specified).
+
+
+== Exit Status
+
+*0*::
+Success.
+
+*non-zero*::
+An error occurred during file reading, writing, or conversion.
+Error messages are written to standard error with source location information when available.
+
+
+== See Also
+
+The mctc-lib API documentation: https://grimme-lab.github.io/mctc-lib
+
+
+== Authors
+
+mctc-lib is developed by the Grimme group at the University of Bonn.
+See https://github.com/grimme-lab/mctc-lib/graphs/contributors for a list of all contributors.
+
+
+== Reporting Bugs
+
+Report bugs and unclear error messages at: https://github.com/grimme-lab/mctc-lib/issues
+
