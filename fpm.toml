@@ -15,3 +15,27 @@ toml-f.tag = "v0.4.3"
 
 [[executable]]
 name = "mctc-convert"
+
+[extra.ford]
+project = "MCTC-library"
+summary = "Modular computation tool chain library"
+project_github = "https://github.com/grimme-lab/mctc-lib"
+project_download = "https://github.com/grimme-lab/mctc-lib/releases"
+author = "Grimme group, Bonn"
+github = "https://github.com/grimme-lab"
+src_dir = ["./src", "./app"]
+output_dir = "./_docs"
+exclude_dir = ["./test"]
+page_dir = "./doc"
+docmark = "<"
+predocmark = ">"
+source = true
+graph = false
+sort = "alpha"
+print_creation_date = true
+creation_date = "%Y-%m-%d %H:%M %z"
+md_extensions = ["markdown.extensions.toc", "markdown.extensions.smarty"]
+
+[extra.ford.extra_mods]
+iso_fortran_env = "https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html"
+jonquil = "https://toml-f.github.io/jonquil/module/jonquil.html"

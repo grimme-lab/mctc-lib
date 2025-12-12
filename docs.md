@@ -1,27 +1,3 @@
----
-project: MCTC-library
-summary: Modular computation tool chain library
-project_github: https://github.com/grimme-lab/mctc-lib
-project_download: https://github.com/grimme-lab/mctc-lib/releases
-author: Grimme group, Bonn
-github: https://github.com/grimme-lab
-src_dir: ./src
-         ./app
-output_dir: ./_docs
-exclude_dir: ./test
-page_dir: ./doc
-docmark: <
-predocmark: >
-source: true
-graph: false
-sort: alpha
-print_creation_date: true
-extra_mods: iso_fortran_env:https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html
-creation_date: %Y-%m-%d %H:%M %z
-md_extensions: markdown.extensions.toc
-               markdown.extensions.smarty
----
-
 API documentation for the modular computation tool chain library.
 For installation instructions and getting started, see the [README](https://github.com/grimme-lab/mctc-lib).
 
@@ -150,7 +126,9 @@ call write_structure(mol, "output.dat", error, filetype%gen)
 
 ### Format Detection
 
-The [[filetype]] enumerator identifies supported formats:
+Use [[get_filetype]] to determine the file format from a filename, or the
+[[mctc_io_filetype:filetype]] enumerator directly when the format is known.
+See [[mctc_io_filetype]] for the complete list of supported formats.
 
 ```f90
 use mctc_io, only : filetype, get_filetype
@@ -228,18 +206,7 @@ en = get_pauling_en(6)
 ## Coordination Numbers
 
 The [[mctc_ncoord]] module provides coordination number evaluators.
-
-### Counting Functions
-
-The [[cn_count]] enumerator selects the counting function:
-
-| Function | Description | Typical Use |
-|----------|-------------|-------------|
-| `cn_count%exp` | Exponential | General purpose |
-| `cn_count%dexp` | Double-exponential | Sharper cutoff |
-| `cn_count%erf` | Error function | GFN methods |
-| `cn_count%erf_en` | EN-weighted error function | Electronegativity corrections |
-| `cn_count%dftd4` | DFT-D4 error function | Dispersion corrections |
+See the module documentation for the complete list of available counting functions.
 
 ### Usage
 

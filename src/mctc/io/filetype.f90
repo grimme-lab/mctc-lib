@@ -13,6 +13,10 @@
 ! limitations under the License.
 
 !> File type support
+!>
+!> This module provides file type identification for molecular structure files.
+!> Use [[get_filetype]] to determine the format from a filename, or use the
+!> [[mctc_io_filetype:filetype]] enumerator directly when the format is known.
 module mctc_io_filetype
    use mctc_io_utils, only : to_lower
    implicit none
@@ -72,6 +76,22 @@ module mctc_io_filetype
    end type enum_filetype
 
    !> File type enumerator
+   !>
+   !> | Enumerator | Format | Description |
+   !> |------------|--------|-------------|
+   !> | `filetype%xyz` | xyz | Xmol/xyz format |
+   !> | `filetype%tmol` | Turbomole | Turbomole coord format |
+   !> | `filetype%molfile` | MOL | MDL Molfile V2000/V3000 |
+   !> | `filetype%sdf` | SDF | Structure Data File |
+   !> | `filetype%vasp` | VASP | POSCAR/CONTCAR format |
+   !> | `filetype%pdb` | PDB | Protein Data Bank format |
+   !> | `filetype%gen` | gen | DFTB+ genFormat |
+   !> | `filetype%gaussian` | Gaussian | External program format |
+   !> | `filetype%qcschema` | QCSchema | MolSSI QCSchema JSON |
+   !> | `filetype%cjson` | Chemical JSON | Avogadro Chemical JSON |
+   !> | `filetype%pymatgen` | Pymatgen | Pymatgen JSON format |
+   !> | `filetype%aims` | FHI-aims | geometry.in format |
+   !> | `filetype%qchem` | Q-Chem | Molecule block format |
    type(enum_filetype), parameter :: filetype = enum_filetype()
 
 

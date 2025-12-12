@@ -12,9 +12,6 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @file mctc/ncoord/erf/en.f90
-!> Provides an implementation for the electronegativity-weighted CN
-
 !> Coordination number implementation with single error function and EN-weighting.
 module mctc_ncoord_erf_en
    use mctc_env, only : wp

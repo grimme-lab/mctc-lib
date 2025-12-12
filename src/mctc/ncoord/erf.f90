@@ -12,12 +12,6 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @dir mctc/ncoord/erf
-!> Provides variations (EN) of the error function based coordination number
-
-!> @file mctc/ncoord/erf.f90
-!> Provides error function based coordination number
-
 !> Coordination number implementation with single error function
 module mctc_ncoord_erf
    use mctc_env, only : wp

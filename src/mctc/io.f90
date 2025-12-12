@@ -20,11 +20,11 @@
 !> - [[structure_type]]: Central data structure for molecular and periodic systems
 !> - [[read_structure]]: Read structures from files or formatted units
 !> - [[write_structure]]: Write structures to files or formatted units
-!> - [[filetype]]: Enumerator for supported file formats
+!> - [[mctc_io_filetype:filetype]]: Enumerator for supported file formats
 !> - [[to_symbol]] / [[to_number]]: Convert between element symbols and atomic numbers
 !>
 !> The file format is automatically detected from file extensions, or can be
-!> explicitly specified using the [[filetype]] enumerator. Use [[get_filetype]]
+!> explicitly specified using the [[mctc_io_filetype:filetype]] enumerator. Use [[get_filetype]]
 !> to translate file names to format identifiers.
 !>
 !> Supported formats include xyz, mol/sdf, pdb, Turbomole coord, VASP POSCAR,

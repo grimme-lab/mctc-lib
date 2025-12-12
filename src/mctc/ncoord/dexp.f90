@@ -12,9 +12,6 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @file mctc/ncoord/dexp.f90
-!> Provides a coordination number implementation with double exponential counting function
-
 !> Coordination number implementation using a double exponential counting function as in GFN2-xTB
 module mctc_ncoord_dexp
    use mctc_env, only : wp

@@ -12,12 +12,6 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @dir mctc/ncoord
-!> Contains the implementation for the coordination number evaluators.
-
-!> @file mctc/ncoord.f90
-!> Reexports the coordination number evaluation modules.
-
 !> Coordination number evaluation module.
 !>
 !> This module provides various coordination number counting functions for
@@ -86,6 +80,14 @@ module mctc_ncoord
    end type enum_cn_count
 
    !> Actual enumerator possible coordination numbers
+   !>
+   !> | Enumerator | Description | Typical Use |
+   !> |------------|-------------|-------------|
+   !> | `cn_count%exp` | Exponential counting function | General purpose |
+   !> | `cn_count%dexp` | Double-exponential counting function | Sharper cutoff |
+   !> | `cn_count%erf` | Error-function-based counting | GFN methods |
+   !> | `cn_count%erf_en` | Electronegativity-weighted error function | EN corrections |
+   !> | `cn_count%dftd4` | DFT-D4 error-function-based counting | Dispersion corrections |
    type(enum_cn_count), parameter :: cn_count = enum_cn_count()
 
 contains

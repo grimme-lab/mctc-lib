@@ -16,13 +16,13 @@
 !>
 !> This module exports fundamental types and constants used throughout mctc-lib:
 !>
-!> - [[error_type]]: Allocatable error type for error propagation
-!> - [[fatal_error]]: Subroutine to create error messages
-!> - [[wp]]: Working precision for real numbers (double precision)
-!> - [[sp]], [[dp]]: Single and double precision kind parameters
-!> - [[i1]], [[i2]], [[i4]], [[i8]]: Integer kind parameters (1, 2, 4, 8 bytes)
+!> - [[mctc_env_error:error_type]]: Allocatable error type for error propagation
+!> - [[mctc_env_error:fatal_error]]: Subroutine to create error messages
+!> - [[mctc_env_accuracy:wp]]: Working precision for real numbers (double precision)
+!> - [[mctc_env_accuracy:sp]], [[mctc_env_accuracy:dp]]: Single and double precision kind parameters
+!> - [[mctc_env_accuracy:i1]], [[mctc_env_accuracy:i2]], [[mctc_env_accuracy:i4]], [[mctc_env_accuracy:i8]]: Integer kind parameters (1, 2, 4, 8 bytes)
 !>
-!> Error handling follows a simple pattern: pass an allocatable [[error_type]]
+!> Error handling follows a simple pattern: pass an allocatable [[mctc_env_error:error_type]]
 !> to library routines, then check if it is allocated to detect errors.
 !>
 !> Example usage:
