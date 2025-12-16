@@ -12,17 +12,38 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> Input and output module of the tool chain library.
+!> Input and output module for molecular structure data.
 !>
-!> This module exports the basic [[structure_type]] as well as routines
-!> to read it from a file or formatted unit ([[read_structure]]) or write
-!> it to a formatted unit ([[write_structure]]).
+!> This module provides the main interface for reading and writing molecular
+!> structures in various geometry file formats. It exports:
 !>
-!> Both [[read_structure]] and [[write_structure]] take format hints from
-!> the filetype enumerator. File names can be translated to the respective
-!> enumerator by using the [[get_filetype]] function. This can be useful in
-!> case the caller routine wants to open the formatted unit itself or uses
-!> a non-standard file extension.
+!> - [[structure_type]]: Central data structure for molecular and periodic systems
+!> - [[read_structure]]: Read structures from files or formatted units
+!> - [[write_structure]]: Write structures to files or formatted units
+!> - [[mctc_io_filetype:filetype]]: Enumerator for supported file formats
+!> - [[to_symbol]] / [[to_number]]: Convert between element symbols and atomic numbers
+!>
+!> The file format is automatically detected from file extensions, or can be
+!> explicitly specified using the [[mctc_io_filetype:filetype]] enumerator. Use [[get_filetype]]
+!> to translate file names to format identifiers.
+!>
+!> Supported formats include xyz, mol/sdf, pdb, Turbomole coord, VASP POSCAR,
+!> DFTB+ gen, Gaussian external, QCSchema JSON, Chemical JSON, Pymatgen JSON,
+!> FHI-aims geometry.in, and Q-Chem molecule blocks.
+!>
+!> Example usage:
+!>
+!>```f90
+!> use mctc_io
+!> use mctc_env
+!> type(structure_type) :: mol
+!> type(error_type), allocatable :: error
+!>
+!> call read_structure(mol, "input.xyz", error)
+!> if (allocated(error)) stop error%message
+!>
+!> call write_structure(mol, "output.mol", error)
+!>```
 module mctc_io
    use mctc_io_filetype, only : filetype, get_filetype
    use mctc_io_read, only : read_structure

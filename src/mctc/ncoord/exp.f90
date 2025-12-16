@@ -12,9 +12,6 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @file mctc/ncoord/exp.f90
-!> Provides a coordination number implementation with exponential counting function
-
 !> Coordination number implementation using an exponential counting function as in dftd3. 
 module mctc_ncoord_exp
    use mctc_env, only : wp

@@ -2,16 +2,49 @@
 title: Pymatgen JSON
 ---
 
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extensions | `.pmgjson`, `.json` |
+| Coordinate units | Ångström |
+| Supports periodicity | Yes (`Structure` class) |
+| Supports charge/spin | Yes |
+| Format hint | `pymatgen` |
+
+@Note Requires JSON support (jonquil dependency)
+
 ## Specification
 
 @Note [Reference](https://pymatgen.org)
 
-Pymatgen formatted JSON files are identified by the extension ``pmgjson`` or ``json`` and parsed following the ``Molecule`` or ``Structure`` format.
+Pymatgen JSON format represents molecular and periodic structures using the Python Materials Genomics library schema.
 
+### Supported Classes
 
-## Example
+| Class | Description | Periodicity |
+|-------|-------------|-------------|
+| `Molecule` | Molecular structure | Non-periodic |
+| `Structure` | Periodic structure with lattice | 3D periodic |
 
-Water molecules using ``Molecule`` schema.
+### Key Fields
+
+| Field | Description |
+|-------|-------------|
+| `@class` | `Molecule` or `Structure` |
+| `charge` | Total charge |
+| `spin_multiplicity` | Spin multiplicity (Molecule only) |
+| `lattice` | Lattice parameters (Structure only) |
+| `sites` | Array of atomic sites |
+| `sites[].species` | Element and occupancy |
+| `sites[].xyz` | Cartesian coordinates (Ångström) |
+| `sites[].abc` | Fractional coordinates (Structure) |
+
+## Examples
+
+### Molecular System
+
+Water molecules using `Molecule` schema:
 
 ```json
 {
@@ -88,7 +121,9 @@ Water molecules using ``Molecule`` schema.
 }
 ```
 
-Rutile using ``Structure`` schema:
+### Periodic System
+
+Rutile TiO₂ using `Structure` schema:
 
 ```json
 {
@@ -158,9 +193,12 @@ Rutile using ``Structure`` schema:
 }
 ```
 
-## Missing features
+## Limitations
 
-The schema is not verified on completeness and not all data is stored in the final structure type.
+- Schema completeness is not verified during reading
+- Not all pymatgen fields are preserved in the structure type
+- Site occupancies other than 1.0 are not fully supported
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+

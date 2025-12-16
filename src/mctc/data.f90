@@ -18,7 +18,28 @@
 !> @file mctc/data.f90
 !> Reexports access to element-specific data.
 
-!> Proxy module for providing access to element data.
+!> Element data module providing atomic properties.
+!>
+!> This module provides access to element-specific data indexed by atomic number.
+!> All radii are returned in atomic units (Bohr).
+!>
+!> Available functions:
+!>
+!> - [[get_covalent_rad]]: Covalent radii in Bohr
+!> - [[get_vdw_rad]]: van der Waals radii in Bohr
+!> - [[get_atomic_rad]]: Atomic radii in Bohr
+!> - [[get_pauling_en]]: Pauling electronegativities
+!>
+!> Example usage:
+!>
+!>```f90
+!> use mctc_data
+!> use mctc_env, only : wp
+!> real(wp) :: radius
+!>
+!> ! Get covalent radius for carbon (Z=6)
+!> radius = get_covalent_rad(6)
+!>```
 module mctc_data
    use mctc_data_atomicrad, only : get_atomic_rad
    use mctc_data_covrad, only : get_covalent_rad

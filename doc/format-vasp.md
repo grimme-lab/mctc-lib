@@ -1,15 +1,72 @@
 ---
-title: Vasp's POSCAR format
+title: VASP POSCAR Format
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extensions | `.vasp`, `.poscar`, `.contcar` |
+| Coordinate units | Ångström or fractional (direct) |
+| Supports periodicity | Yes (required) |
+| Supports bonds | No |
+| Format hint | `vasp` |
+
+## Specification
 
 @Note [Reference](https://www.vasp.at/wiki/index.php/POSCAR)
 
-The format is identified by the extension ``vasp``, ``poscar`` or ``contcar``.
-Alternatively, the basenames ``poscar`` and ``contcar`` identify the format as well.
+POSCAR is the standard geometry input format for the Vienna Ab initio Simulation Package (VASP).
+The format supports both Cartesian and fractional (direct) coordinates.
+
+### Format Detection
+
+The format is identified by:
+- File extension: `.vasp`, `.poscar`, `.contcar`
+- Basename: `POSCAR`, `CONTCAR` (case-insensitive)
+
+### Format Structure
+
+1. **Line 1**: Comment line (may contain element symbols in pre-VASP 5 format)
+2. **Line 2**: Scaling factor
+3. **Lines 3-5**: Lattice vectors (3×3 matrix)
+4. **Line 6**: Element symbols (VASP 5+ format) or atom counts (pre-VASP 5)
+5. **Line 7**: Number of atoms per element (VASP 5+) or coordinate type (pre-VASP 5)
+6. **Line 8**: Coordinate type (`Cartesian` or `Direct`)
+7. **Remaining lines**: Atomic coordinates
 
 ## Examples
 
-Ammonia molecular crystal in pre Vasp 5 POSCAR format:
+### VASP 5 Format
+
+Carbondioxide molecular crystal:
+
+```text
+4CO2
+    1.00000000000000
+    5.68032000000000    0.00000000000000    0.00000000000000
+    0.00000000000000    5.68032000000000    0.00000000000000
+    0.00000000000000    0.00000000000000    5.68032000000000
+ C    O   
+ 4 8
+Cartesian
+    0.94412598720000    0.94378516800000    0.95435056320000
+    3.71799665280000    0.95565703680000    3.73168622400000
+    3.71595173760000    3.71492928000000    0.96923300160000
+    0.95298728640000    3.72208648320000    3.72969811200000
+    1.62139054080000    1.61906160960000    1.63138790400000
+    0.26566856640000    0.26941757760000    0.27765404160000
+    4.39145539200000    1.63462568640000    3.05459208000000
+    3.04408348800000    0.27646117440000    4.40804192640000
+    4.39105776960000    3.04164095040000    0.28810583040000
+    3.03999365760000    4.38793359360000    1.64973533760000
+    0.27413224320000    4.40037349440000    3.05737543680000
+    1.63121749440000    3.04345865280000    4.40230480320000
+```
+
+### Pre-VASP 5 Format
+
+Ammonia molecular crystal (element symbols in comment line):
 
 ```text
  H  N 
@@ -37,37 +94,9 @@ Cartesian
   1.9910559239999999  4.4636450759999997  3.9981545999999994
 ```
 
-Carbondioxide in POSCAR format:
-
-```text
-4CO2
-    1.00000000000000
-    5.68032000000000    0.00000000000000    0.00000000000000
-    0.00000000000000    5.68032000000000    0.00000000000000
-    0.00000000000000    0.00000000000000    5.68032000000000
- C    O   
- 4 8
-Cartesian
-    0.94412598720000    0.94378516800000    0.95435056320000
-    3.71799665280000    0.95565703680000    3.73168622400000
-    3.71595173760000    3.71492928000000    0.96923300160000
-    0.95298728640000    3.72208648320000    3.72969811200000
-    1.62139054080000    1.61906160960000    1.63138790400000
-    0.26566856640000    0.26941757760000    0.27765404160000
-    4.39145539200000    1.63462568640000    3.05459208000000
-    3.04408348800000    0.27646117440000    4.40804192640000
-    4.39105776960000    3.04164095040000    0.28810583040000
-    3.03999365760000    4.38793359360000    1.64973533760000
-    0.27413224320000    4.40037349440000    3.05737543680000
-    1.63121749440000    3.04345865280000    4.40230480320000
-```
-
-## Extensions
-
-No extension implemented to the original format.
-
-## Missing Features
+## Limitations
 
 The implementation of this format is (to our knowledge) feature-complete.
 
 @Note Feel free to bring missing features to our attention by opening an issue.
+

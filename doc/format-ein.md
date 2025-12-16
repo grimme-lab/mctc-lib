@@ -1,30 +1,40 @@
 ---
-title: Gaussian external format
+title: Gaussian External Format
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extension | `.ein` |
+| Coordinate units | Bohr (atomic units) |
+| Supports periodicity | No |
+| Supports charge/spin | Yes |
+| Format hint | `ein` |
 
 ## Specification
 
 @Note [Reference](https://gaussian.com/external/)
 
-The first line of the input is read as four integers of width 10, ``(4i10)``,
-containing the number of atoms in the first integer.
-A run mode specific integer is given in the second entry.
-The third integer contains the total charge and the fourth integer the spin as
-number of unpaired electrons.
-The total charge and the systems spin are stored in the [[structure_type]].
+The Gaussian external format is used for interfacing Gaussian with external programs.
+It uses fixed-format input with atomic coordinates in atomic units (Bohr).
 
-The structure is specified by atomic numbers, cartesian coordinates in atomic units
-(Bohr) and a scalar quantity, usually partial charges using the fixed format
-``(i10,4f20.12)``.
-The element is identified by its atomic number,
-which is converted to its capitalized element symbol internally.
-Only positive, non-zero integers are allowed as atomic numbers.
+### Format Structure
 
-The expected file extension is ``ein``.
+**Line 1**: Header (fixed format `4i10`)
+- Number of atoms
+- Run mode (ignored when reading)
+- Total charge
+- Number of unpaired electrons (spin)
 
-## Examples
+**Atom lines**: Fixed format `(i10,4f20.12)`
+- Atomic number (positive integer)
+- x, y, z coordinates in Bohr
+- Scalar quantity (typically partial charge, ignored when reading)
 
-Caffeine molecule in Gaussian external format:
+## Example
+
+Caffeine molecule:
 
 ```text
         24         1         0         0
@@ -54,16 +64,13 @@ Caffeine molecule in Gaussian external format:
          1      8.315114380769     -9.768540219438     -1.791082028670      0.000000000000
 ```
 
-## Extensions
-
-No extension implemented to the original format.
-
-## Missing Features
+## Limitations
 
 The following features are currently not supported:
 
-- the requested run-mode is dropped while reading.
-- scalar atomic quantities are not preserved and dropped.
+- Run mode (second integer in header) is dropped when reading
+- Scalar atomic quantities (fourth column) are not preserved
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+

@@ -12,7 +12,23 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> Basic structure representation of the system of interest
+!> Molecular structure representation.
+!>
+!> This module defines [[structure_type]], the central data structure for
+!> representing molecular and periodic systems. All quantities are in atomic
+!> units (coordinates and lattice vectors in Bohr).
+!>
+!> Key components of [[structure_type]]:
+!>
+!> - `nat`: Number of atoms
+!> - `xyz(3, nat)`: Cartesian coordinates in Bohr
+!> - `num(nid)`: Atomic numbers for each unique species
+!> - `id(nat)`: Species index for each atom
+!> - `charge`: Total molecular charge
+!> - `uhf`: Number of unpaired electrons
+!> - `lattice(3, 3)`: Lattice vectors for periodic systems (optional)
+!>
+!> Use [[new]] or [[new_structure]] to create structure instances.
 module mctc_io_structure
    use mctc_env_accuracy, only : wp
    use mctc_io_symbols, only : to_number, to_symbol, symbol_length, get_identity, &

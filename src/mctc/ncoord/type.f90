@@ -12,9 +12,6 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @file mctc/ncoord/type.f90
-!> Provides a coordination number evalulator base class
-
 !> Declaration of base class for coordination number evalulations
 module mctc_ncoord_type
    use mctc_env, only : wp

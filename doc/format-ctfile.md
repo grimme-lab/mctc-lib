@@ -1,14 +1,27 @@
 ---
-title: Connection table format
+title: Connection Table Format (MOL/SDF)
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extensions | `.mol`, `.sdf` |
+| Coordinate units | Ångström |
+| Supports periodicity | No |
+| Supports bonds | Yes |
+| Format hints | `mol`, `sdf` |
 
 ## Specification
 
 @Note [Reference](https://www.daylight.com/meetings/mug05/Kappler/ctfile.pdf)
 
-The molfile is identified by the extension ``mol`` and the structure data format
-is identified by ``sdf``.
-Both V2000 and V3000 connection tables can be read.
+The MDL connection table format stores molecular structures with bond connectivity information.
+
+- **Molfile** (`.mol`): Single molecule format
+- **SDF** (`.sdf`): Structure Data Format, can contain multiple molecules with additional properties
+
+Both V2000 and V3000 connection table formats are supported.
 
 ## Example
 
@@ -46,17 +59,14 @@ Caffeine molecule in mol format:
 M  END
 ```
 
-## Extensions
-
-No extension implemented to the original format.
-
-## Missing Features
+## Limitations
 
 The following features are currently not supported:
 
-- Not all modifiers are supported for the connection table
-- SDF key-value pair annotations are dropped
-- continuation lines in V3000 format are not supported
+- Not all atom and bond modifiers are supported in the connection table
+- SDF key-value pair annotations are dropped during reading
+- Continuation lines in V3000 format are not supported
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+

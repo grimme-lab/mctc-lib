@@ -12,9 +12,6 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @file mctc/ncoord/erf_en.f90
-!> Provides an implementation for the CN as used dftd4
-
 !> Coordination number implementation with single error function and EN-weighting for dftd4
 module mctc_ncoord_erf_dftd4
    use mctc_env, only : wp

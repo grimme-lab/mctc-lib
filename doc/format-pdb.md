@@ -1,16 +1,36 @@
 ---
-title: Protein data bank (PDB) format
+title: Protein Data Bank (PDB) Format
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extension | `.pdb` |
+| Coordinate units | Ångström |
+| Supports periodicity | No (cell info is discarded) |
+| Supports bonds | Yes (via CONECT records) |
+| Format hint | `pdb` |
 
 ## Specification
 
 @Note [Reference](http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html)
 
-The extension identifying this format is ``pdb``.
+The Protein Data Bank (PDB) format is a standard for representing macromolecular structures.
+This implementation reads atomic coordinates from ATOM and HETATM records and bond connectivity from CONECT records.
+
+### Supported Record Types
+
+| Record | Description |
+|--------|-------------|
+| `ATOM` | Standard amino acid atoms |
+| `HETATM` | Heteroatoms (ligands, water, ions) |
+| `CONECT` | Bond connectivity |
+| `END` | End of structure |
 
 ## Example
 
-4QXX protein with explicit hydrogen:
+4QXX protein fragment with explicit hydrogen:
 
 ```text
 HEADER    PROTEIN FIBRIL                          22-JUL-14   4QXX              
@@ -155,18 +175,14 @@ CONECT   76   78   80
 END
 ```
 
-## Extensions
-
-No extension implemented to the original format.
-
-## Missing Features
+## Limitations
 
 The following features are currently not supported:
 
-- Support for multiple file PDB input is not available
-- Fractional side occupation is currently not supported
-  all optional sides count as full atoms
-- Cell information is not preserved, PDB input is always handled molecular
+- Multiple model/file PDB input (only first model is read)
+- Fractional site occupancy (all alternative locations are treated as full atoms)
+- Cell information (CRYST1 record) is not preserved; PDB input is always handled as molecular
+- Anisotropic displacement parameters (ANISOU records)
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.

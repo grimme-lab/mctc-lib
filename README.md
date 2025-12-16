@@ -6,6 +6,44 @@
 [![docs](https://github.com/grimme-lab/mctc-lib/workflows/docs/badge.svg)](https://grimme-lab.github.io/mctc-lib)
 [![codecov](https://codecov.io/gh/grimme-lab/mctc-lib/branch/main/graph/badge.svg)](https://codecov.io/gh/grimme-lab/mctc-lib)
 
+A Fortran library providing unified molecular structure data handling and geometry file format I/O for computational chemistry applications.
+The library supports reading and writing of molecular structures in more than twelve different geometry formats and provides element data and coordination number utilities.
+
+
+## Features
+
+- **Unified structure representation**: A common [``structure_type``](https://grimme-lab.github.io/mctc-lib/type/structure_type.html) for handling molecular and periodic systems
+- **Multi-format I/O**: Read and write structures in 12+ geometry formats
+- **Element data**: Access to atomic/covalent/vdW radii and Pauling electronegativities
+- **Coordination numbers**: Multiple counting functions (exponential, error function, electronegativity-weighted)
+- **Helpful error messages**: Detailed error reporting with source location information
+- **Multiple build systems**: Support for meson, CMake, and fpm
+
+
+## Quick Start
+
+```f90
+program example
+   use mctc_io
+   use mctc_env
+   implicit none
+   type(structure_type) :: mol
+   type(error_type), allocatable :: error
+
+   ! Read a structure (format auto-detected from extension)
+   call read_structure(mol, "molecule.xyz", error)
+   if (allocated(error)) stop error%message
+
+   ! Access structure data
+   print '(a,i0)', "Number of atoms: ", mol%nat
+   print '(a,f12.6)', "Total charge: ", mol%charge
+
+   ! Write to different format
+   call write_structure(mol, "molecule.mol", error)
+   if (allocated(error)) stop error%message
+end program
+```
+
 
 ## Supported formats
 
@@ -175,10 +213,32 @@ mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
 
 An example application is provided with the [``mctc-convert``](man/mctc-convert.1.adoc) program to convert between different supported input formats.
 
+
+### Using mctc-convert
+
+After building, the ``mctc-convert`` tool can convert between any supported formats:
+
+```bash
+# Convert xyz to Turbomole coord
+mctc-convert molecule.xyz molecule.coord
+
+# Convert VASP POSCAR to xyz
+mctc-convert POSCAR structure.xyz
+
+# Pipe from stdin to stdout
+cat input.xyz | mctc-convert -i xyz -o mol - -
+
+# Preserve bond information from SDF when converting
+mctc-convert optimized.xyz final.sdf --template original.sdf
+```
+
+
+### Library Usage
+
 To read an input file using the IO library use the ``read_structure`` routine.
 The final geometry data is stored in a ``structure_type``:
 
-```fortran
+```f90
 use mctc_io
 use mctc_env
 type(structure_type) :: mol
@@ -197,7 +257,7 @@ Alternatively, the ``filetype`` enumerator provides the identifiers of all suppo
 
 In a similar way the ``write_structure`` routine allows to write a ``structure_type`` to a file or unit:
 
-``` fortran
+```f90
 use mctc_io
 use mctc_env
 type(structure_type) :: mol
@@ -212,6 +272,120 @@ end if
 
 The [``mctc-convert``](man/mctc-convert.1.adoc) program provides a chained reader and writer call to act as a geometry file converter.
 Checkout the implementation in [``app/main.f90``](app/main.f90).
+
+
+## Working with the Structure Type
+
+The [``structure_type``](https://grimme-lab.github.io/mctc-lib/type/structure_type.html) is the central data structure for representing molecular systems:
+
+```f90
+type(structure_type) :: mol
+
+! Basic properties
+mol%nat           ! Number of atoms
+mol%nid           ! Number of unique species
+mol%charge        ! Total molecular charge
+mol%uhf           ! Number of unpaired electrons
+
+! Atomic data (arrays)
+mol%xyz(:, :)     ! Cartesian coordinates (3, nat) in Bohr
+mol%id(:)         ! Species index for each atom (nat)
+mol%num(:)        ! Atomic numbers for each species (nid)
+mol%sym(:)        ! Element symbols for each species (nid)
+
+! Periodic systems
+mol%lattice(:, :) ! Lattice vectors (3, 3) in Bohr
+mol%periodic(:)   ! Periodic directions (3)
+
+! Optional data
+mol%bond(:, :)    ! Bond connectivity
+mol%comment       ! Structure title/comment
+```
+
+### Creating Structures Programmatically
+
+All inputs use atomic units. Coordinates must be provided in Bohr (1 Bohr ≈ 0.529 Å).
+
+```f90
+use mctc_io
+use mctc_env, only : wp
+implicit none
+type(structure_type) :: mol
+integer :: num(3)
+real(wp) :: xyz(3, 3)
+
+! Water molecule (coordinates in Bohr)
+num = [8, 1, 1]  ! O, H, H
+xyz = reshape([ &
+   & 0.0_wp, 0.0_wp, 0.2372_wp, &
+   & 0.0_wp, 1.4939_wp, -0.9487_wp, &
+   & 0.0_wp, -1.4939_wp, -0.9487_wp], [3, 3])
+
+call new(mol, num, xyz, charge=0.0_wp, uhf=0)
+```
+
+
+## Using Element Data
+
+Access element-specific properties from the [``mctc_data``](https://grimme-lab.github.io/mctc-lib/module/mctc_data.html) module:
+
+```f90
+use mctc_data
+use mctc_env, only : wp
+implicit none
+real(wp) :: radius
+
+! Get covalent radius for carbon (atomic number 6)
+radius = get_covalent_rad(6)
+
+! Available functions:
+! get_covalent_rad(num) - Covalent radii in Bohr
+! get_vdw_rad(num)      - van der Waals radii in Bohr
+! get_atomic_rad(num)   - Atomic radii in Bohr
+! get_pauling_en(num)   - Pauling electronegativities
+```
+
+
+## Element Symbol Conversion
+
+Convert between element symbols and atomic numbers:
+
+```f90
+use mctc_io, only : to_number, to_symbol
+
+integer :: num
+character(len=2) :: sym
+
+num = to_number("C")     ! Returns 6
+sym = to_symbol(6)       ! Returns "C"
+```
+
+
+## Specifying File Formats
+
+When the file extension is non-standard, use the ``filetype`` enumerator:
+
+```f90
+use mctc_io
+
+call read_structure(mol, "geometry.in", error, filetype%aims)
+call write_structure(mol, "output.dat", error, filetype%xyz)
+```
+
+Available format identifiers:
+- ``filetype%xyz`` - xyz format
+- ``filetype%tmol`` - Turbomole coord
+- ``filetype%molfile`` - mol file
+- ``filetype%sdf`` - SDF format
+- ``filetype%vasp`` - VASP POSCAR
+- ``filetype%pdb`` - PDB format
+- ``filetype%gen`` - DFTB+ genFormat
+- ``filetype%gaussian`` - Gaussian external
+- ``filetype%qcschema`` - QCSchema JSON
+- ``filetype%cjson`` - Chemical JSON
+- ``filetype%pymatgen`` - Pymatgen JSON
+- ``filetype%aims`` - FHI-aims
+- ``filetype%qchem`` - Q-Chem
 
 
 ## Error reporting
@@ -270,6 +444,17 @@ Error: Conflicting lattice and cell groups
 ```
 
 We try to retain as much information as possible when displaying the error message to make it easy to fix the offending part in the input.
+
+
+## API Documentation
+
+Full API documentation is available at [grimme-lab.github.io/mctc-lib](https://grimme-lab.github.io/mctc-lib).
+
+Key modules:
+- [``mctc_io``](https://grimme-lab.github.io/mctc-lib/module/mctc_io.html) - Structure I/O (``read_structure``, ``write_structure``, ``structure_type``)
+- [``mctc_env``](https://grimme-lab.github.io/mctc-lib/module/mctc_env.html) - Environment utilities (``error_type``, ``wp`` working precision)
+- [``mctc_data``](https://grimme-lab.github.io/mctc-lib/module/mctc_data.html) - Element data (radii, electronegativities)
+- [``mctc_ncoord``](https://grimme-lab.github.io/mctc-lib/module/mctc_ncoord.html) - Coordination number evaluation
 
 
 ## License

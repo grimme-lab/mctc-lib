@@ -1,20 +1,45 @@
 ---
-title: Q-Chem molecule format
+title: Q-Chem Molecule Format
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extension | `.qchem` |
+| Coordinate units | Ångström |
+| Supports periodicity | No |
+| Supports charge/spin | Yes |
+| Format hint | `qchem` |
 
 ## Specification
 
-@Note: Reference can be found in the [Q-Chem manual](https://manual.q-chem.com/5.1/sect-molinput.html).
+@Note Reference: [Q-Chem manual](https://manual.q-chem.com/5.1/sect-molinput.html)
 
-Format used by the Q-Chem program.
-Elements can be specified either by atomic numbers or element symbols while the geometry is provided in Ångström by default.
+The Q-Chem molecule format specifies molecular geometry within a `$molecule` block.
 
+### Format Structure
+
+```text
+$molecule
+ charge  multiplicity
+ element  x  y  z
+ element  x  y  z
+ ...
+$end
+```
+
+### Elements
+
+Elements can be specified by:
+- Element symbols (e.g., `C`, `H`, `O`)
+- Atomic numbers (e.g., `6`, `1`, `8`)
 
 ## Example
 
-Caffeine molecule in xyz format
+Caffeine molecule:
 
-```
+```text
 $molecule
  0  1
  C         1.07320000000000        0.04890000000000       -0.07570000000000
@@ -44,13 +69,12 @@ $molecule
 $end
 ```
 
+## Limitations
 
-## Missing Features
+The following features are currently not supported:
 
-Following features are missing
-
-- reading of z-matrix input
-- possibility to change coordinate units to Bohr
+- Coordinate units other than Ångström (Bohr option)
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+

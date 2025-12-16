@@ -1,19 +1,47 @@
 ---
-title: QCSchema JSON
+title: MolSSI QCSchema JSON
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extensions | `.qcjson`, `.json` |
+| Coordinate units | Bohr (atomic units) |
+| Supports periodicity | Yes (via `extras.periodic.lattice`) |
+| Supports bonds | Yes (via `connectivity`) |
+| Supports charge/spin | Yes |
+| Format hint | `qcschema` |
+
+@Note Requires JSON support (jonquil dependency)
 
 ## Specification
 
 @Note [Reference](https://molssi-qc-schema.readthedocs.io)
 
-JSON files are identified by the extension ``qcjson`` or ``json`` and parsed following the ``qcschema_molecule`` or ``qcschema_input`` format.
-The ``molecule`` entry from a ``qcschema_input`` will be extracted, but there is no guarantee that the input information will be used by the program.
+QCSchema is a JSON-based format standardized by the Molecular Sciences Software Institute (MolSSI)
+for quantum chemistry data interchange.
 
+### Supported Schemas
+
+| Schema | Description |
+|--------|-------------|
+| `qcschema_molecule` | Molecular geometry and properties |
+| `qcschema_input` | Complete calculation input (molecule extracted) |
+
+### Key Fields
+
+| Field | Description |
+|-------|-------------|
+| `symbols` | Element symbols array |
+| `geometry` | Coordinates in Bohr (flattened [x1,y1,z1,x2,y2,z2,...]) |
+| `molecular_charge` | Total charge |
+| `molecular_multiplicity` | Spin multiplicity |
+| `connectivity` | Bond connectivity (atom1, atom2, bond_order) |
 
 ## Example
 
-Caffeine molecule in ``qcschema_molecule`` format.
-
+Caffeine molecule in `qcschema_molecule` format:
 
 ```json
 {
@@ -87,10 +115,10 @@ Caffeine molecule in ``qcschema_molecule`` format.
 
 ## Extensions
 
-The reader supports the following extensions:
+### Periodic Systems
 
-- Periodic boundary conditions are specified by providing the lattice vectors in Bohr
-  as extras to the molecule in periodic.lattice as flattened array.
+Periodic boundary conditions are supported via the `extras` field.
+Lattice vectors are specified in Bohr as a flattened 3×3 array:
 
 ```json
 "extras": {
@@ -104,9 +132,11 @@ The reader supports the following extensions:
 }
 ```
 
-## Missing features
+## Limitations
 
-The schema is not verified on completeness and not all data is stored in the final structure type.
+- Schema completeness is not verified during reading
+- Not all QCSchema fields are preserved in the structure type
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+

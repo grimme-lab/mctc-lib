@@ -1,19 +1,42 @@
 ---
-title: Chemical JSON
+title: Chemical JSON (cjson)
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extensions | `.cjson`, `.json` |
+| Coordinate units | Ångström |
+| Supports periodicity | Yes (via `unit cell`) |
+| Supports bonds | Yes |
+| Format hint | `cjson` |
+
+@Note Requires JSON support (jonquil dependency)
 
 ## Specification
 
 @Note [Reference](https://github.com/OpenChemistry/avogadrolibs/blob/master/avogadro/io/cjsonformat.cpp)
 
-Chemical JSON files are identified by the extension ``cjson`` or ``json`` and parsed following the format implemented in Avogadro 2.
-The entries *name*, *atoms.elements.number*, *atoms.coords.3d*, *atoms.coords.3d fractional*, *unit cell*, *atoms.formalCharges*, *bonds.connections.index*, and *bonds.order* are recognized by the reader.
+Chemical JSON is a JSON-based format developed for Avogadro 2.
+It provides a structured way to represent molecular data including geometry, bonds, and properties.
 
+### Supported Fields
+
+| Field | Description |
+|-------|-------------|
+| `name` | Molecule name |
+| `atoms.elements.number` | Atomic numbers array |
+| `atoms.coords.3d` | Cartesian coordinates (Ångström) |
+| `atoms.coords.3dFractional` | Fractional coordinates |
+| `atoms.formalCharges` | Formal charges per atom |
+| `unitCell` | Unit cell parameters |
+| `bonds.connections.index` | Bond connectivity (pairs of atom indices) |
+| `bonds.order` | Bond orders |
 
 ## Example
 
-Caffeine molecule in ``qcschema_molecule`` format.
-
+Caffeine molecule:
 
 ```json
 {
@@ -90,10 +113,11 @@ Caffeine molecule in ``qcschema_molecule`` format.
 }
 ```
 
+## Limitations
 
-## Missing features
-
-The schema is not verified on completeness and not all data is stored in the final structure type.
+- Schema completeness is not verified during reading
+- Not all Chemical JSON fields are preserved in the structure type
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+

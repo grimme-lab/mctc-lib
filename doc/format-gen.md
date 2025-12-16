@@ -1,40 +1,52 @@
 ---
-title: DFTB+ general format
+title: DFTB+ General Format (gen)
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extension | `.gen` |
+| Coordinate units | Ångström (Cartesian) or fractional |
+| Supports periodicity | Yes (0D, 3D, helical) |
+| Supports bonds | No |
+| Format hint | `gen` |
 
 ## Specification
 
 @Note [Reference](https://dftbplus.org/fileadmin/DFTBPLUS/public/dftbplus/latest/manual.pdf)
 
-The general (gen) format is used for DFTB+ as geometry input format.
+The general (gen) format is the standard geometry input format for DFTB+.
 It is based on the [xyz format](./format-xyz.html).
 
-The first line contains the number of atoms and the specific kind of provided
-geometry.
-Available types are cluster (``C``), supercell (``S``), fractional (``F``),
-and helical (``H``), the letter defining the format is case-insensitive.
+### Format Structure
 
-The second line gives the element symbols for each group of atoms separated by
-spaces, the groups are indexed starting from 1 and references in the specification
-of the atomic coordinates by this index rather than their element symbol.
+**Line 1**: Number of atoms and geometry type
 
-The following lines are specified as two integers and three reals separated by
-spaces. The first integer is currently ignored. The second integer references
-the element symbol in the second line.
-The atomic coordinates are given in Ångström for cluster, supercell and helical,
-while they are given as fraction of the lattice vector for fractional input types.
+| Type | Code | Description | Coordinates |
+|------|------|-------------|-------------|
+| Cluster | `C` | Non-periodic molecule | Ångström |
+| Supercell | `S` | 3D periodic with Cartesian | Ångström |
+| Fractional | `F` | 3D periodic with fractional | Lattice fractions |
+| Helical | `H` | Helical symmetry | Ångström |
 
-For supercell and fractional input the next lines contains three reals containing
-the origin of the structure, followed by three lines of each three reals for the
-lattice vectors.
+**Line 2**: Element symbols (space-separated), indexed starting from 1
 
-Lines starting with the ``#`` are comments and are ignored while parsing.
+**Atom lines**: `index  element_index  x  y  z`
+- First integer is currently ignored
+- Second integer references element symbol in line 2
 
-The format is identified by the extension ``gen``.
+**Periodic systems** (S, F, H): Additional lines after atoms:
+- Origin (3 reals)
+- Three lattice vectors (3 lines × 3 reals)
 
-## Example
+Lines starting with `#` are comments.
 
-Caffeine molecule in genFormat:
+## Examples
+
+### Molecular System (Cluster)
+
+Caffeine molecule:
 
 ```text
 24 C
@@ -65,6 +77,8 @@ Caffeine molecule in genFormat:
    24    4    4.40017000000000E+00   -5.16929000000000E+00   -9.47800000000000E-01
 ```
 
+### 3D Periodic System (Supercell)
+
 Ammonia molecular crystal:
 
 ```text
@@ -92,13 +106,8 @@ Ammonia molecular crystal:
     0.00000000000000    0.00000000000000    5.01336000000000
 ```
 
-## Extensions
-
-No extension implemented to the original format.
-
-## Missing Features
+## Limitations
 
 The implementation of this format is (to our knowledge) feature-complete.
 
-@Note Feel free to contribute support for missing features
-      or bring missing features to our attention by opening an issue.
+@Note Feel free to bring missing features to our attention by opening an issue.

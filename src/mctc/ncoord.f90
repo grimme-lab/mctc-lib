@@ -12,13 +12,38 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> @dir mctc/ncoord
-!> Contains the implementation for the coordination number evaluators.
-
-!> @file mctc/ncoord.f90
-!> Reexports the coordination number evaluation modules.
-
-!> Proxy module to expose coordination number containers
+!> Coordination number evaluation module.
+!>
+!> This module provides various coordination number counting functions for
+!> molecular structures. Coordination numbers are computed based on interatomic
+!> distances and covalent radii using different counting functions.
+!>
+!> Available counting functions (via [[cn_count]] enumerator):
+!>
+!> - `cn_count%exp`: Exponential counting function
+!> - `cn_count%dexp`: Double-exponential counting function
+!> - `cn_count%erf`: Error-function-based counting function
+!> - `cn_count%erf_en`: Electronegativity-weighted error function
+!> - `cn_count%dftd4`: DFT-D4 error-function-based counting function
+!>
+!> Use [[new_ncoord]] to create a coordination number evaluator, then call
+!> the `get_cn` method to compute coordination numbers for a structure.
+!>
+!> Example usage:
+!>
+!>```f90
+!> use mctc_ncoord
+!> use mctc_io, only : structure_type
+!> use mctc_env, only : wp, error_type
+!> class(ncoord_type), allocatable :: ncoord
+!> type(structure_type) :: mol
+!> type(error_type), allocatable :: error
+!> real(wp), allocatable :: cn(:)
+!>
+!> call new_ncoord(ncoord, mol, cn_count%exp, error)
+!> allocate(cn(mol%nat))
+!> call ncoord%get_cn(mol, cn)
+!>```
 module mctc_ncoord
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
@@ -55,6 +80,14 @@ module mctc_ncoord
    end type enum_cn_count
 
    !> Actual enumerator possible coordination numbers
+   !>
+   !> | Enumerator | Description | Typical Use |
+   !> |------------|-------------|-------------|
+   !> | `cn_count%exp` | Exponential counting function | General purpose |
+   !> | `cn_count%dexp` | Double-exponential counting function | Sharper cutoff |
+   !> | `cn_count%erf` | Error-function-based counting | GFN methods |
+   !> | `cn_count%erf_en` | Electronegativity-weighted error function | EN corrections |
+   !> | `cn_count%dftd4` | DFT-D4 error-function-based counting | Dispersion corrections |
    type(enum_cn_count), parameter :: cn_count = enum_cn_count()
 
 contains

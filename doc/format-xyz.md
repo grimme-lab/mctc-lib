@@ -1,27 +1,34 @@
 ---
-title: xyz format
+title: XYZ Format
 ---
+
+## Overview
+
+| Property | Value |
+|----------|-------|
+| File extensions | `.xyz`, `.log` |
+| Coordinate units | Ångström |
+| Supports periodicity | No |
+| Supports bonds | No |
+| Format hint | `xyz` |
 
 ## Specification
 
 @Note [Reference](http://www.ccl.net/chemistry/resources/messages/1996/10/21.005-dir/index.html)
 
-Simple format to store cartesian coordinates and element symbols.
-The first line contains the number of atoms in the geometry.
-The second line is a comment line and ignored, some program store additional
-information here.
-The following lines contain a short character identifier and three reals.
-The first entry is interpreted as element symbol and defines the atomic species.
-The atomic coordinates are given in Ångström.
+The xyz format is a simple ASCII format for storing Cartesian coordinates and element symbols.
 
-A scalar quantity can be added to each atom with one real as well as a vector
-quantity by three reals, allowing additional four reals per atomic entry.
+**File structure:**
 
-The format is identified by the file extension ``xyz`` or ``log``.
+1. **Line 1**: Number of atoms (integer)
+2. **Line 2**: Comment line (can be empty, often contains title or energy)
+3. **Lines 3+**: Element symbol followed by three coordinates (x, y, z)
 
-## Examples
+Coordinates are given in Ångström and are internally converted to Bohr.
 
-Caffeine molecule in xyz format
+## Example
+
+Caffeine molecule in xyz format:
 
 ```text
 24
@@ -54,17 +61,18 @@ H            4.40017000000000       -5.16929000000000       -0.94780000000000
 
 ## Extensions
 
-The reader supports the following extensions:
+The reader supports the following extensions beyond the standard format:
 
-- Atomic numbers are allowed instead of element symbols.
-  They are automatically converted to capitalized element symbols
+- **Atomic numbers**: Integer atomic numbers are accepted instead of element symbols
+  and are automatically converted to capitalized element symbols
 
-## Missing Features
+## Limitations
 
 The following features are currently not supported:
 
-- Scalar atomic quantities are not preserved and dropped.
-- Vector atomic quantities are not preserved and dropped.
+- Scalar atomic quantities (4th column) are not preserved and dropped
+- Vector atomic quantities (columns 5-7) are not preserved and dropped
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
+
