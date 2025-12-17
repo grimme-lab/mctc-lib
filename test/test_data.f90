@@ -16,9 +16,10 @@ module test_data
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
    & test_failed, check
+   use mctc_io_convert, only : gmoltoau
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
-   use mctc_data, only : get_atomic_rad, get_covalent_rad, get_pauling_en, get_vdw_rad
+   use mctc_data, only : get_atomic_rad, get_covalent_rad, get_atomic_mass, get_pauling_en, get_vdw_rad
    implicit none
    private
 
@@ -44,7 +45,9 @@ contains
       & new_unittest("pauling_en", test_pauling_en), &
       & new_unittest("pauling_en_mb03", test_pauling_en_mb03), &
       & new_unittest("vdw_rad", test_vdw_rad), &
-      & new_unittest("vdw_rad_mb04", test_vdw_rad_mb04) &
+      & new_unittest("vdw_rad_mb04", test_vdw_rad_mb04), &
+      & new_unittest("atomic_mass", test_atomic_mass), &
+      & new_unittest("atomic_mass_mb05", test_atomic_mass_mb05) &
       & ]
 
    end subroutine collect_data
@@ -252,6 +255,50 @@ contains
       end if
 
    end subroutine test_vdw_rad_mb04
+
+   subroutine test_atomic_mass(error)
+      
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+   
+      call check(error, get_atomic_mass("C"), get_atomic_mass(6))
+      if (allocated(error)) return
+      call check(error, get_atomic_mass("Am"), get_atomic_mass(95))
+      if (allocated(error)) return
+      call check(error, get_atomic_mass("Og"), get_atomic_mass(118))
+      if (allocated(error)) return
+      call check(error, get_atomic_mass("X"), get_atomic_mass(-1))
+   
+   end subroutine test_atomic_mass  
+
+
+   subroutine test_atomic_mass_mb05(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      real(wp), allocatable :: mass_sym(:), mass_num(:)
+
+      real(wp), parameter :: ref(6) = gmoltoau * [&
+      & 1.08110280500000E+1_wp, 3.09737620000000E+1_wp, 1.0079407500000E+0_wp, &
+      & 3.54529375800000E+1_wp, 1.40067032100000E+1_wp, 2.80854987100000E+1_wp]
+
+      call get_structure(mol, "mindless05")
+
+      mass_sym = get_atomic_mass(mol%sym)
+      mass_num = get_atomic_mass(mol%num)
+      
+      if (any(abs(mass_sym - mass_num) > thr) .or. any(abs(mass_sym - ref) > thr)) then
+         call test_failed(error, "Atomic masses do not match")
+         print'(3es21.14)', mass_sym
+         print'("---")'
+         print'(3es21.14)', mass_num
+         print'("---")'
+         print'(3es21.14)', ref
+      end if
+
+   end subroutine test_atomic_mass_mb05
 
 
 end module test_data
