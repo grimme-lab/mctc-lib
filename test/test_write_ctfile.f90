@@ -13,6 +13,7 @@
 ! limitations under the License.
 
 module test_write_ctfile
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use testsuite_structure, only : get_structure
    use mctc_io_write_ctfile
@@ -35,7 +36,9 @@ subroutine collect_write_ctfile(testsuite)
 
    testsuite = [ &
       & new_unittest("valid1-mol", test_valid1_mol), &
-      & new_unittest("valid1-sdf", test_valid1_sdf) &
+      & new_unittest("valid1-sdf", test_valid1_sdf), &
+      & new_unittest("v3k-large-mol", test_v3k_large_mol), &
+      & new_unittest("v3k-large-sdf", test_v3k_large_sdf) &
       & ]
 
 end subroutine collect_write_ctfile
@@ -95,6 +98,94 @@ subroutine test_valid1_sdf(error)
    if (allocated(error)) return
 
 end subroutine test_valid1_sdf
+
+
+subroutine test_v3k_large_mol(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc, struc_read
+   integer :: unit, nat, i
+   character(len=2), allocatable :: sym(:)
+   real(wp), allocatable :: xyz(:, :)
+
+   ! Create a structure with 1001 atoms to trigger V3000 format
+   nat = 1001
+   allocate(sym(nat), xyz(3, nat))
+
+   ! Create alternating H and C atoms on a line
+   do i = 1, nat
+      if (mod(i, 2) == 0) then
+         sym(i) = "C"
+      else
+         sym(i) = "H"
+      end if
+      xyz(1, i) = real(i, wp)
+      xyz(2, i) = 0.0_wp
+      xyz(3, i) = 0.0_wp
+   end do
+
+   call new(struc, sym, xyz)
+
+   open(status='scratch', newunit=unit)
+   call write_molfile(struc, unit)
+   rewind(unit)
+
+   call read_molfile(struc_read, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc_read%nat, nat, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc_read%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_v3k_large_mol
+
+
+subroutine test_v3k_large_sdf(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc, struc_read
+   integer :: unit, nat, i
+   character(len=2), allocatable :: sym(:)
+   real(wp), allocatable :: xyz(:, :)
+
+   ! Create a structure with 1001 atoms to trigger V3000 format
+   nat = 1001
+   allocate(sym(nat), xyz(3, nat))
+
+   ! Create alternating H and C atoms on a line
+   do i = 1, nat
+      if (mod(i, 2) == 0) then
+         sym(i) = "C"
+      else
+         sym(i) = "H"
+      end if
+      xyz(1, i) = real(i, wp)
+      xyz(2, i) = 0.0_wp
+      xyz(3, i) = 0.0_wp
+   end do
+
+   call new(struc, sym, xyz)
+
+   open(status='scratch', newunit=unit)
+   call write_sdf(struc, unit)
+   rewind(unit)
+
+   call read_sdf(struc_read, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc_read%nat, nat, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc_read%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+
+end subroutine test_v3k_large_sdf
 
 
 end module test_write_ctfile
