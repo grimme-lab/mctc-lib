@@ -100,4 +100,10 @@ module mctc_io_convert
    !> Debye to atomic dipole moment units (a.u.)
    real(wp), public, parameter :: dtoau = 1.0_wp/autod
 
+   !> Atomic quadrupole moment units (a.u.) to Buckingham
+   real(wp), public, parameter :: autoq = codata%e*bohr**2*codata%c*1e31_wp
+
+   !> Buckingham to atomic quadrupole moment units (a.u.)
+   real(wp), public, parameter :: qtoau = 1.0_wp/autoq
+
 end module mctc_io_convert
