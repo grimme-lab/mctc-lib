@@ -95,7 +95,7 @@ module mctc_io_convert
    real(wp), public, parameter :: ctoau = 1.0_wp/autoc
 
    !> Atomic dipole moment units (a.u.) to Debye
-   real(wp), public, parameter :: autod = codata%e*bohr*codata%c/1e21_wp
+   real(wp), public, parameter :: autod = codata%e*bohr*codata%c*1e21_wp
 
    !> Debye to atomic dipole moment units (a.u.)
    real(wp), public, parameter :: dtoau = 1.0_wp/autod
