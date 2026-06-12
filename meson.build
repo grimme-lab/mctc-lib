@@ -87,6 +87,40 @@ if install
     subdirs: ['', module_id],
   )
 
+  cmake_data = configuration_data({
+    'PROJECT_NAME': meson.project_name(),
+    'PROJECT_VERSION': meson.project_version(),
+    'PACKAGE_INIT': '',
+    'CMAKE_INSTALL_PREFIX': get_option('prefix'),
+    'CMAKE_INSTALL_INCLUDEDIR': get_option('includedir'),
+    'CMAKE_INSTALL_LIBDIR': get_option('libdir'),
+    'MCTCLIB_WITH_OpenMP': get_option('openmp') ? 'ON' : 'OFF',
+    'MCTCLIB_WITH_JSON': jonquil_dep.found() ? 'ON' : 'OFF',
+    'MCTCLIB_USE_JONQUIL': jonquil_dep.type_name() != 'internal' ? 'ON' : 'OFF',
+    'MCTCLIB_USE_TOMLF': jonquil_dep.type_name() != 'internal' ? 'ON' : 'OFF',
+    'module-dir': module_id,
+  })
+  cmake_files = [
+    configure_file(
+      input: files('config'/'template-config.cmake'),
+      output: meson.project_name() + '-config.cmake',
+      configuration: cmake_data,
+    ),
+    configure_file(
+      input: files('config'/'template-targets.cmake'),
+      output: meson.project_name() + '-targets.cmake',
+      configuration: cmake_data,
+    ),
+    files('config'/'cmake'/'Findjonquil.cmake'),
+    files('config'/'cmake'/'Findtoml-f.cmake'),
+    files('config'/'cmake'/'mctc-utils.cmake'),
+  ]
+  install_data(
+    cmake_files,
+    install_dir: get_option('libdir')/'cmake'/meson.project_name(),
+    install_tag: 'devel',
+  )
+
   asciidoc = find_program('asciidoctor', required: false)
   if asciidoc.found()
     install_man(

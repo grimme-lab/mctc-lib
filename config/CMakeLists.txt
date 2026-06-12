@@ -14,8 +14,16 @@
 
 option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
 
-option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" TRUE)
-option(WITH_JSON "Enable support for JSON parsing via jonquil" FALSE)
+if(NOT DEFINED WITH_OpenMP)
+  set(WITH_OpenMP TRUE)
+endif()
+if(NOT DEFINED WITH_JSON)
+  set(WITH_JSON FALSE)
+endif()
+option(MCTCLIB_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
+option(MCTCLIB_WITH_JSON "Enable support for JSON parsing via jonquil" ${WITH_JSON})
+set(MCTCLIB_USE_JONQUIL ${MCTCLIB_WITH_JSON})
+set(MCTCLIB_USE_TOMLF ${MCTCLIB_WITH_JSON})
 
 set(
   "${PROJECT_NAME}-module-dir"
@@ -65,7 +73,7 @@ endif()
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/template.cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/template-config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )

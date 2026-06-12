@@ -62,4 +62,6 @@ jonquil_dep = dependency(
   ],
   static: get_option('default_library') != 'dynamic',
 )
-lib_deps += jonquil_dep
+if jonquil_dep.found()
+  lib_deps += jonquil_dep
+endif
