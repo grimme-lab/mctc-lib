@@ -116,7 +116,7 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
       call write_molfile(self, unit)
 
    case(filetype%pdb)
-      call write_pdb(self, unit)
+      call write_pdb(self, unit, error=error)
 
    case(filetype%pymatgen)
       call write_pymatgen(self, unit)

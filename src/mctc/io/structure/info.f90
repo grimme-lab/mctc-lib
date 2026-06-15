@@ -36,6 +36,7 @@ module mctc_io_structure_info
       integer :: charge = 0
       integer :: residue_number = 0
       character(len=4) :: name = ' '
+      real(wp) :: occupancy = 1.0_wp
       character(len=1) :: loc = ' '
       character(len=3) :: residue = ' '
       character(len=1) :: chains = ' '

@@ -15,6 +15,7 @@
 module test_read_pdb
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
+   use mctc_io_convert, only : aatoau
    use mctc_io_read_pdb
    use mctc_io_structure, only : structure_type
    implicit none
@@ -37,9 +38,16 @@ subroutine collect_read_pdb(testsuite)
       & new_unittest("valid2-pdb", test_valid2_pdb), &
       & new_unittest("valid3-pdb", test_valid3_pdb), &
       & new_unittest("valid4-pdb", test_valid4_pdb), &
+      & new_unittest("valid5-pdb", test_valid5_pdb), &
+      & new_unittest("valid6-pdb", test_valid6_pdb), &
+      & new_unittest("valid7-pdb", test_valid7_pdb), &
+      & new_unittest("valid8-pdb", test_valid8_pdb), &
+      & new_unittest("valid9-pdb", test_valid9_pdb), &
       & new_unittest("invalid1-pdb", test_invalid1_pdb, should_fail=.true.), &
       & new_unittest("invalid2-pdb", test_invalid2_pdb, should_fail=.true.), &
-      & new_unittest("invalid3-pdb", test_invalid3_pdb, should_fail=.true.) &
+      & new_unittest("invalid3-pdb", test_invalid3_pdb, should_fail=.true.), &
+      & new_unittest("invalid4-pdb", test_invalid4_pdb, should_fail=.true.), &
+      & new_unittest("invalid5-pdb", test_invalid5_pdb, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_pdb
@@ -334,6 +342,163 @@ subroutine test_valid4_pdb(error)
 end subroutine test_valid4_pdb
 
 
+subroutine test_valid5_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
+      "ATOM      2  CA ASER A   1       1.000   0.000   0.000  0.60 10.00           C", &
+      "ATOM      3  CA BSER A   1       2.000   0.000   0.000  0.40 10.00           C", &
+      "ATOM      4  C   SER A   1       3.000   0.000   0.000  1.00 10.00           C", &
+      "ATOM      5  O   SER A   1       4.000   0.000   0.000  1.00 10.00           O", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 4, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, 2), 1.0_wp*aatoau, thr=1.0e-12_wp, &
+      & message="Highest occupancy alternate location was not selected")
+   if (allocated(error)) return
+
+end subroutine test_valid5_pdb
+
+
+subroutine test_valid6_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
+      "ATOM      2  CA ASER A   1       1.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      3  CA BSER A   1       2.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      4  C   SER A   1       3.000   0.000   0.000  1.00 10.00           C", &
+      "ATOM      5  O   SER A   1       4.000   0.000   0.000  1.00 10.00           O", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 4, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, 2), 1.0_wp*aatoau, thr=1.0e-12_wp, &
+      & message="Tie occupancy should keep the first alternate location")
+   if (allocated(error)) return
+
+end subroutine test_valid6_pdb
+
+
+subroutine test_valid7_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
+      "ATOM      2  CA ASER A   1       1.000   0.000   0.000  0.25 10.00           C", &
+      "ATOM      3  CA BSER A   1       2.000   0.000   0.000  0.25 10.00           C", &
+      "ATOM      4  CA CSER A   1       3.000   0.000   0.000  0.25 10.00           C", &
+      "ATOM      5  CA DSER A   1       4.000   0.000   0.000  0.25 10.00           C", &
+      "ATOM      6  C   SER A   1       5.000   0.000   0.000  1.00 10.00           C", &
+      "ATOM      7  O   SER A   1       6.000   0.000   0.000  1.00 10.00           O", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 4, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, 2), 1.0_wp*aatoau, thr=1.0e-12_wp, &
+      & message="Four-way tie should keep the first alternate location")
+   if (allocated(error)) return
+
+end subroutine test_valid7_pdb
+
+
+subroutine test_valid8_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
+      "ATOM      2  CA ASER A   1       1.000   0.000   0.000  0.40 10.00           C", &
+      "ATOM      3  CA BSER A   1       2.000   0.000   0.000  0.60 10.00           C", &
+      "ATOM      4  C   SER A   1       3.000   0.000   0.000  1.00 10.00           C", &
+      "ATOM      5  O   SER A   1       4.000   0.000   0.000  1.00 10.00           O", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 4, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, 2), 2.0_wp*aatoau, thr=1.0e-12_wp, &
+      & message="Higher occupancy alternate location was not selected")
+   if (allocated(error)) return
+
+end subroutine test_valid8_pdb
+
+
+subroutine test_valid9_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
+      "ATOM      2  CA BSER A   1       1.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      3  CA  SER A   1       2.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      4  C   SER A   1       3.000   0.000   0.000  1.00 10.00           C", &
+      "ATOM      5  O   SER A   1       4.000   0.000   0.000  1.00 10.00           O", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 4, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, 2), 2.0_wp*aatoau, thr=1.0e-12_wp, &
+      & message="Primary location should win tie against alternate location")
+   if (allocated(error)) return
+
+end subroutine test_valid9_pdb
+
+
 subroutine test_invalid1_pdb(error)
 
    !> Error handling
@@ -555,6 +720,49 @@ subroutine test_invalid3_pdb(error)
    close(unit)
 
 end subroutine test_invalid3_pdb
+
+
+subroutine test_invalid4_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
+      "ATOM      2  CA  SER A   1       1.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      3  CA  SER A   1       2.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      4  C   SER A   1       3.000   0.000   0.000  1.00 10.00           C", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid4_pdb
+
+
+subroutine test_invalid5_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000 -0.10 10.00           N", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid5_pdb
 
 
 end module test_read_pdb
