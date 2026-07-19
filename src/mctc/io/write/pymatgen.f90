@@ -30,7 +30,7 @@ module mctc_io_write_pymatgen
       module procedure :: json_value_real
    end interface json_value
 
-   character(len=*), parameter :: nl = new_line('a')
+   character(len=*), parameter :: nl = new_line("a")
 
 contains
 
@@ -39,7 +39,7 @@ subroutine write_pymatgen(mol, unit)
    type(structure_type), intent(in) :: mol
    integer, intent(in) :: unit
 
-   write(unit, '(a)') json_string(mol, "  ")
+   write(unit, "(a)") json_string(mol, "  ")
 end subroutine write_pymatgen
 
 pure function json_string(mol, indent) result(string)
@@ -99,9 +99,9 @@ pure function json_string(mol, indent) result(string)
       string = string // ","
       if (present(indent)) string = string // nl // indent // indent // indent
       string = string // json_key("xyz", indent) // &
-         & "[" // json_value(mol%xyz(1, iat) * autoaa, '(es23.16)') // "," // &
-         & json_value(mol%xyz(2, iat) * autoaa, '(es23.16)') // "," // &
-         & json_value(mol%xyz(3, iat) * autoaa, '(es23.16)') // "]"
+         & "[" // json_value(mol%xyz(1, iat) * autoaa, "(es23.16)") // "," // &
+         & json_value(mol%xyz(2, iat) * autoaa, "(es23.16)") // "," // &
+         & json_value(mol%xyz(3, iat) * autoaa, "(es23.16)") // "]"
 
       ! if (allocated(invlat)) then
       !    vec = matmul(invlat, mol%xyz(:, iat))
@@ -136,9 +136,9 @@ pure function json_string(mol, indent) result(string)
       if (present(indent)) string = string // nl // indent // indent // indent
       do ilt = 1, 3
          string = string // "[" // &
-            & json_value(mol%lattice(1, ilt) * autoaa, '(es23.16)') // "," // &
-            & json_value(mol%lattice(2, ilt) * autoaa, '(es23.16)') // "," // &
-            & json_value(mol%lattice(3, ilt) * autoaa, '(es23.16)') // "]"
+            & json_value(mol%lattice(1, ilt) * autoaa, "(es23.16)") // "," // &
+            & json_value(mol%lattice(2, ilt) * autoaa, "(es23.16)") // "," // &
+            & json_value(mol%lattice(3, ilt) * autoaa, "(es23.16)") // "]"
          if (ilt < 3) then
             string = string // ","
             if (present(indent)) string = string // nl // indent // indent // indent
@@ -147,19 +147,19 @@ pure function json_string(mol, indent) result(string)
       if (present(indent)) string = string // nl // indent // indent
       string = string // "],"
       if (present(indent)) string = string // nl // indent // indent
-      string = string // json_key("a", indent) // json_value(cellpar(1) * autoaa, '(es23.16)') // ","
+      string = string // json_key("a", indent) // json_value(cellpar(1) * autoaa, "(es23.16)") // ","
       if (present(indent)) string = string // nl // indent // indent
-      string = string // json_key("b", indent) // json_value(cellpar(2) * autoaa, '(es23.16)') // ","
+      string = string // json_key("b", indent) // json_value(cellpar(2) * autoaa, "(es23.16)") // ","
       if (present(indent)) string = string // nl // indent // indent
-      string = string // json_key("c", indent) // json_value(cellpar(3) * autoaa, '(es23.16)') // ","
+      string = string // json_key("c", indent) // json_value(cellpar(3) * autoaa, "(es23.16)") // ","
       if (present(indent)) string = string // nl // indent // indent
-      string = string // json_key("alpha", indent) // json_value(cellpar(4), '(es23.16)') // ","
+      string = string // json_key("alpha", indent) // json_value(cellpar(4), "(es23.16)") // ","
       if (present(indent)) string = string // nl // indent // indent
-      string = string // json_key("beta", indent) // json_value(cellpar(5), '(es23.16)') // ","
+      string = string // json_key("beta", indent) // json_value(cellpar(5), "(es23.16)") // ","
       if (present(indent)) string = string // nl // indent // indent
-      string = string // json_key("gamma", indent) // json_value(cellpar(6), '(es23.16)') // ","
+      string = string // json_key("gamma", indent) // json_value(cellpar(6), "(es23.16)") // ","
       if (present(indent)) string = string // nl // indent // indent
-      string = string // json_key("volume", indent) // json_value(volume * autoaa**3, '(es23.16)')
+      string = string // json_key("volume", indent) // json_value(volume * autoaa**3, "(es23.16)")
       if (present(indent)) string = string // nl // indent
       string = string // "}"
    end if
@@ -233,7 +233,7 @@ pure function json_value_int(val) result(string)
    end do
    if (val < 0) then
       pos = pos - 1
-      buffer(pos:pos) = '-'
+      buffer(pos:pos) = "-"
    end if
 
    string = buffer(pos:)

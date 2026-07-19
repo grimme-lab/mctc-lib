@@ -96,8 +96,8 @@
 !>
 !> For an example setup checkout the ``test/`` directory in this project.
 module mctc_env_testing
-   use mctc_env_error, only : error_type, mctc_stat
    use mctc_env_accuracy, only : sp, dp, i1, i2, i4, i8
+   use mctc_env_error, only : error_type, mctc_stat
    implicit none
    private
 
@@ -173,7 +173,7 @@ module mctc_env_testing
    end type testsuite_type
 
 
-   character(len=*), parameter :: fmt = '(1x, *(1x, a))'
+   character(len=*), parameter :: fmt = "(1x, *(1x, a))"
    character(len=*), parameter :: indent = repeat(" ", 5) // repeat(".", 3)
 
 
@@ -722,7 +722,7 @@ subroutine test_failed(error, message, more)
    error%stat = mctc_stat%fatal
 
    if (present(more)) then
-      error%message = message // new_line('a') // more
+      error%message = message // new_line("a") // more
    else
       error%message = message
    end if

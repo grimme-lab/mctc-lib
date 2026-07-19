@@ -12,11 +12,11 @@
 ! See the License for the specific language governing permissions and
 ! limitations under the License.
 
-!> Coordination number implementation using an exponential counting function as in dftd3. 
+!> Coordination number implementation using an exponential counting function as in dftd3.
 module mctc_ncoord_exp
+   use mctc_data_covrad, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use mctc_data_covrad, only : get_covalent_rad
    use mctc_ncoord_type, only : ncoord_type
    implicit none
    private
@@ -85,7 +85,7 @@ contains
       end if
 
    end subroutine new_exp_ncoord
-   
+
 
    !> Exponential counting function for coordination number contributions.
    elemental function ncoord_count(self, izp, jzp, r) result(count)

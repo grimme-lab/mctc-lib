@@ -140,7 +140,7 @@ pure subroutine eigvec_3x3(a, w, q)
    real(wp), intent(out) :: q(3,3)
 
    real(wp), parameter :: eps = epsilon(1.0_wp)
-   real(wp) norm, n1, n2, n3, precon
+   real(wp) :: norm, n1, n2, n3, precon
    integer :: i
 
    w(1) = max(abs(a(1, 1)), abs(a(1, 2)))

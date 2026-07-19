@@ -37,12 +37,12 @@ subroutine write_aims(self, unit)
    expo = maxval(self%xyz) > 1.0e+5 .or. minval(self%xyz) < -1.0e+5
    if (expo) then
       do iat = 1, self%nat
-         write(unit, '(a, 1x, 3es24.14, 1x, a)') &
+         write(unit, "(a, 1x, 3es24.14, 1x, a)") &
             "atom", self%xyz(:, iat) * autoaa, trim(self%sym(self%id(iat)))
       end do
    else
       do iat = 1, self%nat
-         write(unit, '(a, 1x, 3f24.14, 1x, a)') &
+         write(unit, "(a, 1x, 3f24.14, 1x, a)") &
             "atom", self%xyz(:, iat) * autoaa, trim(self%sym(self%id(iat)))
       end do
    end if
@@ -51,12 +51,12 @@ subroutine write_aims(self, unit)
       if (size(self%lattice, 2) /= 3) return
       do ilt = 1, 3
          if (self%periodic(ilt)) then
-            write(unit, '(a, 1x, 3f24.14)') &
+            write(unit, "(a, 1x, 3f24.14)") &
                "lattice_vector", self%lattice(:, ilt) * autoaa
          end if
       end do
    end if
 
 end subroutine write_aims
-   
+
 end module mctc_io_write_aims

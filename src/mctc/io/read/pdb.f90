@@ -17,9 +17,9 @@ module mctc_io_read_pdb
    use mctc_env_error, only : error_type
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
-   use mctc_io_symbols, only : to_number, symbol_length
    use mctc_io_structure, only : structure_type, new
    use mctc_io_structure_info, only : pdb_data, resize
+   use mctc_io_symbols, only : to_number, symbol_length
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
       read_token, to_string
    implicit none
@@ -53,7 +53,7 @@ subroutine read_pdb(self, unit, error)
    character(len=symbol_length), allocatable :: sym(:)
    type(pdb_data), allocatable :: pdb(:)
 
-   allocate(sym(p_initial_size), source=repeat(' ', symbol_length))
+   allocate(sym(p_initial_size), source=repeat(" ", symbol_length))
    allocate(xyz(3, p_initial_size), source=0.0_wp)
    allocate(pdb(p_initial_size), source=pdb_data())
 
@@ -63,13 +63,13 @@ subroutine read_pdb(self, unit, error)
    stat = 0
    do while(stat == 0)
       call next_line(unit, line, pos, lnum, stat)
-      if (index(line, 'END') == 1) exit
-      if (index(line, 'ATOM') == 1 .or. index(line, 'HETATM') == 1) then
+      if (index(line, "END") == 1) exit
+      if (index(line, "ATOM") == 1 .or. index(line, "HETATM") == 1) then
          if (iatom >= size(xyz, 2)) call resize(xyz)
          if (iatom >= size(sym)) call resize(sym)
          if (iatom >= size(pdb)) call resize(pdb)
          iatom = iatom + 1
-         pdb(iatom)%het = index(line, 'HETATM') == 1
+         pdb(iatom)%het = index(line, "HETATM") == 1
 
          if (len(line) >= 78) then
             ! a4: 13:16, a1: 17:17, a3: 18:20, a1: 22:22
@@ -136,8 +136,8 @@ subroutine read_pdb(self, unit, error)
          xyz(:,iatom) = coords * aatoau
          atom_type = to_number(sym(iatom))
          if (atom_type == 0) then
-            try = scan(pdb(iatom)%name, 'HCNOSPF')
-            if (try > 0) sym(iatom) = pdb(iatom)%name(try:try)//' '
+            try = scan(pdb(iatom)%name, "HCNOSPF")
+            if (try > 0) sym(iatom) = pdb(iatom)%name(try:try)//" "
             pdb(iatom)%charge = 0
          else
             read(a_charge(1:1), *, iostat=stat) pdb(iatom)%charge
@@ -145,7 +145,7 @@ subroutine read_pdb(self, unit, error)
                stat = 0
                pdb(iatom)%charge = 0
             else
-               if (a_charge(2:2) == '-') pdb(iatom)%charge = -pdb(iatom)%charge
+               if (a_charge(2:2) == "-") pdb(iatom)%charge = -pdb(iatom)%charge
             end if
          end if
          if (to_number(sym(iatom)) == 0) then

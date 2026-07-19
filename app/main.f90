@@ -48,7 +48,7 @@ program main
    call get_arguments(input, input_format, output, output_format, normalize, &
       & template, template_format, read_dot_files, error)
    if (allocated(error)) then
-      write(error_unit, '(a)') error%message
+      write(error_unit, "(a)") error%message
       error stop
    end if
 
@@ -63,7 +63,7 @@ program main
          call read_structure(mol_template, template, error, template_format)
       end if
       if (allocated(error)) then
-         write(error_unit, '(a)') error%message
+         write(error_unit, "(a)") error%message
          error stop
       end if
    end if
@@ -91,13 +91,13 @@ program main
       end if
    end if
    if (allocated(error)) then
-      write(error_unit, '(a)') error%message
+      write(error_unit, "(a)") error%message
       error stop
    end if
 
    if (allocated(mol_template)) then
       if (mol%nat /= mol_template%nat) then
-         write(error_unit, '(*(a, 1x))') &
+         write(error_unit, "(*(a, 1x))") &
             "Number of atoms missmatch in", template, "and", input
          error stop
       end if
@@ -122,7 +122,7 @@ program main
       call write_structure(mol, output, error, output_format)
    end if
    if (allocated(error)) then
-      write(error_unit, '(a)') error%message
+      write(error_unit, "(a)") error%message
       error stop
    end if
 
@@ -133,16 +133,16 @@ contains
 subroutine help(unit)
    integer, intent(in) :: unit
 
-   write(unit, '(a, *(1x, a))') &
+   write(unit, "(a, *(1x, a))") &
       "Usage: "//prog_name//" [options] <input> <output>"
 
-   write(unit, '(a)') &
+   write(unit, "(a)") &
       "", &
       "Read structure from input file and writes it to output file.", &
       "The format is determined by the file extension or the format hint", &
       ""
 
-   write(unit, '(2x, a, t25, a)') &
+   write(unit, "(2x, a, t25, a)") &
       "-i, --input <format>", "Hint for the format of the input file", &
       "-o, --output <format>", "Hint for the format of the output file", &
       "--normalize", "Normalize all element symbols to capitalized format", &
@@ -153,7 +153,7 @@ subroutine help(unit)
       "--version", "Print program version and exit", &
       "--help", "Show this help message"
 
-   write(unit, '(a)')
+   write(unit, "(a)")
 
 end subroutine help
 
@@ -163,7 +163,7 @@ subroutine version(unit)
    character(len=:), allocatable :: version_string
 
    call get_mctc_version(string=version_string)
-   write(unit, '(a, *(1x, a))') &
+   write(unit, "(a, *(1x, a))") &
       & prog_name, "version", version_string
 
 end subroutine version
@@ -294,9 +294,9 @@ function join(a1, a2) result(path)
    character :: filesep
 
    if (is_windows()) then
-      filesep = '\'
+      filesep = "\"
    else
-      filesep = '/'
+      filesep = "/"
    end if
 
    path = a1 // filesep // a2
@@ -323,15 +323,16 @@ subroutine read_file(filename, val, error)
 
    lnum = 0
 
-   open(file=filename, newunit=io, status='old', iostat=stat)
+   open(file=filename, newunit=io, status="old", iostat=stat)
    if (stat /= 0) then
       call fatal_error(error, "Error: Could not open file '"//filename//"'")
       return
    end if
 
    call next_line(io, line, pos, lnum, stat)
-   if (stat == 0) &
-      call read_next_token(line, pos, token, val, stat)
+   if (stat == 0) then
+     call read_next_token(line, pos, token, val, stat)
+   end if
    if (stat /= 0) then
       call io_error(error, "Cannot read value from file", line, token, &
          filename, lnum, "expected integer value")

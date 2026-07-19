@@ -17,10 +17,10 @@ module mctc_io_read_qchem
    use mctc_env_error, only : error_type
    use mctc_io_constants, only : pi
    use mctc_io_convert, only : aatoau
-   use mctc_io_resize, only : resize
    use mctc_io_math, only : crossprod
-   use mctc_io_symbols, only : symbol_length, to_number, to_symbol
+   use mctc_io_resize, only : resize
    use mctc_io_structure, only : structure_type, new
+   use mctc_io_symbols, only : symbol_length, to_number, to_symbol
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
       read_next_token, read_token, to_lower
    implicit none
@@ -62,7 +62,7 @@ subroutine read_qchem(mol, unit, error)
 
       call next_token(line, pos, token)
       if (token%first > len(line)) cycle
-      if (to_lower(line(token%first:token%last)) == '$molecule') exit
+      if (to_lower(line(token%first:token%last)) == "$molecule") exit
    end do
 
    if (stat /= 0) then
@@ -72,17 +72,19 @@ subroutine read_qchem(mol, unit, error)
    end if
 
    call next_line(unit, line, pos, lnum, stat)
-   if (stat == 0) &
-      call read_next_token(line, pos, token, charge, stat)
-   if (stat == 0) &
-      call read_next_token(line, pos, token, multiplicity, stat)
+   if (stat == 0) then
+     call read_next_token(line, pos, token, charge, stat)
+   end if
+   if (stat == 0) then
+     call read_next_token(line, pos, token, multiplicity, stat)
+   end if
    if (stat /= 0) then
       call io_error(error, "Failed to read charge and multiplicity", &
          & line, token, filename(unit), lnum, "expected integer value")
       return
    end if
 
-   allocate(sym(initial_size), source=repeat(' ', symbol_length))
+   allocate(sym(initial_size), source=repeat(" ", symbol_length))
    allocate(xyz(3, initial_size), source=0.0_wp)
 
    call next_line(unit, line, pos, lnum, stat)
@@ -119,7 +121,7 @@ subroutine read_qchem(mol, unit, error)
          if (stat /= 0) exit
 
          call next_token(line, pos, token)
-         if (to_lower(line(token%first:token%last)) == '$end') exit
+         if (to_lower(line(token%first:token%last)) == "$end") exit
 
          if (iat >= size(sym)) call resize(sym)
          if (iat >= size(xyz, 2)) call resize(xyz)
@@ -138,10 +140,12 @@ subroutine read_qchem(mol, unit, error)
          end if
 
          do iz = 1, zrepeat
-            if (stat == 0) &
-            call read_next_token(line, pos, token, ij(iz), stat)
-            if (stat == 0) &
-            call read_next_token(line, pos, token, zm(iz), stat)
+            if (stat == 0) then
+              call read_next_token(line, pos, token, ij(iz), stat)
+            end if
+            if (stat == 0) then
+              call read_next_token(line, pos, token, zm(iz), stat)
+            end if
          end do
          if (stat /= 0) then
             call io_error(error, "Cannot read coordinates", &
@@ -185,10 +189,12 @@ subroutine read_qchem(mol, unit, error)
 
       end do
    else
-      if (stat == 0) &
-         call read_next_token(line, pos, token, y, stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, z, stat)
+      if (stat == 0) then
+        call read_next_token(line, pos, token, y, stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, z, stat)
+      end if
       if (stat /= 0) then
          call io_error(error, "Cannot read coordinates", &
             & line, token, filename(unit), lnum, "expected real value")
@@ -202,7 +208,7 @@ subroutine read_qchem(mol, unit, error)
          if (stat /= 0) exit
 
          call next_token(line, pos, token)
-         if (to_lower(line(token%first:token%last)) == '$end') exit
+         if (to_lower(line(token%first:token%last)) == "$end") exit
 
          if (iat >= size(sym)) call resize(sym)
          if (iat >= size(xyz, 2)) call resize(xyz)
@@ -221,10 +227,12 @@ subroutine read_qchem(mol, unit, error)
          end if
 
          call read_next_token(line, pos, token, x, stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, y, stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, z, stat)
+         if (stat == 0) then
+           call read_next_token(line, pos, token, y, stat)
+         end if
+         if (stat == 0) then
+           call read_next_token(line, pos, token, z, stat)
+         end if
          if (stat /= 0) then
             call io_error(error, "Cannot read coordinates", &
                & line, token, filename(unit), lnum, "expected real value")

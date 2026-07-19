@@ -109,36 +109,36 @@ elemental function get_filetype(file) result(ftype)
    integer :: iext, isep
 
    ftype = filetype%unknown
-   iext = index(file, '.', back=.true.)
-   isep = scan(file, '\/', back=.true.)
+   iext = index(file, ".", back=.true.)
+   isep = scan(file, "\/", back=.true.)
 
    if (iext > isep .and. iext > 0) then
       select case(to_lower(file(iext+1:)))
-      case('coord', 'tmol')
+      case("coord", "tmol")
          ftype = filetype%tmol
-      case('xyz', 'log')
+      case("xyz", "log")
          ftype = filetype%xyz
-      case('mol')
+      case("mol")
          ftype = filetype%molfile
-      case('sdf')
+      case("sdf")
          ftype = filetype%sdf
-      case('poscar', 'contcar', 'vasp')
+      case("poscar", "contcar", "vasp")
          ftype = filetype%vasp
-      case('pdb')
+      case("pdb")
          ftype = filetype%pdb
-      case('gen')
+      case("gen")
          ftype = filetype%gen
-      case('ein')
+      case("ein")
          ftype = filetype%gaussian
-      case('qcjson')
+      case("qcjson")
          ftype = filetype%qcschema
-      case('cjson')
+      case("cjson")
          ftype = filetype%cjson
-      case('qchem')
+      case("qchem")
          ftype = filetype%qchem
-      case('pmgjson')
+      case("pmgjson")
          ftype = filetype%pymatgen
-      case('json')
+      case("json")
          ftype = filetype%json
       end select
       if (ftype /= filetype%unknown) return
@@ -147,16 +147,16 @@ elemental function get_filetype(file) result(ftype)
    end if
 
    if (iext > isep) then
-      if (file(isep+1:) == 'geometry.in') then
+      if (file(isep+1:) == "geometry.in") then
          ftype = filetype%aims
       end if
 
       select case(to_lower(file(isep+1:iext-1)))
-      case('geometry.in')
+      case("geometry.in")
          ftype = filetype%aims
-      case('coord')
+      case("coord")
          ftype = filetype%tmol
-      case('poscar', 'contcar')
+      case("poscar", "contcar")
          ftype = filetype%vasp
       end select
    end if

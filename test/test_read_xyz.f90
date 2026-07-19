@@ -57,8 +57,8 @@ subroutine test_valid1_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "9", &
       "WATER27, (H2O)3", &
       "O     1.1847029    1.1150792   -0.0344641 ", &
@@ -96,8 +96,8 @@ subroutine test_valid2_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "24", &
       "", &
       "C          1.07317        0.04885       -0.07573", &
@@ -148,8 +148,8 @@ subroutine test_valid3_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "24", &
       "#", &
       "c  1.07317  0.04885 -0.07573 -0.05445590", &
@@ -198,8 +198,8 @@ subroutine test_valid4_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "3", &
       "WATER27, H2O", &
       "O     1.1847029    1.1150792   -0.0344641 ", &
@@ -240,8 +240,8 @@ subroutine test_valid5_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "3", &
       "WATER27, H2O", &
       "8     1.1847029    1.1150792   -0.0344641 ", &
@@ -277,8 +277,8 @@ subroutine test_invalid1_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "9", &
       "WATER27, (H2O)3", &
       "O     1.1847029    1.1150792   -0.0344641 ", &
@@ -304,8 +304,8 @@ subroutine test_invalid2_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "WATER27, (H2O)3", &
       "O     1.1847029    1.1150792   -0.0344641 ", &
@@ -334,8 +334,8 @@ subroutine test_invalid3_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       & "120"
    rewind(unit)
 
@@ -354,8 +354,8 @@ subroutine test_invalid4_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "-3", &
       "H2O", &
       "O     1.1847029    1.1150792   -0.0344641 ", &
@@ -378,8 +378,8 @@ subroutine test_invalid5_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "3", &
       "H2O", &
       "****o   1.1847029    1.1150792   -0.0344641 ", &
@@ -402,8 +402,8 @@ subroutine test_invalid6_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "3", &
       "H2O", &
       "1.1847029    1.1150792   -0.0344641      O", &
@@ -426,8 +426,8 @@ subroutine test_invalid7_xyz(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "nine", &
       "WATER27, (H2O)3", &
       "O     1.1847029    1.1150792   -0.0344641 ", &

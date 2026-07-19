@@ -13,21 +13,21 @@
 ! limitations under the License.
 
 module test_ncoord
+   use mctc_cutoff, only : get_lattice_points
+   use mctc_data_covrad, only : get_covalent_rad
+   use mctc_data_paulingen, only : get_pauling_en
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
    & test_failed, check
    use mctc_io_structure, only : structure_type
-   use testsuite_structure, only : get_structure
-   use mctc_cutoff, only : get_lattice_points
-   use mctc_data_covrad, only : get_covalent_rad
-   use mctc_data_paulingen, only : get_pauling_en
-   use mctc_ncoord_dexp, only : dexp_ncoord_type, new_dexp_ncoord
-   use mctc_ncoord_exp, only : exp_ncoord_type, new_exp_ncoord
-   use mctc_ncoord_erf, only : erf_ncoord_type, new_erf_ncoord
-   use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
-   use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
-   use mctc_ncoord_type, only : ncoord_type
    use mctc_ncoord, only : new_ncoord, cn_count, get_cn_count_id, get_cn_count_string
+   use mctc_ncoord_dexp, only : dexp_ncoord_type, new_dexp_ncoord
+   use mctc_ncoord_erf, only : erf_ncoord_type, new_erf_ncoord
+   use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
+   use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
+   use mctc_ncoord_exp, only : exp_ncoord_type, new_exp_ncoord
+   use mctc_ncoord_type, only : ncoord_type
+   use testsuite_structure, only : get_structure
    implicit none
    private
 
@@ -134,7 +134,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_gen
@@ -273,7 +273,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_dexp
@@ -306,7 +306,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_dexp_defaults
@@ -572,9 +572,9 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
-   
+
    end subroutine test_cn_mb01_exp
 
 
@@ -606,7 +606,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_exp_defaults
@@ -837,7 +837,7 @@ contains
 
 
    !> ----------------------------------------------------
-   !> Tests for error-function based coordination number 
+   !> Tests for error-function based coordination number
    !> using the Pyykko covalent radii and Pauling EN
    !> ----------------------------------------------------
    subroutine test_cn_mb01_erf(error)
@@ -873,7 +873,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_erf
@@ -907,7 +907,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_erf_defaults
@@ -1186,7 +1186,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_erf_en
@@ -1220,7 +1220,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_erf_en_defaults
@@ -1513,7 +1513,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_erf_dftd4
@@ -1547,7 +1547,7 @@ contains
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
-         print'(3es21.14)', cn
+         print"(3es21.14)", cn
       end if
 
    end subroutine test_cn_mb01_erf_dftd4_defaults
@@ -1568,26 +1568,26 @@ contains
 
       real(wp), parameter :: cutoff = 30.0_wp
       real(wp), parameter :: ref_gradient(3, 16) = reshape([ &
-      &  2.3515337861584880_wp, -3.0453827536691351_wp,  0.5392536733971742_wp, & 
-      & -0.4086227335489838_wp,  0.0501074408829545_wp,  0.2137313744331271_wp, & 
-      &  0.0249303991608369_wp, -0.0373339882416463_wp, -0.0756057413224991_wp, & 
-      & -0.5436172455452489_wp,  0.4933244472902760_wp,  1.2499429094951524_wp, & 
-      &  0.0187062301843386_wp,  0.0079863446319139_wp, -0.0342050060044000_wp, & 
-      &  0.0541178064781164_wp,  0.0314514945594538_wp,  0.0256701683856457_wp, & 
-      & -1.1131746078453495_wp, -1.6288054931512879_wp,  0.4146928754871603_wp, & 
-      &  0.0887505649437715_wp,  0.0350320577127468_wp, -0.0407677557149725_wp, & 
-      & -0.0499761354250785_wp,  0.1548143128637227_wp, -0.2724294261044626_wp, & 
-      & -0.2140027394072616_wp, -0.0253209254791824_wp, -0.0023845891460968_wp, & 
-      &  0.0091192286107324_wp, -0.0054889861418698_wp, -0.0708601381531837_wp, & 
-      &  0.1710608463902656_wp,  0.5486016273258228_wp,  0.0456750463319099_wp, & 
-      & -1.4496220571725840_wp,  0.2848532829040934_wp,  2.1631929338961609_wp, & 
-      &  0.2437819446177886_wp,  0.0864993947414499_wp, -0.8074962768633803_wp, & 
-      &  0.0760143426254694_wp,  0.2932453158431059_wp, -0.1384011976765554_wp, & 
+      &  2.3515337861584880_wp, -3.0453827536691351_wp,  0.5392536733971742_wp, &
+      & -0.4086227335489838_wp,  0.0501074408829545_wp,  0.2137313744331271_wp, &
+      &  0.0249303991608369_wp, -0.0373339882416463_wp, -0.0756057413224991_wp, &
+      & -0.5436172455452489_wp,  0.4933244472902760_wp,  1.2499429094951524_wp, &
+      &  0.0187062301843386_wp,  0.0079863446319139_wp, -0.0342050060044000_wp, &
+      &  0.0541178064781164_wp,  0.0314514945594538_wp,  0.0256701683856457_wp, &
+      & -1.1131746078453495_wp, -1.6288054931512879_wp,  0.4146928754871603_wp, &
+      &  0.0887505649437715_wp,  0.0350320577127468_wp, -0.0407677557149725_wp, &
+      & -0.0499761354250785_wp,  0.1548143128637227_wp, -0.2724294261044626_wp, &
+      & -0.2140027394072616_wp, -0.0253209254791824_wp, -0.0023845891460968_wp, &
+      &  0.0091192286107324_wp, -0.0054889861418698_wp, -0.0708601381531837_wp, &
+      &  0.1710608463902656_wp,  0.5486016273258228_wp,  0.0456750463319099_wp, &
+      & -1.4496220571725840_wp,  0.2848532829040934_wp,  2.1631929338961609_wp, &
+      &  0.2437819446177886_wp,  0.0864993947414499_wp, -0.8074962768633803_wp, &
+      &  0.0760143426254694_wp,  0.2932453158431059_wp, -0.1384011976765554_wp, &
       &  0.7410003697746987_wp,  2.7564164279275825_wp, -3.2100088504407793_wp], &
       & shape(ref_gradient))
       real(wp), parameter :: ref_sigma(3, 3) = reshape([ &
-      &-14.102412014163017_wp,  5.058593018200457_wp,  7.2112237247416280_wp, &      
-      &  5.058593018200459_wp,-18.111874478203490_wp,  6.8763096498221916_wp, &        
+      &-14.102412014163017_wp,  5.058593018200457_wp,  7.2112237247416280_wp, &
+      &  5.058593018200459_wp,-18.111874478203490_wp,  6.8763096498221916_wp, &
       &  7.211223724741628_wp,  6.876309649822192_wp, -22.636906090720050_wp], &
       & shape(ref_sigma))
 
@@ -1611,12 +1611,12 @@ contains
 
       if (any(abs(gradient - ref_gradient) > thr)) then
          call test_failed(error, "Coordination number gradient does not match")
-         print'(3es21.14)', gradient - ref_gradient
+         print"(3es21.14)", gradient - ref_gradient
       end if
 
       if (any(abs(sigma - ref_sigma) > thr)) then
          call test_failed(error, "Coordination numbers sigma does not match")
-         print'(3es21.14)', sigma - ref_sigma
+         print"(3es21.14)", sigma - ref_sigma
       end if
 
    end subroutine test_dfdcn_mb01_erf_dftd4
@@ -1714,12 +1714,12 @@ contains
 
       if (any(abs(gradient - ref_gradient_sum) > thr)) then
          call test_failed(error, "Coordination number gradient does not match")
-         print'(3es21.14)', gradient - ref_gradient_sum
+         print"(3es21.14)", gradient - ref_gradient_sum
       end if
 
       if (any(abs(sigma - ref_sigma_sum) > thr)) then
          call test_failed(error, "Coordination numbers sigma does not match")
-         print'(3es21.14)', sigma - ref_sigma_sum
+         print"(3es21.14)", sigma - ref_sigma_sum
       end if
 
    end subroutine test_dfdcn_mb02_erf_dftd4
@@ -1959,7 +1959,7 @@ contains
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
-   
+
       call check(error, get_cn_count_id("exp"), cn_count%exp)
       if (allocated(error)) return
 
@@ -1979,14 +1979,14 @@ contains
       if (allocated(error)) return
 
 
-   end subroutine test_cn_count_string_to_id 
+   end subroutine test_cn_count_string_to_id
 
-   
+
    subroutine test_cn_count_id_to_string(error)
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
-   
+
       call check(error, get_cn_count_string(cn_count%exp), "exp")
       if (allocated(error)) return
 
@@ -2005,7 +2005,7 @@ contains
       call check(error, get_cn_count_string(-1), "")
       if (allocated(error)) return
 
-   end subroutine test_cn_count_id_to_string 
+   end subroutine test_cn_count_id_to_string
 
 
 end module test_ncoord

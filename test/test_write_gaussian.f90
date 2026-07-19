@@ -14,10 +14,10 @@
 
 module test_write_gaussian
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use testsuite_structure, only : get_structure
-   use mctc_io_write_gaussian
    use mctc_io_read_gaussian
    use mctc_io_structure
+   use mctc_io_write_gaussian
+   use testsuite_structure, only : get_structure
    implicit none
    private
 
@@ -52,7 +52,7 @@ subroutine test_valid1_ein(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_gaussian_external(struc, unit)
    rewind(unit)
 

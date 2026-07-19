@@ -68,18 +68,18 @@ subroutine read_genformat(mol, unit, error)
 
    call next_token(line, pos, token)
    select case(line(token%first:token%last))
-   case('c', 'C')
+   case("c", "C")
       cartesian = .true.
       periodic = .false.
-   case('s', 'S')
+   case("s", "S")
       cartesian = .true.
       periodic = .true.
       allocate(lattice(3, 3), source=0.0_wp)
-   case('f', 'F')
+   case("f", "F")
       cartesian = .false.
       periodic = .true.
       allocate(lattice(3, 3), source=0.0_wp)
-   case('h', 'H')
+   case("h", "H")
       cartesian = .true.
       periodic = [.false., .false., .true.]
       allocate(lattice(3, 1), source=0.0_wp)
@@ -107,16 +107,21 @@ subroutine read_genformat(mol, unit, error)
    do iatom = 1, natoms
       token = token_type(0, 0)
       call advance_line(unit, line, pos, lnum, stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, dummy, stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, isp, stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(1), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(2), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(3), stat)
+      if (stat == 0) then
+        call read_next_token(line, pos, token, dummy, stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, isp, stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(1), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(2), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(3), stat)
+      end if
       if (stat /= 0) then
          call io_error(error, "Cannot read coordinates", &
             & line, token, filename(unit), lnum, "unexpected value")
@@ -137,12 +142,15 @@ subroutine read_genformat(mol, unit, error)
             & line, token_type(0, 0), filename(unit), lnum, "missing lattice information")
          return
       end if
-      if (stat == 0) &
-         call read_next_token(line, pos, token, origin(1), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, origin(2), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, origin(3), stat)
+      if (stat == 0) then
+        call read_next_token(line, pos, token, origin(1), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, origin(2), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, origin(3), stat)
+      end if
       if (stat /= 0) then
          call io_error(error, "Cannot read origin", &
             & line, token, filename(unit), lnum, "expected real value")
@@ -153,12 +161,15 @@ subroutine read_genformat(mol, unit, error)
    if (all(periodic)) then
       do ilat = 1, 3
          call advance_line(unit, line, pos, lnum, stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, coord(1), stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, coord(2), stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, coord(3), stat)
+         if (stat == 0) then
+           call read_next_token(line, pos, token, coord(1), stat)
+         end if
+         if (stat == 0) then
+           call read_next_token(line, pos, token, coord(2), stat)
+         end if
+         if (stat == 0) then
+           call read_next_token(line, pos, token, coord(3), stat)
+         end if
          if (stat /= 0) then
             call io_error(error, "Cannot read lattice vector", &
                & line, token, filename(unit), lnum, "expected real value")
@@ -173,12 +184,15 @@ subroutine read_genformat(mol, unit, error)
 
    if (count(periodic) == 1) then
       call advance_line(unit, line, pos, lnum, stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(1), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(2), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(3), stat)
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(1), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(2), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(3), stat)
+      end if
       if (stat /= 0) then
          call io_error(error, "Cannot read lattice vector", &
             & line, token, filename(unit), lnum, "expected real value")
@@ -215,7 +229,7 @@ subroutine advance_line(unit, line, pos, num, stat)
    stat = 0
    do while(stat == 0)
       call next_line(unit, line, pos, num, stat)
-      ihash = index(line, '#')
+      ihash = index(line, "#")
       if (ihash > 0) line = line(:ihash-1)
       if (len_trim(line) > 0) exit
    end do

@@ -59,8 +59,8 @@ subroutine test_valid1_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "   0 1", &
       "   8   0.000000   0.000000  -0.212195", &
@@ -89,8 +89,8 @@ subroutine test_valid2_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "$molecule", &
       "   0 1", &
@@ -120,8 +120,8 @@ subroutine test_valid3_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$MOLECULE", &
       "0 1", &
       "c  1.07317  0.04885 -0.07573", &
@@ -170,8 +170,8 @@ subroutine test_valid4_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "0 1", &
       "P", &
@@ -202,8 +202,8 @@ subroutine test_invalid1_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "   0 1", &
       "C   -0.0090   -0.0157   -0.0000", &
@@ -235,8 +235,8 @@ subroutine test_invalid2_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "24", &
       "c  1.07317  0.04885 -0.07573", &
@@ -280,8 +280,8 @@ subroutine test_invalid3_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "   0 1", &
       "C   -0.0090   -0.0157   -0.0000", &
@@ -312,8 +312,8 @@ subroutine test_invalid4_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$mol", &
       " 0  1", &
       " 1 0 0 0", &
@@ -334,8 +334,8 @@ subroutine test_invalid5_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "   0 1", &
       "C    ******    ******    0.0000", &
@@ -366,8 +366,8 @@ subroutine test_invalid6_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "0 1", &
       "P", &
@@ -391,8 +391,8 @@ subroutine test_invalid7_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "0 1", &
       "P", &
@@ -416,8 +416,8 @@ subroutine test_invalid8_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "0 1", &
       "P", &
@@ -441,8 +441,8 @@ subroutine test_invalid9_qchem(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "$molecule", &
       "0 1", &
       "P", &

@@ -58,83 +58,83 @@ subroutine test_valid_mol1(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {},', &
       '      "label": "O"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [-1.1469443, 0.0697649, 1.1470196],', &
       '      "properties": {},', &
       '      "label": "O"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [-1.2798308, -0.5232169, 1.8902833],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [-1.0641398, -0.4956693, 0.356925],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [-0.1633508, -1.0289346, -1.2401808],', &
       '      "properties": {},', &
       '      "label": "O"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4914771, -0.3248733, -1.0784838],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [-0.5400907, -0.8496512, -2.1052499],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_json(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
 
    call check(error, struc%nat, 9, "Number of atoms does not match")
@@ -154,33 +154,33 @@ subroutine test_valid_mol2(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "chemicalJson": 1,', &
       '  "atoms": {', &
       '    "elements": {', &
       '      "number": [', &
-      '        8,', &
-      '        1', &
-      '      ]', &
-      '    },', &
+      "        8,", &
+      "        1", &
+      "      ]", &
+      "    },", &
       '    "coords": {', &
       '      "3d": [', &
-      '         1.2358341722502633E+00,', &
-      '        -9.1774253284895344E-02,', &
-      '        -6.7936144993384059E-02,', &
-      '         1.5475582000473165E+00,', &
-      '         5.7192830956765273E-01,', &
-      '         5.5691301045614838E-01', &
-      '      ]', &
-      '    },', &
+      "         1.2358341722502633E+00,", &
+      "        -9.1774253284895344E-02,", &
+      "        -6.7936144993384059E-02,", &
+      "         1.5475582000473165E+00,", &
+      "         5.7192830956765273E-01,", &
+      "         5.5691301045614838E-01", &
+      "      ]", &
+      "    },", &
       '    "formalCharges": [ -1, 0 ]', &
-      '  }', &
-      '}'
+      "  }", &
+      "}"
    rewind(unit)
 
    call read_json(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
    call check(error, struc%nat, 2, "Number of atoms does not match")
    if (allocated(error)) return
@@ -201,23 +201,23 @@ subroutine test_valid_mol3(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "schema_version": 1,', &
       '  "molecule": {', &
       '    "geometry": [', &
-      '      0.0,  0.0000, -0.1294,', &
-      '      0.0, -1.4941,  1.0274,', &
-      '      0.0,  1.4941,  1.0274', &
-      '    ],', &
+      "      0.0,  0.0000, -0.1294,", &
+      "      0.0, -1.4941,  1.0274,", &
+      "      0.0,  1.4941,  1.0274", &
+      "    ],", &
       '    "symbols": ["O", "H", "H"],', &
       '    "comment": "Water molecule"', &
-      '  }', &
-      '}'
+      "  }", &
+      "}"
    rewind(unit)
 
    call read_json(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")
@@ -241,17 +241,17 @@ subroutine test_valid_sol1(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
       '  "lattice": {', &
       '    "matrix": [', &
-      '      [5.59003664376222, 0.0, 0.0],', &
-      '      [0.0, 8.68089159045265, 0.0],', &
-      '      [0.0, 0.0, 8.68089159045265]', &
-      '    ],', &
+      "      [5.59003664376222, 0.0, 0.0],", &
+      "      [0.0, 8.68089159045265, 0.0],", &
+      "      [0.0, 0.0, 8.68089159045265]", &
+      "    ],", &
       '    "pbc": [true, true, true],', &
       '    "a": 5.59003664376222,', &
       '    "b": 8.68089159045265,', &
@@ -260,57 +260,57 @@ subroutine test_valid_sol1(error)
       '    "beta": 90.0,', &
       '    "gamma": 90.0,', &
       '    "volume": 421.253303917213', &
-      '  },', &
+      "  },", &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_json(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
 
    call check(error, struc%nat, 6, "Number of atoms does not match")
@@ -332,8 +332,8 @@ subroutine test_valid_sol2(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "chemical json": 0,', &
       '  "name": "ethane",', &
       '  "inchi": "1/C2H6/c1-2/h1-2H3",', &
@@ -341,40 +341,40 @@ subroutine test_valid_sol2(error)
       '  "atoms": {', &
       '    "elements": {', &
       '      "number": [  1,   6,   1,   1,   6,   1,   1,   1 ]', &
-      '    },', &
+      "    },", &
       '    "coords": {', &
       '      "3d": [  1.185080, -0.003838,  0.987524,', &
-      '               0.751621, -0.022441, -0.020839,', &
-      '               1.166929,  0.833015, -0.569312,', &
-      '               1.115519, -0.932892, -0.514525,', &
-      '              -0.751587,  0.022496,  0.020891,', &
-      '              -1.166882, -0.833372,  0.568699,', &
-      '              -1.115691,  0.932608,  0.515082,', &
-      '              -1.184988,  0.004424, -0.987522 ]', &
-      '    }', &
-      '  },', &
+      "               0.751621, -0.022441, -0.020839,", &
+      "               1.166929,  0.833015, -0.569312,", &
+      "               1.115519, -0.932892, -0.514525,", &
+      "              -0.751587,  0.022496,  0.020891,", &
+      "              -1.166882, -0.833372,  0.568699,", &
+      "              -1.115691,  0.932608,  0.515082,", &
+      "              -1.184988,  0.004424, -0.987522 ]", &
+      "    }", &
+      "  },", &
       '  "bonds": {', &
       '    "connections": {', &
       '      "index": [ 0, 1,', &
-      '                 1, 2,', &
-      '                 1, 3,', &
-      '                 1, 4,', &
-      '                 4, 5,', &
-      '                 4, 6,', &
-      '                 4, 7 ]', &
-      '    },', &
+      "                 1, 2,", &
+      "                 1, 3,", &
+      "                 1, 4,", &
+      "                 4, 5,", &
+      "                 4, 6,", &
+      "                 4, 7 ]", &
+      "    },", &
       '    "order": [ 1, 1, 1, 1, 1, 1, 1 ]', &
-      '  },', &
+      "  },", &
       '  "properties": {', &
       '    "molecular mass": 30.0690,', &
       '    "melting point": -172,', &
       '    "boiling point": -88', &
-      '  }', &
-      '}'
+      "  }", &
+      "}"
    rewind(unit)
 
    call read_json(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")
@@ -400,39 +400,39 @@ subroutine test_valid_sol3(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "provenance": {', &
       '    "creator": "mctc-lib",', &
       '    "version": "0.4.2",', &
       '    "routine": "mctc_io_write_qcschema::write_qcschema"', &
-      '  },', &
+      "  },", &
       '  "comment": "TiO2 rutile",', &
       '  "symbols": ["Ti", "Ti", "O", "O", "O", "O"],', &
       '  "atomic_numbers": [22, 22, 8, 8, 8, 8],', &
       '  "geometry": [', &
-      '     0.0000000000000000E+00, 0.0000000000000000E+00, 0.0000000000000000E+00,', &
-      '     5.2818191416515159E+00, 8.2022538117381334E+00, 8.2022538117381334E+00,', &
-      '     6.1333938828927657E-16, 5.0082961774473045E+00, 5.0082961774473045E+00,', &
-      '     1.3956333869785798E-15, 1.1396211446028962E+01, 1.1396211446028962E+01,', &
-      '     5.2818191416515150E+00, 3.1939576342908298E+00, 1.3210549989185438E+01,', &
-      '     5.2818191416515150E+00, 1.3210549989185438E+01, 3.1939576342908289E+00', &
-      '  ],', &
+      "     0.0000000000000000E+00, 0.0000000000000000E+00, 0.0000000000000000E+00,", &
+      "     5.2818191416515159E+00, 8.2022538117381334E+00, 8.2022538117381334E+00,", &
+      "     6.1333938828927657E-16, 5.0082961774473045E+00, 5.0082961774473045E+00,", &
+      "     1.3956333869785798E-15, 1.1396211446028962E+01, 1.1396211446028962E+01,", &
+      "     5.2818191416515150E+00, 3.1939576342908298E+00, 1.3210549989185438E+01,", &
+      "     5.2818191416515150E+00, 1.3210549989185438E+01, 3.1939576342908289E+00", &
+      "  ],", &
       '  "molecular_charge": 0,', &
       '  "extras": {', &
       '    "periodic": {', &
       '      "lattice": [', &
-      '         5.5900366437622173E+00, 0.0000000000000000E+00, 0.0000000000000000E+00,', &
-      '         5.3155130499965102E-16, 8.6808915904526547E+00, 0.0000000000000000E+00,', &
-      '         5.3155130499965102E-16, 5.3155130499965102E-16, 8.6808915904526547E+00', &
-      '      ]', &
-      '    }', &
-      '  }', &
-      '}'
+      "         5.5900366437622173E+00, 0.0000000000000000E+00, 0.0000000000000000E+00,", &
+      "         5.3155130499965102E-16, 8.6808915904526547E+00, 0.0000000000000000E+00,", &
+      "         5.3155130499965102E-16, 5.3155130499965102E-16, 8.6808915904526547E+00", &
+      "      ]", &
+      "    }", &
+      "  }", &
+      "}"
    rewind(unit)
 
    call read_json(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
 
    call check(error, allocated(struc%comment), "Comment line should be preserved")

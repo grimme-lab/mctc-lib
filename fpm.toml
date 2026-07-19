@@ -39,3 +39,16 @@ md_extensions = ["markdown.extensions.toc", "markdown.extensions.smarty"]
 [extra.ford.extra_mods]
 iso_fortran_env = "https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html"
 jonquil = "https://toml-f.github.io/jonquil/module/jonquil.html"
+
+[extra.fortitude.check]
+ignore = [
+  "C002",  # interface without implicit none
+  "C003",  # implicit none(external)
+  "C011",  # no default in select case
+  "C061",  # missing intent attribute
+  "C072",  # assumed size character intent
+  "C121",  # use without explicit only
+  "C122",  # intrinsic missing for internal modules
+  "C181",  # iostat not checked
+]
+line-length = 132

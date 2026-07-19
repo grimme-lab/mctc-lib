@@ -47,12 +47,12 @@
 module mctc_ncoord
    use mctc_env, only : error_type, fatal_error, wp
    use mctc_io, only : structure_type
-   use mctc_ncoord_type, only : ncoord_type
    use mctc_ncoord_dexp, only : dexp_ncoord_type, new_dexp_ncoord
-   use mctc_ncoord_exp, only : exp_ncoord_type, new_exp_ncoord
    use mctc_ncoord_erf, only : erf_ncoord_type, new_erf_ncoord
-   use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
    use mctc_ncoord_erf_dftd4, only : erf_dftd4_ncoord_type, new_erf_dftd4_ncoord
+   use mctc_ncoord_erf_en, only : erf_en_ncoord_type, new_erf_en_ncoord
+   use mctc_ncoord_exp, only : exp_ncoord_type, new_exp_ncoord
+   use mctc_ncoord_type, only : ncoord_type
    implicit none
    private
 
@@ -116,9 +116,9 @@ subroutine new_ncoord(self, mol, cn_count_type, error, kcn, cutoff, rcov, en, cu
    real(wp), intent(in), optional :: norm_exp
 
    select case(cn_count_type)
-   case default 
+   case default
       call fatal_error(error, "Unsupported option for coordination number")
-      return 
+      return
    case(cn_count%exp)
       block
          type(exp_ncoord_type), allocatable :: tmp
@@ -171,7 +171,7 @@ pure function get_cn_count_id(cn_count_name) result(cn_count_id)
    select case(cn_count_name)
    case default
       ! Indicate unknown CN option
-      cn_count_id = -1 
+      cn_count_id = -1
    case("exp")
       cn_count_id = cn_count%exp
    case("dexp")

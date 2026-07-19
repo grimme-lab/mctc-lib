@@ -46,7 +46,7 @@ subroutine read_coord(mol, unit, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   character, parameter :: flag = '$'
+   character, parameter :: flag = "$"
    integer, parameter :: p_initial_size = 100
    integer, parameter :: p_nlv(3) = [1, 4, 9], p_ncp(3) = [1, 3, 6]
 
@@ -62,7 +62,7 @@ subroutine read_coord(mol, unit, error)
    character(len=symbol_length), allocatable :: sym(:)
    type(structure_info) :: info
 
-   allocate(sym(p_initial_size), source=repeat(' ', symbol_length))
+   allocate(sym(p_initial_size), source=repeat(" ", symbol_length))
    allocate(coord(3, p_initial_size), source=0.0_wp)
 
    lnum = 0
@@ -88,10 +88,10 @@ subroutine read_coord(mol, unit, error)
       if (index(line, flag) == 1) then
          call next_token(line, pos, token)
          select case(line(token%first:token%last))
-         case('$end')
+         case("$end")
             exit
 
-         case('$eht')
+         case("$eht")
             if (has_eht) then
                pos = 0
                call next_token(line_eht, pos, token2)
@@ -104,13 +104,13 @@ subroutine read_coord(mol, unit, error)
             has_eht = .true.
             leht = lnum
             line_eht = line
-            i = index(line, 'charge=')
+            i = index(line, "charge=")
             if (i > 0) then
                pos = i + 6
                call read_next_token(line, pos, token, icharge, stat)
                charge = real(icharge, wp)
             end if
-            j = index(line, 'unpaired=')
+            j = index(line, "unpaired=")
             if (j > 0 .and. stat == 0) then
                pos = j + 8
                call read_next_token(line, pos, token, unpaired, stat)
@@ -121,7 +121,7 @@ subroutine read_coord(mol, unit, error)
                return
             end if
 
-         case('$coord')
+         case("$coord")
             if (has_coord) then
                pos = 0
                call next_token(line_coord, pos, token2)
@@ -143,12 +143,15 @@ subroutine read_coord(mol, unit, error)
                if (iatom >= size(sym)) call resize(sym)
                iatom = iatom + 1
                call read_next_token(line, pos, token, coord(1, iatom), stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, coord(2, iatom), stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, coord(3, iatom), stat)
-               if (stat == 0) &
-                  call next_token(line, pos, token)
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, coord(2, iatom), stat)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, coord(3, iatom), stat)
+               end if
+               if (stat == 0) then
+                 call next_token(line, pos, token)
+               end if
                if (stat /= 0) then
                   call io_error(error, "Cannot read coordinates", &
                      & line, token, filename(unit), lnum, "expected real value")
@@ -165,7 +168,7 @@ subroutine read_coord(mol, unit, error)
             end do coord_group
             cycle
 
-         case('$periodic')
+         case("$periodic")
             if (has_periodic) then
                pos = 0
                call next_token(line_periodic, pos, token2)
@@ -186,7 +189,7 @@ subroutine read_coord(mol, unit, error)
                return
             end if
 
-         case('$lattice')
+         case("$lattice")
             if (has_lattice) then
                pos = 0
                call next_token(line_lattice, pos, token2)
@@ -202,16 +205,16 @@ subroutine read_coord(mol, unit, error)
             ! $lattice bohr / $lattice angs
             call select_unit(line, lattice_in_bohr)
             cell_vectors = 0
-            lattice_string = ''
+            lattice_string = ""
             lattice_group: do while(stat == 0)
                call next_line(unit, line, pos, lnum, stat)
                if (index(line, flag) == 1) exit lattice_group
                cell_vectors = cell_vectors + 1
-               lattice_string = lattice_string // ' ' // line
+               lattice_string = lattice_string // " " // line
             end do lattice_group
             cycle
 
-         case('$cell')
+         case("$cell")
             if (has_cell) then
                pos = 0
                call next_token(line_cell, pos, token2)
@@ -377,8 +380,8 @@ contains
       character(len=*), intent(in) :: line
       logical, intent(out) :: in_bohr
       logical, intent(out), optional :: cartesian
-      in_bohr = index(line, ' angs') == 0
-      if (present(cartesian)) cartesian = index(line, ' frac') == 0
+      in_bohr = index(line, " angs") == 0
+      if (present(cartesian)) cartesian = index(line, " frac") == 0
    end subroutine select_unit
 
 end subroutine read_coord
@@ -407,7 +410,7 @@ pure subroutine cell_to_dlat(cellpar, lattice)
       lattice(1, 2) = blen*cos(gam)
       lattice(2, 2) = blen*sin(gam)
       lattice(1, 3) = clen*cos(bet)
-      lattice(2, 3) = clen*(cos(alp) - cos(bet)*cos(gam))/sin(gam);
+      lattice(2, 3) = clen*(cos(alp) - cos(bet)*cos(gam))/sin(gam)
       lattice(3, 3) = dvol/(alen*blen*sin(gam))
 
    end associate

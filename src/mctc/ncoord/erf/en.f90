@@ -14,10 +14,10 @@
 
 !> Coordination number implementation with single error function and EN-weighting.
 module mctc_ncoord_erf_en
-   use mctc_env, only : wp
-   use mctc_io, only : structure_type
    use mctc_data_covrad, only : get_covalent_rad
    use mctc_data_paulingen, only : get_pauling_en
+   use mctc_env, only : wp
+   use mctc_io, only : structure_type
    use mctc_ncoord_erf, only : erf_ncoord_type
    implicit none
    private
@@ -35,7 +35,7 @@ module mctc_ncoord_erf_en
 
    !> Steepness of counting function
    real(wp), parameter :: default_kcn = 2.65_wp
-   !> Exponent of distance normalization 
+   !> Exponent of distance normalization
    real(wp), parameter :: default_norm_exp = 1.0_wp
    !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
@@ -76,7 +76,7 @@ contains
       allocate(self%rcov(mol%nid))
       if (present(rcov)) then
          self%rcov(:) = rcov
-      else   
+      else
          self%rcov(:) = get_covalent_rad(mol%num)
       end if
 
@@ -119,7 +119,7 @@ contains
       real(wp) :: en_factor
 
       en_factor = self%en(jzp) - self%en(izp)
-      
+
    end function get_en_factor
 
 end module mctc_ncoord_erf_en

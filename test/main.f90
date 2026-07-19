@@ -22,7 +22,6 @@ program tester
    use test_data, only : collect_data
    use test_math, only : collect_math
    use test_ncoord, only : collect_ncoord
-   use test_timer, only : collect_timer
    use test_read, only : collect_read
    use test_read_aims, only : collect_read_aims
    use test_read_cjson, only : collect_read_cjson
@@ -38,6 +37,7 @@ program tester
    use test_read_vasp, only : collect_read_vasp
    use test_read_xyz, only : collect_read_xyz
    use test_symbols, only : collect_symbols
+   use test_timer, only : collect_timer
    use test_write, only : collect_write
    use test_write_aims, only : collect_write_aims
    use test_write_cjson, only : collect_write_cjson
@@ -126,7 +126,7 @@ program tester
    end if
 
    if (stat > 0) then
-      write(error_unit, '(i0, 1x, a)') stat, "test(s) failed!"
+      write(error_unit, "(i0, 1x, a)") stat, "test(s) failed!"
       error stop 1
    end if
 

@@ -49,11 +49,11 @@ subroutine write_sdf(self, unit, energy, gnorm)
 
    if (present(energy)) then
       write(unit, sd_format) "total energy / Eh", energy
-   endif
+   end if
 
    if (present(gnorm)) then
       write(unit, sd_format) "gradient norm / Eh/a0", gnorm
-   endif
+   end if
 
    write(unit, '("$$$$")')
 
@@ -94,19 +94,19 @@ subroutine write_molfile_v2k(self, unit, comment_line)
    call date_and_time(date, time)
 
    if (present(comment_line)) then
-      write(unit, '(a)') comment_line
+      write(unit, "(a)") comment_line
    else
       if (allocated(self%comment)) then
-         write(unit, '(a)') self%comment
+         write(unit, "(a)") self%comment
       else
-         write(unit, '(a)')
+         write(unit, "(a)")
       end if
    end if
    write(unit, '(2x, 3x, 5x, 3a2, a4, "3D")') &
       &  date(5:6), date(7:8), date(3:4), time(:4)
-   write(unit, '(a)')
-   write(unit, '(3i3, 3x, 2i3, 12x, i3, 1x, a5)') &
-      &  self%nat, self%nbd, 0, 0, 0, 999, 'V2000'
+   write(unit, "(a)")
+   write(unit, "(3i3, 3x, 2i3, 12x, i3, 1x, a5)") &
+      &  self%nat, self%nbd, 0, 0, 0, 999, "V2000"
 
    has_sdf_data = allocated(self%sdf)
 
@@ -116,41 +116,41 @@ subroutine write_molfile_v2k(self, unit, comment_line)
             & 0, 0, 0, 0, 0, 0]
       else
          list12 = 0
-      endif
-      write(unit, '(3f10.4, 1x, a3, i2, 11i3)') &
+      end if
+      write(unit, "(3f10.4, 1x, a3, i2, 11i3)") &
          & self%xyz(:, iatom)*autoaa, self%sym(self%id(iatom)), list12
-   enddo
+   end do
 
    if (self%nbd > 0) then
       if (size(self%bond, 1) > 2) then
          do ibond = 1, self%nbd
-            write(unit, '(7i3)') self%bond(:3, ibond), list4
+            write(unit, "(7i3)") self%bond(:3, ibond), list4
          end do
       else
          do ibond = 1, self%nbd
-            write(unit, '(7i3)') self%bond(:2, ibond), 1, list4
+            write(unit, "(7i3)") self%bond(:2, ibond), 1, list4
          end do
       end if
    end if
 
    if (has_sdf_data) then
       if (sum(self%sdf%charge) /= nint(self%charge)) then
-         write(unit, '(a, *(i3, 1x, i3, 1x, i3))') "M  CHG", 1, 1, nint(self%charge)
+         write(unit, "(a, *(i3, 1x, i3, 1x, i3))") "M  CHG", 1, 1, nint(self%charge)
       else
          do iatom = 1, self%nat
             if (self%sdf(iatom)%charge /= 0) then
-               write(unit, '(a, *(i3, 1x, i3, 1x, i3))') &
+               write(unit, "(a, *(i3, 1x, i3, 1x, i3))") &
                   & "M  CHG", 1, iatom, self%sdf(iatom)%charge
             end if
          end do
       end if
    else
       if (nint(self%charge) /= 0) then
-         write(unit, '(a, *(i3, 1x, i3, 1x, i3))') "M  CHG", 1, 1, nint(self%charge)
+         write(unit, "(a, *(i3, 1x, i3, 1x, i3))") "M  CHG", 1, 1, nint(self%charge)
       end if
    end if
 
-   write(unit, '(a)') "M  END"
+   write(unit, "(a)") "M  END"
 
 end subroutine write_molfile_v2k
 
@@ -170,32 +170,32 @@ subroutine write_molfile_v3k(self, unit, comment_line)
 
    ! Header block (3 lines)
    if (present(comment_line)) then
-      write(unit, '(a)') comment_line
+      write(unit, "(a)") comment_line
    else
       if (allocated(self%comment)) then
-         write(unit, '(a)') self%comment
+         write(unit, "(a)") self%comment
       else
-         write(unit, '(a)')
+         write(unit, "(a)")
       end if
    end if
    write(unit, '(2x, 3x, 5x, 3a2, a4, "3D")') &
       &  date(5:6), date(7:8), date(3:4), time(:4)
-   write(unit, '(a)')
+   write(unit, "(a)")
 
    ! Counts line for V3000 (atoms and bonds are set to 0 in header)
-   write(unit, '(a)') "  0  0  0     0  0            999 V3000"
+   write(unit, "(a)") "  0  0  0     0  0            999 V3000"
 
    ! V3000 block
-   write(unit, '(a)') "M  V30 BEGIN CTAB"
-   write(unit, '(a, i0, a, i0, a)') "M  V30 COUNTS ", self%nat, " ", self%nbd, " 0 0 0"
+   write(unit, "(a)") "M  V30 BEGIN CTAB"
+   write(unit, "(a, i0, a, i0, a)") "M  V30 COUNTS ", self%nat, " ", self%nbd, " 0 0 0"
 
    has_sdf_data = allocated(self%sdf)
 
    ! Atom block
-   write(unit, '(a)') "M  V30 BEGIN ATOM"
+   write(unit, "(a)") "M  V30 BEGIN ATOM"
    do iatom = 1, self%nat
       ! Build basic atom line: index, symbol, x, y, z, aamap (0)
-      write(line, '(a, i0, a, a, 3(a, f0.6), a)') &
+      write(line, "(a, i0, a, a, 3(a, f0.6), a)") &
          & "M  V30 ", iatom, " ", trim(self%sym(self%id(iatom))), &
          & " ", self%xyz(1, iatom)*autoaa, &
          & " ", self%xyz(2, iatom)*autoaa, &
@@ -204,34 +204,34 @@ subroutine write_molfile_v3k(self, unit, comment_line)
       ! Add optional properties
       if (has_sdf_data) then
          if (self%sdf(iatom)%charge /= 0) then
-            write(line, '(a, a, i0)') trim(line), " CHG=", self%sdf(iatom)%charge
+            write(line, "(a, a, i0)") trim(line), " CHG=", self%sdf(iatom)%charge
          end if
          if (self%sdf(iatom)%valence /= 0) then
-            write(line, '(a, a, i0)') trim(line), " VAL=", self%sdf(iatom)%valence
+            write(line, "(a, a, i0)") trim(line), " VAL=", self%sdf(iatom)%valence
          end if
       end if
 
-      write(unit, '(a)') trim(line)
+      write(unit, "(a)") trim(line)
    end do
-   write(unit, '(a)') "M  V30 END ATOM"
+   write(unit, "(a)") "M  V30 END ATOM"
 
    ! Bond block
    if (self%nbd > 0) then
-      write(unit, '(a)') "M  V30 BEGIN BOND"
+      write(unit, "(a)") "M  V30 BEGIN BOND"
       do ibond = 1, self%nbd
          if (size(self%bond, 1) > 2) then
             btype = self%bond(3, ibond)
          else
             btype = 1
          end if
-         write(unit, '(a, i0, a, i0, a, i0, a, i0)') &
+         write(unit, "(a, i0, a, i0, a, i0, a, i0)") &
             & "M  V30 ", ibond, " ", btype, " ", self%bond(1, ibond), " ", self%bond(2, ibond)
       end do
-      write(unit, '(a)') "M  V30 END BOND"
+      write(unit, "(a)") "M  V30 END BOND"
    end if
 
-   write(unit, '(a)') "M  V30 END CTAB"
-   write(unit, '(a)') "M  END"
+   write(unit, "(a)") "M  V30 END CTAB"
+   write(unit, "(a)") "M  END"
 
 end subroutine write_molfile_v3k
 

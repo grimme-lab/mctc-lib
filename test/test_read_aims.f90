@@ -57,8 +57,8 @@ subroutine test_valid1_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "atom   -0.0090   -0.0157   -0.0000 C", &
       "atom   -0.7131    1.2038   -0.0000 C", &
       "atom    1.3990   -0.0157   -0.0000 C", &
@@ -95,8 +95,8 @@ subroutine test_valid2_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "atom        1.07317        0.04885       -0.07573  C  ", &
       "atom        2.51365        0.01256       -0.07580  N  ", &
       "atom        3.35199        1.09592       -0.07533  C* ", &
@@ -147,8 +147,8 @@ subroutine test_valid3_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "# 24", &
       "", &
       "atom  1.07317  0.04885 -0.07573  c", &
@@ -197,8 +197,8 @@ subroutine test_valid4_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "lattice_vector     4.59373    0.00000    0.00000", &
       "lattice_vector     0.00000    4.59373    0.00000", &
       "lattice_vector     0.00000    0.00000    2.95812", &
@@ -231,8 +231,8 @@ subroutine test_valid5_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "# cubic diamond", &
       "atom  0.0 0.0 0.0 C", &
       "atom_frac  0.25 0.25 0.25 C", &
@@ -261,8 +261,8 @@ subroutine test_valid6_aims(error)
    type(structure_type) :: struc1, struc2
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "atom            0.00000000000000   0.00000000000000   0.00000000000000 Mg", &
       "atom            1.48881365396205  -1.48881365396205   0.00000000000000 O", &
       "atom            1.48881365396205   1.48881365396205   0.00000000000000 O", &
@@ -279,8 +279,8 @@ subroutine test_valid6_aims(error)
    close(unit)
    if (allocated(error)) return
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "atom_frac       0.00000000000000   0.00000000000000   0.00000000000000 Mg", &
       "atom_frac       0.50000000000000   0.00000000000000   0.00000000000000 O", &
       "atom_frac       0.00000000000000   0.50000000000000   0.00000000000000 O", &
@@ -311,8 +311,8 @@ subroutine test_valid7_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "atom             -1.05835465887935   1.85522662363901   0.00000000000000 B", &
       "atom             -1.05835465887935   1.57910813351869   1.38575958673374 N", &
       "atom             -1.05835465887935   0.79318285794365  -0.93200541748473 N", &
@@ -363,8 +363,8 @@ subroutine test_invalid1_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "atom   -0.0090   -0.0157   -0.0000 C", &
       "atom   -0.7131    1.2038   -0.0000 C", &
       "atom    1.3990   -0.0157   -0.0000 C", &
@@ -393,8 +393,8 @@ subroutine test_invalid2_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "# cubic diamond", &
       "atom  0.0 0.0 0.0 C", &
       "atom_frac  0.25 0.25 0.25 C", &
@@ -417,8 +417,8 @@ subroutine test_invalid3_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "lattice_vector     4.59373    0.00000    0.00000", &
       "lattice_vector     0.00000    4.59373    0.00000", &
       "lattice_vector     0.00000    abcdefg    2.95812", &
@@ -444,8 +444,8 @@ subroutine test_invalid4_aims(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "# nothing", &
       "# to", &
       "# see", &

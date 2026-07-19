@@ -73,8 +73,8 @@ subroutine test_valid1_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  Mrv1823 10191918163D          ", &
       "", &
@@ -130,8 +130,8 @@ subroutine test_valid2_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  xtb     09072013503D", &
       " xtb: 6.3.2 (b5103a3)", &
@@ -212,8 +212,8 @@ subroutine test_valid3_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 1017", &
       "     RDKit          3D", &
       "", &
@@ -311,8 +311,8 @@ subroutine test_valid4_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 1016", &
       "     RDKit          3D", &
       "", &
@@ -395,8 +395,8 @@ subroutine test_valid5_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  Mrv1823 10191918163D          ", &
       "", &
@@ -452,8 +452,8 @@ subroutine test_invalid1_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       " OpenBabel10191918023D", &
       "", &
       " 12 12  0  0  0  0  0  0  0  0999 V2000", &
@@ -498,8 +498,8 @@ subroutine test_invalid2_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "          10191918023D", &
       "", &
@@ -527,8 +527,8 @@ subroutine test_invalid3_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "          10191918163D          ", &
       "", &
@@ -574,8 +574,8 @@ subroutine test_invalid4_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  Mrv1823 10191918163D          ", &
       "", &
@@ -622,8 +622,8 @@ subroutine test_invalid5_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  Mrv1823 10191918163D          ", &
       "", &
@@ -657,8 +657,8 @@ subroutine test_invalid6_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -720,8 +720,8 @@ subroutine test_invalid7_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -785,8 +785,8 @@ subroutine test_invalid8_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -848,8 +848,8 @@ subroutine test_invalid9_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -909,8 +909,8 @@ subroutine test_maestro_mol(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "  2244", &
       "                   3D", &
       " Schrodinger Suite 2022-1.", &
@@ -983,8 +983,8 @@ subroutine test_valid1_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       " OpenBabel10191918023D", &
       "", &
@@ -1041,8 +1041,8 @@ subroutine test_valid2_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "962", &
       "  Marvin  12300703363D          ", &
       "", &
@@ -1117,8 +1117,8 @@ subroutine test_valid3_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -1196,8 +1196,8 @@ subroutine test_invalid1_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  Mrv1823 10191918163D          ", &
       "", &
@@ -1243,8 +1243,8 @@ subroutine test_invalid2_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  Mrv1823 10191918163D          ", &
       "", &
@@ -1291,8 +1291,8 @@ subroutine test_invalid3_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "962", &
       "          12300703363D          ", &
       "", &
@@ -1350,8 +1350,8 @@ subroutine test_invalid4_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "", &
       "  xtb     08072014173D", &
       "", &
@@ -1406,8 +1406,8 @@ subroutine test_invalid5_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -1476,8 +1476,8 @@ subroutine test_invalid6_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -1546,8 +1546,8 @@ subroutine test_invalid7_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -1616,8 +1616,8 @@ subroutine test_unsupported1_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -1686,8 +1686,8 @@ subroutine test_unsupported2_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &
@@ -1716,8 +1716,8 @@ subroutine test_unsupported3_sdf(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Compound 11", &
       "     RDKit          3D", &
       "", &

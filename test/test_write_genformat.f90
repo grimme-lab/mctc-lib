@@ -14,11 +14,11 @@
 
 module test_write_genformat
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use testsuite_structure, only : get_structure
-   use mctc_io_write_genformat
    use mctc_io_read_genformat
    use mctc_io_structure
    use mctc_io_structure_info
+   use mctc_io_write_genformat
+   use testsuite_structure, only : get_structure
    implicit none
    private
 
@@ -55,7 +55,7 @@ subroutine test_valid1_gen(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_genformat(struc, unit)
    rewind(unit)
 
@@ -83,7 +83,7 @@ subroutine test_valid2_gen(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_genformat(struc, unit)
    rewind(unit)
 
@@ -114,7 +114,7 @@ subroutine test_valid3_gen(error)
    info = structure_info(cartesian=.false.)
    struc%info = info
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_genformat(struc, unit)
    rewind(unit)
 

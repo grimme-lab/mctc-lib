@@ -14,10 +14,10 @@
 
 !> Coordination number implementation with single error function and EN-weighting for dftd4
 module mctc_ncoord_erf_dftd4
-   use mctc_env, only : wp
-   use mctc_io, only : structure_type
    use mctc_data_covrad, only : get_covalent_rad
    use mctc_data_paulingen, only : get_pauling_en
+   use mctc_env, only : wp
+   use mctc_io, only : structure_type
    use mctc_ncoord_erf, only : erf_ncoord_type
    implicit none
    private
@@ -35,7 +35,7 @@ module mctc_ncoord_erf_dftd4
 
    !> Steepness of counting function
    real(wp), parameter :: default_kcn = 7.5_wp
-   !> Exponent of distance normalization 
+   !> Exponent of distance normalization
    real(wp), parameter :: default_norm_exp = 1.0_wp
    !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
@@ -83,7 +83,7 @@ contains
       allocate(self%rcov(mol%nid))
       if (present(rcov)) then
          self%rcov(:) = rcov
-      else   
+      else
          self%rcov(:) = get_covalent_rad(mol%num)
       end if
 
@@ -124,7 +124,7 @@ contains
       real(wp) :: en_factor
 
       en_factor = k4*exp(-(abs(self%en(izp)-self%en(jzp)) + k5)**2.0_wp/k6)
-      
+
    end function get_en_factor
 
 end module mctc_ncoord_erf_dftd4

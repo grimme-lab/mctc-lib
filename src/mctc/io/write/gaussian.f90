@@ -29,9 +29,9 @@ subroutine write_gaussian_external(mol, unit)
    integer, intent(in) :: unit
    integer :: iat
 
-   write(unit, '(4i10)') mol%nat, 1, nint(mol%charge), mol%uhf
+   write(unit, "(4i10)") mol%nat, 1, nint(mol%charge), mol%uhf
    do iat = 1, mol%nat
-      write(unit, '(i10,4f20.12)') mol%num(mol%id(iat)), mol%xyz(:, iat), 0.0_wp
+      write(unit, "(i10,4f20.12)") mol%num(mol%id(iat)), mol%xyz(:, iat), 0.0_wp
    end do
 
 end subroutine write_gaussian_external

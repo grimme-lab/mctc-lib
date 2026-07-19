@@ -43,7 +43,7 @@ subroutine test_format_time(error)
 
    t = 1.234_wp
    s = format_time(t)
-   expected = repeat(' ', 19) // "1.234 sec"
+   expected = repeat(" ", 19) // "1.234 sec"
 
    call check(error, s, expected)
 

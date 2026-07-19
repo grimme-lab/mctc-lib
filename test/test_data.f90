@@ -13,12 +13,12 @@
 ! limitations under the License.
 
 module test_data
+   use mctc_data, only : get_atomic_rad, get_covalent_rad, get_pauling_en, get_vdw_rad
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
    & test_failed, check
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
-   use mctc_data, only : get_atomic_rad, get_covalent_rad, get_pauling_en, get_vdw_rad
    implicit none
    private
 
@@ -54,7 +54,7 @@ contains
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
-   
+
       call check(error, get_atomic_rad("C"), get_atomic_rad(6))
       if (allocated(error)) return
       call check(error, get_atomic_rad("Am"), get_atomic_rad(95))
@@ -62,8 +62,8 @@ contains
       call check(error, get_atomic_rad("Og"), get_atomic_rad(118))
       if (allocated(error)) return
       call check(error, get_atomic_rad("X"), get_atomic_rad(-1))
-   
-   end subroutine test_atomic_rad   
+
+   end subroutine test_atomic_rad
 
 
    subroutine test_atomic_rad_mb01(error)
@@ -83,14 +83,14 @@ contains
 
       ratm_sym = get_atomic_rad(mol%sym)
       ratm_num = get_atomic_rad(mol%num)
-      
+
       if (any(abs(ratm_sym - ratm_num) > thr) .or. any(abs(ratm_sym - ref) > thr)) then
          call test_failed(error, "Atomic radii do not match")
-         print'(3es21.14)', ratm_sym
+         print"(3es21.14)", ratm_sym
          print'("---")'
-         print'(3es21.14)', ratm_num
+         print"(3es21.14)", ratm_num
          print'("---")'
-         print'(3es21.14)', ref
+         print"(3es21.14)", ref
       end if
 
    end subroutine test_atomic_rad_mb01
@@ -100,7 +100,7 @@ contains
 
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
-   
+
       call check(error, get_covalent_rad("C"), get_covalent_rad(6))
       if (allocated(error)) return
       call check(error, get_covalent_rad("Am"), get_covalent_rad(95))
@@ -108,8 +108,8 @@ contains
       call check(error, get_covalent_rad("Og"), get_covalent_rad(118))
       if (allocated(error)) return
       call check(error, get_covalent_rad("X"), get_covalent_rad(-1))
-   
-   end subroutine test_covalent_rad   
+
+   end subroutine test_covalent_rad
 
 
    subroutine test_covalent_rad_mb02(error)
@@ -129,24 +129,24 @@ contains
 
       rcov_sym = get_covalent_rad(mol%sym)
       rcov_num = get_covalent_rad(mol%num)
-      
+
       if (any(abs(rcov_sym - rcov_num) > thr) .or. any(abs(rcov_sym - ref) > thr)) then
          call test_failed(error, "Covalent radii do not match")
-         print'(3es21.14)', rcov_sym
+         print"(3es21.14)", rcov_sym
          print'("---")'
-         print'(3es21.14)', rcov_num
+         print"(3es21.14)", rcov_num
          print'("---")'
-         print'(3es21.14)', ref
+         print"(3es21.14)", ref
       end if
 
    end subroutine test_covalent_rad_mb02
 
 
    subroutine test_pauling_en(error)
-      
+
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
-   
+
       call check(error, get_pauling_en("C"), get_pauling_en(6))
       if (allocated(error)) return
       call check(error, get_pauling_en("Am"), get_pauling_en(95))
@@ -154,8 +154,8 @@ contains
       call check(error, get_pauling_en("Og"), get_pauling_en(118))
       if (allocated(error)) return
       call check(error, get_pauling_en("X"), get_pauling_en(-1))
-   
-   end subroutine test_pauling_en   
+
+   end subroutine test_pauling_en
 
 
    subroutine test_pauling_en_mb03(error)
@@ -175,24 +175,24 @@ contains
 
       en_sym = get_pauling_en(mol%sym)
       en_num = get_pauling_en(mol%num)
-      
+
       if (any(abs(en_sym - en_num) > thr) .or. any(abs(en_sym - ref) > thr)) then
          call test_failed(error, "Pauling electronegativities do not match")
-         print'(3es21.14)', en_sym
+         print"(3es21.14)", en_sym
          print'("---")'
-         print'(3es21.14)', en_num
+         print"(3es21.14)", en_num
          print'("---")'
-         print'(3es21.14)', ref
+         print"(3es21.14)", ref
       end if
 
    end subroutine test_pauling_en_mb03
 
 
    subroutine test_vdw_rad(error)
-      
+
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
-   
+
       call check(error, get_vdw_rad("C"), get_vdw_rad(6))
       if (allocated(error)) return
       call check(error, get_vdw_rad("Am"), get_vdw_rad(95))
@@ -203,7 +203,7 @@ contains
       if (allocated(error)) return
       call check(error, get_vdw_rad("C", "Og"), get_vdw_rad(118, 6))
 
-   end subroutine test_vdw_rad 
+   end subroutine test_vdw_rad
 
 
    subroutine test_vdw_rad_mb04(error)
@@ -228,27 +228,27 @@ contains
 
       rvdw_sym = get_vdw_rad(mol%sym)
       rvdw_num = get_vdw_rad(mol%num)
-      
+
       if (any(abs(rvdw_sym - rvdw_num) > thr) .or. any(abs(rvdw_sym - ref) > thr)) then
          call test_failed(error, "Van der Waals radii do not match")
-         print'(3es21.14)', rvdw_sym
+         print"(3es21.14)", rvdw_sym
          print'("---")'
-         print'(3es21.14)', rvdw_num
+         print"(3es21.14)", rvdw_num
          print'("---")'
-         print'(3es21.14)', ref
+         print"(3es21.14)", ref
       end if
 
       rvdw_pair_sym = get_vdw_rad(mol%num, 1)
-      rvdw_pair_num = get_vdw_rad('H', mol%sym)
+      rvdw_pair_num = get_vdw_rad("H", mol%sym)
 
       if (any(abs(rvdw_pair_sym - rvdw_pair_num) > thr) &
          & .or. any(abs(rvdw_pair_num - ref_pair) > thr)) then
          call test_failed(error, "Pairwise van der Waals radii do not match")
-         print'(3es21.14)', rvdw_pair_sym
+         print"(3es21.14)", rvdw_pair_sym
          print'("---")'
-         print'(3es21.14)', rvdw_pair_num
+         print"(3es21.14)", rvdw_pair_num
          print'("---")'
-         print'(3es21.14)', ref_pair
+         print"(3es21.14)", ref_pair
       end if
 
    end subroutine test_vdw_rad_mb04

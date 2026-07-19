@@ -15,6 +15,7 @@
 module mctc_io_write
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_filetype, only : filetype, get_filetype
+   use mctc_io_structure, only : structure_type, new_structure
    use mctc_io_write_aims, only : write_aims
    use mctc_io_write_cjson, only : write_cjson
    use mctc_io_write_ctfile, only : write_molfile, write_sdf
@@ -27,7 +28,6 @@ module mctc_io_write
    use mctc_io_write_turbomole, only : write_coord
    use mctc_io_write_vasp, only : write_vasp
    use mctc_io_write_xyz, only : write_xyz
-   use mctc_io_structure, only : structure_type, new_structure
    implicit none
    private
 
