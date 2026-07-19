@@ -17,12 +17,12 @@
 module mctc_io_read_json
    use mctc_env_accuracy, only : wp
    use mctc_env_error, only : error_type, fatal_error
+   use mctc_io_read_cjson, only : read_cjson
+   use mctc_io_read_pymatgen, only : read_pymatgen
+   use mctc_io_read_qcschema, only : read_qcschema
    use mctc_io_structure, only : structure_type, new
    use mctc_io_symbols, only : to_number, symbol_length
    use mctc_io_utils, only : to_string
-   use mctc_io_read_cjson, only : read_cjson
-   use mctc_io_read_qcschema, only : read_qcschema
-   use mctc_io_read_pymatgen, only : read_pymatgen
 #if WITH_JSON
    use jonquil, only : json_value, json_object, json_array, json_keyval, &
       & json_load, json_error, json_context, json_stat, get_value, &

@@ -14,11 +14,11 @@
 
 module test_write_vasp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use testsuite_structure, only : get_structure
-   use mctc_io_write_vasp
    use mctc_io_read_vasp
    use mctc_io_structure
    use mctc_io_structure_info
+   use mctc_io_write_vasp
+   use testsuite_structure, only : get_structure
    implicit none
    private
 
@@ -56,7 +56,7 @@ subroutine test_valid1_poscar(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_vasp(struc, unit)
    rewind(unit)
 
@@ -87,7 +87,7 @@ subroutine test_valid2_poscar(error)
    info = structure_info(selective=.true., cartesian=.false.)
    struc%info = info
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_vasp(struc, unit, "x02")
    rewind(unit)
 
@@ -118,7 +118,7 @@ subroutine test_valid3_poscar(error)
    info = structure_info(scale=0.5291772105638411)
    struc%info = info
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_vasp(struc, unit)
    rewind(unit)
 
@@ -146,7 +146,7 @@ subroutine test_valid4_poscar(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_vasp(struc, unit)
    rewind(unit)
 

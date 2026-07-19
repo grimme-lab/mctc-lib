@@ -17,8 +17,8 @@ module mctc_io_write_genformat
    use mctc_io_constants, only : pi
    use mctc_io_convert, only : autoaa
    use mctc_io_math, only : matinv_3x3
-   use mctc_io_symbols, only : to_symbol
    use mctc_io_structure, only : structure_type
+   use mctc_io_symbols, only : to_symbol
    implicit none
    private
 
@@ -38,7 +38,7 @@ subroutine write_genformat(mol, unit)
    logical :: helical
 
    helical = .false.
-   write(unit, '(i0, 1x)', advance='no') mol%nat
+   write(unit, "(i0, 1x)", advance="no") mol%nat
    if (.not.any(mol%periodic)) then
       write(unit, '("C")') ! cluster
    else
@@ -50,39 +50,39 @@ subroutine write_genformat(mol, unit)
             write(unit, '("S")') ! supercell
          else
             write(unit, '("F")') ! fractional
-         endif
+         end if
       end if
-   endif
+   end if
 
    do izp = 1, mol%nid
-      write(unit, '(1x, a)', advance='no') trim(mol%sym(izp))
-   enddo
-   write(unit, '(a)')
+      write(unit, "(1x, a)", advance="no") trim(mol%sym(izp))
+   end do
+   write(unit, "(a)")
 
    if (.not.any(mol%periodic) .or. mol%info%cartesian) then
       ! now write the cartesian coordinates
       do iat = 1, mol%nat
-         write(unit, '(2i5, 3es24.14)') iat, mol%id(iat), mol%xyz(:, iat)*autoaa
-      enddo
+         write(unit, "(2i5, 3es24.14)") iat, mol%id(iat), mol%xyz(:, iat)*autoaa
+      end do
    else
       inv_lat = matinv_3x3(mol%lattice)
       abc = matmul(inv_lat, mol%xyz)
       ! now write the fractional coordinates
       do iat = 1, mol%nat
-         write(unit, '(2i5, 3es24.15)') iat, mol%id(iat), abc(:, iat)
-      enddo
-   endif
+         write(unit, "(2i5, 3es24.15)") iat, mol%id(iat), abc(:, iat)
+      end do
+   end if
 
    if (any(mol%periodic)) then
-      write(unit, '(3f20.14)') zero3
+      write(unit, "(3f20.14)") zero3
       ! write the lattice parameters
       if (helical) then
-         write(unit, '(2f20.14,1x,i0)') &
+         write(unit, "(2f20.14,1x,i0)") &
             & mol%lattice(1, 1)*autoaa, mol%lattice(2, 1)*180.0_wp/pi, nint(mol%lattice(3, 1))
       else
-         write(unit, '(3f20.14)') mol%lattice(:, :)*autoaa
+         write(unit, "(3f20.14)") mol%lattice(:, :)*autoaa
       end if
-   endif
+   end if
 
 end subroutine write_genformat
 

@@ -15,10 +15,10 @@
 module test_write_ctfile
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use testsuite_structure, only : get_structure
-   use mctc_io_write_ctfile
    use mctc_io_read_ctfile
    use mctc_io_structure
+   use mctc_io_write_ctfile
+   use testsuite_structure, only : get_structure
    implicit none
    private
 
@@ -57,7 +57,7 @@ subroutine test_valid1_mol(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_molfile(struc, unit)
    rewind(unit)
 
@@ -85,7 +85,7 @@ subroutine test_valid1_sdf(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_sdf(struc, unit)
    rewind(unit)
 
@@ -129,7 +129,7 @@ subroutine test_v3k_large_mol(error)
 
    call new(struc, sym, xyz)
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_molfile(struc, unit)
    rewind(unit)
 
@@ -173,7 +173,7 @@ subroutine test_v3k_large_sdf(error)
 
    call new(struc, sym, xyz)
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_sdf(struc, unit)
    rewind(unit)
 
@@ -226,7 +226,7 @@ subroutine test_v3k_with_bonds(error)
 
    call new(struc, sym, xyz, bond=bond)
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_molfile(struc, unit)
    rewind(unit)
 

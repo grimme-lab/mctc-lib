@@ -94,10 +94,12 @@ subroutine read_vasp(self, unit, error)
          return
       end if
       call read_next_token(line, pos, token, latvec(1), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, latvec(2), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, latvec(3), stat)
+      if (stat == 0) then
+        call read_next_token(line, pos, token, latvec(2), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, latvec(3), stat)
+      end if
       if (stat /= 0) then
          call io_error(error, "Cannot read lattice vectors from input", &
             & line, token, filename(unit), lnum, "expected real value")
@@ -114,12 +116,12 @@ subroutine read_vasp(self, unit, error)
    end if
 
    ! try to verify that first element is actually a number
-   i = max(verify(line, ' '), 1)
-   j = scan(line(i:), ' ') - 2 + i
+   i = max(verify(line, " "), 1)
+   j = scan(line(i:), " ") - 2 + i
    if (j < i) j = len_trim(line)
 
    ! CONTCAR files have additional Element line here since vasp.5.1
-   if (verify(line(i:j), '1234567890') /= 0) then
+   if (verify(line(i:j), "1234567890") /= 0) then
       call parse_line(" " // line, args, ntype)
       call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
@@ -131,7 +133,7 @@ subroutine read_vasp(self, unit, error)
    end if
    call parse_line(" " // line, args2, nn)
    if (nn /= ntype) then
-      call fatal_error(error, 'Number of atom types mismatches the number of counts')
+      call fatal_error(error, "Number of atom types mismatches the number of counts")
       return
    end if
 
@@ -163,7 +165,7 @@ subroutine read_vasp(self, unit, error)
       return
    end if
    line = adjustl(line)
-   if (line(:1).eq.'s' .or. line(:1).eq.'S') then
+   if (line(:1)=="s" .or. line(:1)=="S") then
       selective = .true.
       call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
@@ -173,8 +175,8 @@ subroutine read_vasp(self, unit, error)
       line = adjustl(line)
    end if
 
-   cartesian = (line(:1).eq.'c' .or. line(:1).eq.'C' .or. &
-      &         line(:1).eq.'k' .or. line(:1).eq.'K')
+   cartesian = (line(:1)=="c" .or. line(:1)=="C" .or. &
+      &         line(:1)=="k" .or. line(:1)=="K")
    do i = 1, natoms
       call next_line(unit, line, pos, lnum, stat)
       if (stat /= 0) then
@@ -182,10 +184,12 @@ subroutine read_vasp(self, unit, error)
          return
       end if
       call read_next_token(line, pos, token, coord(1), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(2), stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, coord(3), stat)
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(2), stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, coord(3), stat)
+      end if
       if (stat /= 0) then
          call io_error(error, "Cannot read geometry from input", &
             & line, token, filename(unit), lnum, "expected real value")
@@ -214,13 +218,13 @@ subroutine parse_line(line, args, nargs)
    integer, intent(out) :: nargs
    integer, parameter :: p_initial_size = 50
    integer :: istart, iend
-   allocate(args(p_initial_size), source=repeat(' ', 2*symbol_length))
+   allocate(args(p_initial_size), source=repeat(" ", 2*symbol_length))
    istart = 1
    iend = 1
    nargs = 0
    do while(iend < len_trim(line))
-      istart = verify(line(iend:), ' ') - 1 + iend
-      iend = scan(line(istart:), ' ') - 1 + istart
+      istart = verify(line(iend:), " ") - 1 + iend
+      iend = scan(line(istart:), " ") - 1 + istart
       if (iend < istart) iend = len_trim(line)
       if (nargs >= size(args)) then
          call resize(args)

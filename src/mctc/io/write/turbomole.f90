@@ -14,8 +14,8 @@
 
 module mctc_io_write_turbomole
    use mctc_env_accuracy, only : wp
-   use mctc_io_structure, only : structure_type
    use mctc_io_convert, only : autoaa
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 
@@ -37,19 +37,19 @@ subroutine write_coord(mol, unit)
    if (angs) conv_fac = autoaa
 
    if (angs) then
-      write(unit, '(a)') "$coord angs"
+      write(unit, "(a)") "$coord angs"
    else
-      write(unit, '(a)') "$coord"
+      write(unit, "(a)") "$coord"
    end if
    expo = maxval(mol%xyz) > 1.0e+5 .or. minval(mol%xyz) < -1.0e+5
    if (expo) then
       do iat = 1, mol%nat
-         write(unit, '(3es24.14, 6x, a)') mol%xyz(:, iat) * conv_fac, &
+         write(unit, "(3es24.14, 6x, a)") mol%xyz(:, iat) * conv_fac, &
             trim(mol%sym(mol%id(iat)))
       end do
    else
       do iat = 1, mol%nat
-         write(unit, '(3f24.14, 6x, a)') mol%xyz(:, iat) * conv_fac, &
+         write(unit, "(3f24.14, 6x, a)") mol%xyz(:, iat) * conv_fac, &
             trim(mol%sym(mol%id(iat)))
       end do
    end if
@@ -58,20 +58,20 @@ subroutine write_coord(mol, unit)
          "$eht", "charge", nint(mol%charge), "unpaired", mol%uhf
    end if
    if (any(mol%periodic)) then
-      write(unit, '(a, 1x, i0)') "$periodic", count(mol%periodic)
+      write(unit, "(a, 1x, i0)") "$periodic", count(mol%periodic)
       npbc = count(mol%periodic)
       if (size(mol%lattice, 2) == 3) then
          if (angs) then
-            write(unit, '(a)') "$lattice angs"
+            write(unit, "(a)") "$lattice angs"
          else
-            write(unit, '(a)') "$lattice bohr"
+            write(unit, "(a)") "$lattice bohr"
          end if
          do ilt = 1, npbc
-            write(unit, '(3f20.14)') mol%lattice(:npbc, ilt) * conv_fac
+            write(unit, "(3f20.14)") mol%lattice(:npbc, ilt) * conv_fac
          end do
       end if
    end if
-   write(unit, '(a)') "$end"
+   write(unit, "(a)") "$end"
 
 end subroutine write_coord
 

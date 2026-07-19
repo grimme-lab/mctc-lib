@@ -37,7 +37,7 @@ subroutine write_pdb(mol, unit, number)
    integer :: offset, iat, jat
    real(wp) :: xyz(3)
    character(len=*), parameter :: pdb_format = &
-      &  '(a6,i5,1x,a4,a1,a3,1x,a1,i4,a1,3x,3f8.3,2f6.2,6x,a4,a2,a2)'
+      &  "(a6,i5,1x,a4,a1,a3,1x,a1,i4,a1,3x,3f8.3,2f6.2,6x,a4,a2,a2)"
 
 
    if (present(number)) write(unit, '("MODEL ",4x,i4)') number
@@ -59,14 +59,14 @@ subroutine write_pdb(mol, unit, number)
                &  mol%pdb(iat-1)%residue, last_chain, mol%pdb(iat)%residue_number
             last_chain = mol%pdb(iat)%chains
             offset = offset+1
-         endif
+         end if
 
          jat = iat + offset
          if (mol%pdb(iat)%het) then
             w1 = "HETATM"
          else
             w1 = "ATOM  "
-         endif
+         end if
 
 
          sym = adjustr(mol%sym(mol%id(iat))(1:2))
@@ -76,34 +76,34 @@ subroutine write_pdb(mol, unit, number)
          else if (mol%pdb(iat)%charge > 0) then
             write(a_charge, '(i1,"+")') abs(mol%pdb(iat)%charge)
          else
-            a_charge = '  '
-         endif
+            a_charge = "  "
+         end if
 
          write(unit, pdb_format) &
             &  w1, jat, mol%pdb(iat)%name, mol%pdb(iat)%loc, &
             &  mol%pdb(iat)%residue, mol%pdb(iat)%chains, mol%pdb(iat)%residue_number, &
             &  mol%pdb(iat)%code, xyz, 1.0_wp, 0.0_wp, mol%pdb(iat)%segid, &
             &  sym, a_charge
-      enddo
+      end do
    else
       do iat = 1, mol%nat
          w1 = "HETATM"
          sym = adjustr(mol%sym(mol%id(iat))(1:2))
          xyz = mol%xyz(:,iat) * autoaa
-         a_charge = '  '
+         a_charge = "  "
 
          write(unit, pdb_format) &
             &  w1, iat, sym, " ", &
             &  "UNK", "A", 1, " ", xyz, 1.0_wp, 0.0_wp, "    ", &
             &  sym, "  "
-      enddo
+      end do
    end if
 
    if (present(number)) then
       write(unit, '("ENDMDL")')
    else
       write(unit, '("END")')
-   endif
+   end if
 
 end subroutine write_pdb
 

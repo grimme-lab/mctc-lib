@@ -34,7 +34,7 @@ module mctc_io_write_qcschema
       module procedure :: json_array_real_1
    end interface json_array
 
-   character(len=*), parameter :: nl = new_line('a')
+   character(len=*), parameter :: nl = new_line("a")
 
 contains
 
@@ -43,7 +43,7 @@ subroutine write_qcschema(mol, unit)
    type(structure_type), intent(in) :: mol
    integer, intent(in) :: unit
 
-   write(unit, '(a)') json_string(mol, "  ")
+   write(unit, "(a)") json_string(mol, "  ")
 end subroutine write_qcschema
 
 pure function json_string(mol, indent) result(string)
@@ -142,7 +142,7 @@ pure function json_string(mol, indent) result(string)
          if (present(indent)) then
             indent3 = indent // indent // indent
             indent4 = indent // indent // indent // indent
-         endif
+         end if
          string = string // json_key("lattice", indent) // json_array([mol%lattice], indent3, indent4, group=3)
       end block
       if (present(indent)) string = string // nl // indent // indent
@@ -192,7 +192,7 @@ pure function json_array_real_1(array, indent, indent2, group) result(string)
          string = string // nl // indent // indent
       end if
       do j = 1, step, 1
-         string = string // json_value(array(i + j - 1), '(es23.16)')
+         string = string // json_value(array(i + j - 1), "(es23.16)")
          if (i + j - 1 /= size(array)) string = string // ","
       end do
    end do
@@ -278,7 +278,7 @@ pure function json_value_int(val) result(string)
    end do
    if (val < 0) then
       pos = pos - 1
-      buffer(pos:pos) = '-'
+      buffer(pos:pos) = "-"
    end if
 
    string = buffer(pos:)

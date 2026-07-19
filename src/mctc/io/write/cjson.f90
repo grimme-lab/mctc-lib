@@ -36,7 +36,7 @@ module mctc_io_write_cjson
       module procedure :: json_array_real_1
    end interface json_array
 
-   character(len=*), parameter :: nl = new_line('a')
+   character(len=*), parameter :: nl = new_line("a")
 
 contains
 
@@ -45,7 +45,7 @@ subroutine write_cjson(mol, unit)
    type(structure_type), intent(in) :: mol
    integer, intent(in) :: unit
 
-   write(unit, '(a)') json_string(mol, "  ")
+   write(unit, "(a)") json_string(mol, "  ")
 end subroutine write_cjson
 
 pure function json_string(mol, indent) result(string)
@@ -190,7 +190,7 @@ pure function json_array_real_1(array, depth, indent) result(string)
    string = "["
    do i = 1, size(array)
       if (present(indent)) string = string // nl // repeat(indent, depth+1)
-      string = string // json_value(array(i), '(es23.16)')
+      string = string // json_value(array(i), "(es23.16)")
       if (i /= size(array)) string = string // ","
    end do
    if (present(indent)) string = string // nl // repeat(indent, depth)
@@ -276,7 +276,7 @@ pure function json_value_int(val) result(string)
    end do
    if (val < 0) then
       pos = pos - 1
-      buffer(pos:pos) = '-'
+      buffer(pos:pos) = "-"
    end if
 
    string = buffer(pos:)

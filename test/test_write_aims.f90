@@ -14,10 +14,10 @@
 
 module test_write_aims
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use testsuite_structure, only : get_structure
-   use mctc_io_write_aims
    use mctc_io_read_aims
    use mctc_io_structure
+   use mctc_io_write_aims
+   use testsuite_structure, only : get_structure
    implicit none
    private
 
@@ -53,7 +53,7 @@ subroutine test_valid1_aims(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_aims(struc, unit)
    rewind(unit)
 
@@ -81,7 +81,7 @@ subroutine test_valid2_aims(error)
    nat = struc%nat
    nid = struc%nid
 
-   open(status='scratch', newunit=unit)
+   open(status="scratch", newunit=unit)
    call write_aims(struc, unit)
    rewind(unit)
 

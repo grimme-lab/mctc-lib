@@ -160,7 +160,7 @@ function format_time(time) result(string)
    else
       string = string // repeat(" ", 8)
    end if
-   string = string // format_string_real_dp(secs, '(f6.3)')//" sec"
+   string = string // format_string_real_dp(secs, "(f6.3)")//" sec"
 end function format_time
 
 

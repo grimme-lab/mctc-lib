@@ -60,8 +60,8 @@ subroutine test_valid1_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "3 C", &
       "O H", &
       "# B3LYP geometry", &
@@ -90,8 +90,8 @@ subroutine test_valid2_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "9 C", &
       "C Br H O", &
       "     1   1  -8.9147060000E-02  -6.6786080000E-02  -1.0432907000E-01", &
@@ -125,8 +125,8 @@ subroutine test_valid3_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "8 S", &
       "C", &
       "     1   1   0.0000000000E+00   0.0000000000E+00   0.0000000000E+00", &
@@ -163,8 +163,8 @@ subroutine test_valid4_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "2  F", &
       "Ga As", &
       "1 1 0.00 0.00 0.00", &
@@ -195,8 +195,8 @@ subroutine test_valid5_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "   20  H", &
       "  C", &
       "    1 1    0.2756230044E+01    0.2849950460E+01    0.1794011798E+01", &
@@ -245,8 +245,8 @@ subroutine test_valid6_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "    2  H", &
       "  C", &
       "    1 1    0.0 0.0 1.4271041431", &
@@ -277,8 +277,8 @@ subroutine test_invalid1_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "-2  F", &
       "Ga As", &
       "1 1 0.00 0.00 0.00", &
@@ -303,8 +303,8 @@ subroutine test_invalid2_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "2  X", &
       "Ga As", &
       "1 1 0.00 0.00 0.00", &
@@ -329,8 +329,8 @@ subroutine test_invalid3_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "2  F", &
       "Ga ***As", &
       "1 1 0.00 0.00 0.00", &
@@ -355,8 +355,8 @@ subroutine test_invalid4_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "2  F", &
       "Ga As"
    rewind(unit)
@@ -375,8 +375,8 @@ subroutine test_invalid5_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "2  F", &
       "Ga As", &
       "1 1 0.00 0.00 0.00", &
@@ -397,8 +397,8 @@ subroutine test_invalid6_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "2  F", &
       "Ga As", &
       "1 1 0.00 0.00 0.00", &
@@ -423,8 +423,8 @@ subroutine test_invalid7_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "12 H", &
       " C H ", &
       " 1 1   1.39792890   0.00000000  -0.00000000", &
@@ -457,8 +457,8 @@ subroutine test_invalid8_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "   2  H", &
       "  C", &
       "    1 1    0.2756230044E+01    0.2849950460E+01    0.1794011798E+01", &
@@ -481,8 +481,8 @@ subroutine test_invalid9_gen(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "    2  S", &
       "  C", &
       "    1 1    0.0000000000E+00    0.0000000000E+00    0.0000000000E+00", &

@@ -59,8 +59,8 @@ subroutine test_valid1_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Ti  O ", &
       " 1.0000000000000000", &
       "     4.59373    0.00000    0.00000", &
@@ -98,8 +98,8 @@ subroutine test_valid2_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Anatase", &
       " 1.0000000000000000", &
       "     3.7850000000000000    0.0000000000000000    0.0000000000000000", &
@@ -147,8 +147,8 @@ subroutine test_valid3_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "cubic diamond", &
       "  3.7", &
       "    0.5 0.5 0.0", &
@@ -183,8 +183,8 @@ subroutine test_valid4_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "C2 F2", &
       "1.0", &
       "  1.291         2.23608        +0.0000000000", &
@@ -218,8 +218,8 @@ subroutine test_valid5_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       " O  C  H ", &
       " 1.0000000000000000", &
       "     6.4411018522600001    0.0492571261505000    0.2192046129910000", &
@@ -281,8 +281,8 @@ subroutine test_invalid1_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       ""
    rewind(unit)
 
@@ -301,8 +301,8 @@ subroutine test_invalid2_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Ti  O ", &
       " 1.0000000000000000", &
       "     4.59373    0.00000    0.00000", &
@@ -333,8 +333,8 @@ subroutine test_invalid3_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Ti  O ", &
       " 1.0000000000000000", &
       "     4.59373    0.00000    0.00000", &
@@ -356,8 +356,8 @@ subroutine test_invalid4_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Ti  O ", &
       " 1.0000000000000000", &
       "     4.59373    0.00000    0.00000", &
@@ -388,8 +388,8 @@ subroutine test_invalid5_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Ti  O ", &
       " 1.0000000000000000", &
       "     *******    0.00000    0.00000", &
@@ -420,8 +420,8 @@ subroutine test_invalid6_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "Titan  Oxygen", &
       " 1.0000000000000000", &
       "     4.59373    0.00000    0.00000", &
@@ -452,8 +452,8 @@ subroutine test_invalid7_poscar(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "# Rutile", &
       "Ti  O ", &
       " 1.0000000000000000", &
@@ -485,8 +485,8 @@ subroutine test_issue60(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "POSCAR", &
       "3.0", &
       "1.0  0.0  0.0", &

@@ -53,8 +53,8 @@ subroutine test_valid1_pdb(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "ATOM      1  N   GLY Z   1      -0.821  -2.072  16.609  1.00  9.93           N1+", &
       "ATOM      2  CA  GLY Z   1      -1.705  -2.345  15.487  1.00  7.38           C", &
       "ATOM      3  C   GLY Z   1      -0.968  -3.008  14.344  1.00  4.89           C", &
@@ -157,8 +157,8 @@ subroutine test_valid2_pdb(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "HETATM 2463  CHA HEM A 154       9.596 -13.100  10.368  1.00  0.00           C", &
       "HETATM 2464  CHB HEM A 154      11.541 -10.200   7.336  1.00  0.00           C", &
       "HETATM 2465  CHC HEM A 154       9.504  -6.500   9.390  1.00  0.00           C", &
@@ -258,8 +258,8 @@ subroutine test_valid3_pdb(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "ATOM      1  N   PCA A   1      -0.169 -16.525  -1.918  1.00 39.42      9WGA 334", &
       "ATOM      2  CA  PCA A   1      -1.347 -16.464  -2.767  1.00 38.75      9WGA 335", &
       "ATOM      3  C   PCA A   1      -2.629 -16.172  -2.059  1.00 36.17      9WGA 336", &
@@ -300,8 +300,8 @@ subroutine test_valid4_pdb(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "ATOM      1  N   GLY Z   1      -0.821  -2.072  16.609  1.00  9.93           N1+", &
       "ANISOU    1  N   GLY Z   1     1184   1952    638    314   -191   -326       N", &
       "ATOM      2  CA  GLY Z   1      -1.705  -2.345  15.487  1.00  7.38           C", &
@@ -342,8 +342,8 @@ subroutine test_invalid1_pdb(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "ATOM      1  N   GLY Z   1      -0.821  -2.072  16.609  1.00  9.93           N1+", &
       "ATOM      2  CA  GLY Z   1      -1.705  -2.345  15.487  1.00  7.38           C", &
       "ATOM      3  C   GLY Z   1      -0.968  -3.008  14.344  1.00  4.89           C", &
@@ -438,8 +438,8 @@ subroutine test_invalid2_pdb(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "HETATM 2463  CHA HEM A 154       9.596 -13.100  10.368  1.00  0.00           C", &
       "HETATM 2464  CHB HEM A 154      11.541 -10.200   7.336  1.00  0.00           C", &
       "HETATM 2465  CHC HEM A 154       9.504  -6.500   9.390  1.00  0.00           C", &
@@ -531,8 +531,8 @@ subroutine test_invalid3_pdb(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "ATOM      1  N   GLY Z   1      -0.821  -2.072  16.609  1.00  9.93           N1+", &
       "ANISOU    1  N   GLY Z   1     1184   1952    638    314   -191   -326       N", &
       "ATOM      2  CA  GLY Z   1      -1.705  -2.345  15.487  1.00  7.38           C", &

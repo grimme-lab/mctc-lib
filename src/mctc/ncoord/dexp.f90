@@ -14,22 +14,22 @@
 
 !> Coordination number implementation using a double exponential counting function as in GFN2-xTB
 module mctc_ncoord_dexp
+   use mctc_data_covrad, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use mctc_data_covrad, only : get_covalent_rad
    use mctc_ncoord_type, only : ncoord_type
    implicit none
    private
 
    public :: new_dexp_ncoord
-   
+
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: dexp_ncoord_type
       !> Covalent radii
       real(wp), allocatable :: rcov(:)
    contains
-      !> Evaluates the dexp counting function 
+      !> Evaluates the dexp counting function
       procedure :: ncoord_count
       !> Evaluates the derivative of the dexp counting function
       procedure :: ncoord_dcount
@@ -72,7 +72,7 @@ subroutine new_dexp_ncoord(self, mol, cutoff, rcov, cut)
    else
       self%rcov(:) = get_covalent_rad(mol%num)
    end if
-   
+
    self%directed_factor = 1.0_wp
 
    if (present(cut)) then
@@ -116,7 +116,7 @@ elemental function ncoord_dcount(self, izp, jzp, r) result(count)
    real(wp), intent(in) :: r
 
    real(wp) :: rc, count
-   
+
    rc = self%rcov(izp) + self%rcov(jzp)
 
    count = (exp_dcount(ka, r, rc) * exp_count(kb, r, rc + r_shift) &

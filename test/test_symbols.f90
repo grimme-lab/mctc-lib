@@ -120,7 +120,7 @@ subroutine test_sym_ids(error)
    character(symbol_length), allocatable :: sym(:)
 
    sym = [character(symbol_length) :: &
-      & 'Al', 'Ca', 'Ti', 'O ', 'F ', 'Ga', 'Ca', 'Ti', 'S ', 'Cl', 'O ', 'O ']
+      & "Al", "Ca", "Ti", "O ", "F ", "Ga", "Ca", "Ti", "S ", "Cl", "O ", "O "]
 
    allocate(ids(size(sym)))
    call get_identity(nid, ids, sym)

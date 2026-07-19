@@ -31,27 +31,27 @@ subroutine write_xyz(self, unit, comment_line)
    integer :: iat
    logical :: expo
 
-   write(unit, '(i0)') self%nat
+   write(unit, "(i0)") self%nat
    if (present(comment_line)) then
-      write(unit, '(a)') comment_line
+      write(unit, "(a)") comment_line
    else
       if (allocated(self%comment)) then
-         write(unit, '(a)') self%comment
+         write(unit, "(a)") self%comment
       else
-         write(unit, '(a)')
+         write(unit, "(a)")
       end if
    end if
    expo = maxval(self%xyz) > 1.0e+5 .or. minval(self%xyz) < -1.0e+5
    if (expo) then
       do iat = 1, self%nat
-         write(unit, '(a4, 1x, 3es24.14)') &
+         write(unit, "(a4, 1x, 3es24.14)") &
             & self%sym(self%id(iat)), self%xyz(:, iat)*autoaa
-      enddo
+      end do
    else
       do iat = 1, self%nat
-         write(unit, '(a4, 1x, 3f24.14)') &
+         write(unit, "(a4, 1x, 3f24.14)") &
             & self%sym(self%id(iat)), self%xyz(:, iat)*autoaa
-      enddo
+      end do
    end if
 
 end subroutine write_xyz

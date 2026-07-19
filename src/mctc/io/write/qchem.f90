@@ -34,24 +34,24 @@ subroutine write_qchem(self, unit)
    integer :: iat
    logical :: expo
 
-   write(unit, '(a)') "$molecule"
-   write(unit, '(*(1x, i0))') nint(self%charge), self%uhf + 1
+   write(unit, "(a)") "$molecule"
+   write(unit, "(*(1x, i0))") nint(self%charge), self%uhf + 1
 
    expo = maxval(self%xyz) > 1.0e+5 .or. minval(self%xyz) < -1.0e+5
    if (expo) then
       do iat = 1, self%nat
-         write(unit, '(a, 1x, 3es24.14)') &
+         write(unit, "(a, 1x, 3es24.14)") &
            self%sym(self%id(iat)), self%xyz(:, iat) * autoaa
       end do
    else
       do iat = 1, self%nat
-         write(unit, '(a, 1x, 3f24.14)') &
+         write(unit, "(a, 1x, 3f24.14)") &
            self%sym(self%id(iat)), self%xyz(:, iat) * autoaa
       end do
    end if
 
-   write(unit, '(a)') "$end"
+   write(unit, "(a)") "$end"
 
 end subroutine write_qchem
-   
+
 end module mctc_io_write_qchem

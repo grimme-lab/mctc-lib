@@ -17,8 +17,8 @@ module mctc_io_read_aims
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_convert, only : aatoau
    use mctc_io_resize, only : resize
-   use mctc_io_symbols, only : symbol_length, to_number
    use mctc_io_structure, only : structure_type, new
+   use mctc_io_symbols, only : symbol_length, to_number
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
       read_next_token, to_string
    implicit none
@@ -50,7 +50,7 @@ subroutine read_aims(mol, unit, error)
    logical :: is_frac, periodic(3)
    logical, allocatable :: frac(:)
 
-   allocate(sym(initial_size), source=repeat(' ', symbol_length))
+   allocate(sym(initial_size), source=repeat(" ", symbol_length))
    allocate(xyz(3, initial_size), source=0.0_wp)
    allocate(abc(3, initial_size), source=0.0_wp)
    allocate(frac(initial_size), source=.false.)
@@ -72,12 +72,15 @@ subroutine read_aims(mol, unit, error)
       case("atom", "atom_frac")
          is_frac = token%last - token%first + 1 > 4
          call read_next_token(line, pos, token, x, stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, y, stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, z, stat)
-         if (stat == 0) &
-            call next_token(line, pos, token)
+         if (stat == 0) then
+           call read_next_token(line, pos, token, y, stat)
+         end if
+         if (stat == 0) then
+           call read_next_token(line, pos, token, z, stat)
+         end if
+         if (stat == 0) then
+           call next_token(line, pos, token)
+         end if
          if (stat /= 0) then
             call io_error(error, "Cannot read coordinates", &
                & line, token, filename(unit), lnum, "expected real value")
@@ -114,10 +117,12 @@ subroutine read_aims(mol, unit, error)
             exit
          end if
          call read_next_token(line, pos, token, x, stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, y, stat)
-         if (stat == 0) &
-            call read_next_token(line, pos, token, z, stat)
+         if (stat == 0) then
+           call read_next_token(line, pos, token, y, stat)
+         end if
+         if (stat == 0) then
+           call read_next_token(line, pos, token, z, stat)
+         end if
          if (stat /= 0) then
             call io_error(error, "Cannot read lattice vectors", &
                & line, token, filename(unit), lnum, "expected real value")

@@ -41,7 +41,7 @@ subroutine write_vasp(self, unit, comment_line)
    j = 0
    izp = 0
    do i = 1, self%nat
-      if (izp.eq.self%id(i)) then
+      if (izp==self%id(i)) then
          kinds(j) = kinds(j)+1
       else
          j = j+1
@@ -52,38 +52,38 @@ subroutine write_vasp(self, unit, comment_line)
 
    ! use vasp 5.x format
    if (present(comment_line)) then
-      write(unit, '(a)') comment_line
+      write(unit, "(a)") comment_line
    else
       if (allocated(self%comment)) then
-         write(unit, '(a)') self%comment
+         write(unit, "(a)") self%comment
       else
-         write(unit, '(a)')
+         write(unit, "(a)")
       end if
    end if
 
    ! scaling factor for lattice parameters is always one
-   write(unit, '(f20.14)') self%info%scale
+   write(unit, "(f20.14)") self%info%scale
    ! write the lattice parameters
    if (any(self%periodic)) then
       if (size(self%lattice, 2) == 3) then
-         write(unit, '(3f20.14)') self%lattice
+         write(unit, "(3f20.14)") self%lattice
       else
-         write(unit, '(3f20.14)') spread(0.0_wp, 1, 9)
+         write(unit, "(3f20.14)") spread(0.0_wp, 1, 9)
       end if
    else
-      write(unit, '(3f20.14)') spread(0.0_wp, 1, 9)
+      write(unit, "(3f20.14)") spread(0.0_wp, 1, 9)
    end if
 
    do i = 1, j
-      write(unit, '(1x, a)', advance='no') self%sym(species(i))
+      write(unit, "(1x, a)", advance="no") self%sym(species(i))
    end do
-   write(unit, '(a)')
+   write(unit, "(a)")
 
    ! write the count of the consecutive atom types
    do i = 1, j
-      write(unit, '(1x, i0)', advance='no') kinds(i)
+      write(unit, "(1x, i0)", advance="no") kinds(i)
    end do
-   write(unit, '(a)')
+   write(unit, "(a)")
    deallocate(kinds, species)
 
    if (self%info%selective) write(unit, '("Selective")')
@@ -94,7 +94,7 @@ subroutine write_vasp(self, unit, comment_line)
 
       ! now write the cartesian coordinates
       do i = 1, self%nat
-         write(unit, '(3f20.14)') self%xyz(:, i)*autoaa/self%info%scale
+         write(unit, "(3f20.14)") self%xyz(:, i)*autoaa/self%info%scale
       end do
    else
       write(unit, '("Direct")')
@@ -103,7 +103,7 @@ subroutine write_vasp(self, unit, comment_line)
 
       ! now write the fractional coordinates
       do i = 1, self%nat
-         write(unit, '(3f20.14)') abc(:, i)
+         write(unit, "(3f20.14)") abc(:, i)
       end do
    end if
 

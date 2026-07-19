@@ -13,12 +13,12 @@
 ! limitations under the License.
 
 module test_cutoff
+   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
    & test_failed
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
-   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
    implicit none
    private
 
@@ -185,10 +185,10 @@ contains
       call get_structure(mol, "x04")
 
       call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
-      
+
       if (any(abs(lattr - ref) > thr)) then
          call test_failed(error, "Structures do not match")
-         print'(3es21.14)', lattr
+         print"(3es21.14)", lattr
       end if
 
    end subroutine test_lattice_points_cutoff
@@ -252,10 +252,10 @@ contains
       call get_structure(mol, "x04")
 
       call get_lattice_points(mol%lattice, rep, .false., lattr)
-            
+
       if (any(abs(lattr - ref) > thr)) then
          call test_failed(error, "Structures do not match")
-         print'(3es21.14)', lattr
+         print"(3es21.14)", lattr
       end if
 
    end subroutine test_lattice_points_rep
@@ -312,7 +312,7 @@ contains
 
       if (any(abs(mol%xyz - ref) > thr)) then
          call test_failed(error, "Structures do not match")
-         print'(3es21.14)', mol%xyz
+         print"(3es21.14)", mol%xyz
       end if
 
    end subroutine test_wrap

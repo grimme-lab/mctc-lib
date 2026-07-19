@@ -15,9 +15,9 @@
 module test_write
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_write
    use mctc_io_read
    use mctc_io_structure, only : structure_type
+   use mctc_io_write
    use mctc_version, only : get_mctc_feature
    use testsuite_structure, only : get_structure
    implicit none
@@ -70,7 +70,7 @@ subroutine test_mol(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_mol
 
@@ -94,7 +94,7 @@ subroutine test_sdf(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_sdf
 
@@ -118,7 +118,7 @@ subroutine test_pdb(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_pdb
 
@@ -142,7 +142,7 @@ subroutine test_qchem(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_qchem
 
@@ -166,7 +166,7 @@ subroutine test_gen(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_gen
 
@@ -190,7 +190,7 @@ subroutine test_coord(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_coord
 
@@ -214,7 +214,7 @@ subroutine test_vasp(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_vasp
 
@@ -238,7 +238,7 @@ subroutine test_xyz(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_xyz
 
@@ -262,7 +262,7 @@ subroutine test_qcschema(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_qcschema
 
@@ -286,7 +286,7 @@ subroutine test_cjson(error)
    end if
 
    open(file=name, newunit=unit)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_cjson
 
@@ -298,7 +298,7 @@ function get_name() result(name)
    real :: val
 
    call random_number(val)
-   write(name, '(a, z8.8)') "mctc-test-", int(val*1.0e9)
+   write(name, "(a, z8.8)") "mctc-test-", int(val*1.0e9)
 
 end function get_name
 

@@ -51,7 +51,7 @@ subroutine read_sdf(self, unit, error)
    stat = 0
    do while(stat == 0)
       call next_line(unit, line, pos, lnum, stat)
-      if (index(line, '$$$$') == 1) exit
+      if (index(line, "$$$$") == 1) exit
    end do
    if (stat /= 0) then
       call fatal_error(error, "Failed while reading SDF key-value pairs")
@@ -85,9 +85,9 @@ subroutine read_molfile(self, unit, error)
 
    call next_line(unit, comment, pos, lnum, stat)
    call next_line(unit, line, pos, lnum, stat)
-   read(line, '(20x, a2)', iostat=stat) sdf_dim
+   read(line, "(20x, a2)", iostat=stat) sdf_dim
    if (stat == 0) then
-      two_dim = sdf_dim == '2D' .or. sdf_dim == '2d'
+      two_dim = sdf_dim == "2D" .or. sdf_dim == "2d"
    end if
    call next_line(unit, line, pos, lnum, stat)
    call next_line(unit, line, pos, lnum, stat)
@@ -107,8 +107,8 @@ subroutine read_molfile(self, unit, error)
    token = token_type(35, 39)
    stat = 1
    if (len(line) >= 39) then
-      v3k = line(35:39) == 'V3000'
-      if (line(35:39) == 'V2000' .or. v3k) stat = 0
+      v3k = line(35:39) == "V3000"
+      if (line(35:39) == "V2000" .or. v3k) stat = 0
    end if
 
    if (stat /= 0) then
@@ -245,8 +245,8 @@ subroutine read_molfile_v2k(self, unit, number_of_atoms, number_of_bonds, error)
 
    do while(stat == 0)
       call next_line(unit, line, pos, lnum, stat)
-      if (index(line, 'M  END') == 1) exit
-      if (index(line, 'M  CHG') == 1) then
+      if (index(line, "M  END") == 1) exit
+      if (index(line, "M  CHG") == 1) then
          token = token_type(7, 9)
          read(line(7:9), *) length
          call read_token(line, token, length, stat)
@@ -311,9 +311,9 @@ subroutine read_molfile_v3k(self, unit, error)
    call next_v30(unit, line, pos, lnum, stat)
    do while(stat == 0)
       call next_token(line, pos, token)
-      if (slice(line, token%first, token%last) == 'BEGIN') then
+      if (slice(line, token%first, token%last) == "BEGIN") then
          call next_token(line, pos, token)
-         if (slice(line, token%first, token%last) == 'CTAB') exit
+         if (slice(line, token%first, token%last) == "CTAB") exit
       end if
       call next_v30(unit, line, pos, lnum, stat)
    end do
@@ -327,7 +327,7 @@ subroutine read_molfile_v3k(self, unit, error)
    call next_v30(unit, line, pos, lnum, stat)
    if (stat == 0) then
       call next_token(line, pos, token)
-      if (slice(line, token%first, token%last) /= 'COUNTS') then
+      if (slice(line, token%first, token%last) /= "COUNTS") then
          call io_error(error, "Cannot read connection table", &
             & line, token, filename(unit), lnum, "COUNTS header not found")
          return
@@ -337,14 +337,18 @@ subroutine read_molfile_v3k(self, unit, error)
       call read_next_token(line, pos, token, number_of_atoms, stat)
       tsym = token
    end if
-   if (stat == 0) &
-      call read_next_token(line, pos, token, number_of_bonds, stat)
-   if (stat == 0) &
-      call read_next_token(line, pos, token, dummy, stat)
-   if (stat == 0) &
-      call read_next_token(line, pos, token, dummy, stat)
-   if (stat == 0) &
-      call read_next_token(line, pos, token, dummy, stat)
+   if (stat == 0) then
+     call read_next_token(line, pos, token, number_of_bonds, stat)
+   end if
+   if (stat == 0) then
+     call read_next_token(line, pos, token, dummy, stat)
+   end if
+   if (stat == 0) then
+     call read_next_token(line, pos, token, dummy, stat)
+   end if
+   if (stat == 0) then
+     call read_next_token(line, pos, token, dummy, stat)
+   end if
    if (stat /= 0) then
       call io_error(error, "Cannot read connection table counts", &
          & line, token, filename(unit), lnum, "expected integer value")
@@ -365,26 +369,32 @@ subroutine read_molfile_v3k(self, unit, error)
    call next_v30(unit, line, pos, lnum, stat)
    do while(stat == 0)
       call next_token(line, pos, token)
-      if (slice(line, token%first, token%last) == 'END') exit
-      if (slice(line, token%first, token%last) == 'BEGIN') then
+      if (slice(line, token%first, token%last) == "END") exit
+      if (slice(line, token%first, token%last) == "BEGIN") then
          call next_token(line, pos, token)
          group = slice(line, token%first, token%last)
          select case(group)
          case("ATOM")
             do iatom = 1, number_of_atoms
                call next_v30(unit, line, pos, lnum, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, dummy, stat)
-               if (stat == 0) &
-                  call next_token(line, pos, tsym)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, x, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, y, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, z, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, aamap, stat)
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, dummy, stat)
+               end if
+               if (stat == 0) then
+                 call next_token(line, pos, tsym)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, x, stat)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, y, stat)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, z, stat)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, aamap, stat)
+               end if
                if (stat /= 0) then
                   call io_error(error, "Cannot read coordinates", &
                      & line, token, filename(unit), lnum, "unexpected value")
@@ -409,7 +419,7 @@ subroutine read_molfile_v3k(self, unit, error)
                sdf(iatom) = sdf_data()
                do while(pos < len(line))
                   call next_token(line, pos, token)
-                  equal = index(slice(line, token%first, token%last), '=') + token%first - 1
+                  equal = index(slice(line, token%first, token%last), "=") + token%first - 1
                   if (equal > token%first) then
                      select case(slice(line, token%first, equal - 1))
                      case("CHG")
@@ -436,14 +446,18 @@ subroutine read_molfile_v3k(self, unit, error)
          case("BOND")
             do ibond = 1, number_of_bonds
                call next_v30(unit, line, pos, lnum, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, dummy, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, btype, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, iatom, stat)
-               if (stat == 0) &
-                  call read_next_token(line, pos, token, jatom, stat)
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, dummy, stat)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, btype, stat)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, iatom, stat)
+               end if
+               if (stat == 0) then
+                 call read_next_token(line, pos, token, jatom, stat)
+               end if
                if (stat /= 0) then
                   call io_error(error, "Cannot read bond information", &
                      & line, token, filename(unit), lnum, "expected integer value")
@@ -459,7 +473,7 @@ subroutine read_molfile_v3k(self, unit, error)
             do while(stat == 0)
                call next_v30(unit, line, pos, lnum, stat)
                call next_token(line, pos, token)
-               if (slice(line, token%first, token%last) == 'END') exit
+               if (slice(line, token%first, token%last) == "END") exit
             end do
 
          case default
@@ -468,7 +482,7 @@ subroutine read_molfile_v3k(self, unit, error)
             return
          end select
 
-         if (slice(line, token%first, token%last) /= 'END') then
+         if (slice(line, token%first, token%last) /= "END") then
             call io_error(error, group//" block is not terminated", &
                & line, token, filename(unit), lnum, "expected END label")
             return
@@ -483,13 +497,13 @@ subroutine read_molfile_v3k(self, unit, error)
       call next_v30(unit, line, pos, lnum, stat)
    end do
 
-   if (slice(line, token%first, token%last) /= 'END') then
+   if (slice(line, token%first, token%last) /= "END") then
       call io_error(error, "Connection table is not terminated", &
          & line, token, filename(unit), lnum, "expected END label")
       return
    end if
    call next_token(line, pos, token)
-   if (slice(line, token%first, token%last) /= 'CTAB') then
+   if (slice(line, token%first, token%last) /= "CTAB") then
       call io_error(error, "Connection table is not terminated", &
          & line, token, filename(unit), lnum, "expected ATOM label")
       return
@@ -498,7 +512,7 @@ subroutine read_molfile_v3k(self, unit, error)
    call next_v30(unit, line, pos, lnum, stat)
    do while(stat == 0)
       call next_token(line, pos, token)
-      if (slice(line, token%first, token%last) == 'END') exit
+      if (slice(line, token%first, token%last) == "END") exit
    end do
 
    if (stat /= 0) then
@@ -545,8 +559,8 @@ subroutine next_v30(unit, line, pos, lnum, iostat, iomsg)
    call next_line(unit, line, pos, lnum, iostat, iomsg)
    if (iostat /= 0) return
 
-   if (index(line, 'M  END') == 1) pos = 3
-   if (index(line, 'M  V30') == 1) pos = 6
+   if (index(line, "M  END") == 1) pos = 3
+   if (index(line, "M  V30") == 1) pos = 6
 end subroutine next_v30
 
 end module mctc_io_read_ctfile

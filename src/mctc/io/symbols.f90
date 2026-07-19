@@ -37,48 +37,48 @@ module mctc_io_symbols
 
    !> Periodic system of elements
    character(len=2), parameter :: pse(118) = [ &
-      & 'H ','He', &
-      & 'Li','Be','B ','C ','N ','O ','F ','Ne', &
-      & 'Na','Mg','Al','Si','P ','S ','Cl','Ar', &
-      & 'K ','Ca', &
-      & 'Sc','Ti','V ','Cr','Mn','Fe','Co','Ni','Cu','Zn', &
-      &           'Ga','Ge','As','Se','Br','Kr', &
-      & 'Rb','Sr', &
-      & 'Y ','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd', &
-      &           'In','Sn','Sb','Te','I ','Xe', &
-      & 'Cs','Ba', &
-      & 'La','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb', &
-      & 'Lu','Hf','Ta','W ','Re','Os','Ir','Pt','Au','Hg', &
-      &           'Tl','Pb','Bi','Po','At','Rn', &
-      & 'Fr','Ra', &
-      & 'Ac','Th','Pa','U ','Np','Pu','Am','Cm','Bk','Cf','Es','Fm','Md','No', &
-      & 'Lr','Rf','Db','Sg','Bh','Hs','Mt','Ds','Rg','Cn', &
-      &           'Nh','Fl','Mc','Lv','Ts','Og' ]
+      & "H ","He", &
+      & "Li","Be","B ","C ","N ","O ","F ","Ne", &
+      & "Na","Mg","Al","Si","P ","S ","Cl","Ar", &
+      & "K ","Ca", &
+      & "Sc","Ti","V ","Cr","Mn","Fe","Co","Ni","Cu","Zn", &
+      &           "Ga","Ge","As","Se","Br","Kr", &
+      & "Rb","Sr", &
+      & "Y ","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd", &
+      &           "In","Sn","Sb","Te","I ","Xe", &
+      & "Cs","Ba", &
+      & "La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb", &
+      & "Lu","Hf","Ta","W ","Re","Os","Ir","Pt","Au","Hg", &
+      &           "Tl","Pb","Bi","Po","At","Rn", &
+      & "Fr","Ra", &
+      & "Ac","Th","Pa","U ","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No", &
+      & "Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn", &
+      &           "Nh","Fl","Mc","Lv","Ts","Og" ]
 
 
    !> Lower case version of the periodic system of elements
    character(len=2), parameter :: lcpse(118) = [ &
-      & 'h ','he', &
-      & 'li','be','b ','c ','n ','o ','f ','ne', &
-      & 'na','mg','al','si','p ','s ','cl','ar', &
-      & 'k ','ca', &
-      & 'sc','ti','v ','cr','mn','fe','co','ni','cu','zn', &
-      &           'ga','ge','as','se','br','kr', &
-      & 'rb','sr', &
-      & 'y ','zr','nb','mo','tc','ru','rh','pd','ag','cd', &
-      &           'in','sn','sb','te','i ','xe', &
-      & 'cs','ba','la', &
-      & 'ce','pr','nd','pm','sm','eu','gd','tb','dy','ho','er','tm','yb', &
-      & 'lu','hf','ta','w ','re','os','ir','pt','au','hg', &
-      &           'tl','pb','bi','po','at','rn', &
-      & 'fr','ra','ac', &
-      & 'th','pa','u ','np','pu','am','cm','bk','cf','es','fm','md','no', &
-      & 'lr','rf','db','sg','bh','hs','mt','ds','rg','cn', &
-      &           'nh','fl','mc','lv','ts','og' ]
+      & "h ","he", &
+      & "li","be","b ","c ","n ","o ","f ","ne", &
+      & "na","mg","al","si","p ","s ","cl","ar", &
+      & "k ","ca", &
+      & "sc","ti","v ","cr","mn","fe","co","ni","cu","zn", &
+      &           "ga","ge","as","se","br","kr", &
+      & "rb","sr", &
+      & "y ","zr","nb","mo","tc","ru","rh","pd","ag","cd", &
+      &           "in","sn","sb","te","i ","xe", &
+      & "cs","ba","la", &
+      & "ce","pr","nd","pm","sm","eu","gd","tb","dy","ho","er","tm","yb", &
+      & "lu","hf","ta","w ","re","os","ir","pt","au","hg", &
+      &           "tl","pb","bi","po","at","rn", &
+      & "fr","ra","ac", &
+      & "th","pa","u ","np","pu","am","cm","bk","cf","es","fm","md","no", &
+      & "lr","rf","db","sg","bh","hs","mt","ds","rg","cn", &
+      &           "nh","fl","mc","lv","ts","og" ]
 
 
    !> ASCII offset between lowercase and uppercase letters
-   integer, parameter :: offset = iachar('a') - iachar('A')
+   integer, parameter :: offset = iachar("a") - iachar("A")
 
 
 contains
@@ -97,32 +97,32 @@ elemental subroutine symbol_to_number(number, symbol)
    integer :: i, j, k, l
 
    number = 0
-   lcsymbol = '  '
+   lcsymbol = "  "
 
    k = 0
    do j = 1, len_trim(symbol)
       if (k > 2) exit
       l = iachar(symbol(j:j))
-      if (k >= 1 .and. l == iachar(' ')) exit
+      if (k >= 1 .and. l == iachar(" ")) exit
       if (k >= 1 .and. l == 9) exit
-      if (l >= iachar('A') .and. l <= iachar('Z')) l = l + offset
-      if (l >= iachar('a') .and. l <= iachar('z')) then
+      if (l >= iachar("A") .and. l <= iachar("Z")) l = l + offset
+      if (l >= iachar("a") .and. l <= iachar("z")) then
          k = k+1
          if (k > 2) exit
          lcsymbol(k:k) = achar(l)
-      endif
-   enddo
+      end if
+   end do
 
    do i = 1, size(lcpse)
       if (lcsymbol == lcpse(i)) then
          number = i
          exit
-      endif
-   enddo
+      end if
+   end do
 
    if (number == 0) then
       select case(lcsymbol)
-      case('d ', 't ')
+      case("d ", "t ")
          number = 1
       end select
    end if
@@ -140,10 +140,10 @@ elemental subroutine number_to_symbol(symbol, number)
    character(len=2), intent(out) :: symbol
 
    if (number <= 0 .or. number > size(pse)) then
-      symbol = '--'
+      symbol = "--"
    else
       symbol = pse(number)
-   endif
+   end if
 
 end subroutine number_to_symbol
 
@@ -158,10 +158,10 @@ elemental subroutine number_to_lcsymbol(symbol, number)
    character(len=2), intent(out) :: symbol
 
    if (number <= 0 .or. number > size(lcpse)) then
-      symbol = '--'
+      symbol = "--"
    else
       symbol = lcpse(number)
-   endif
+   end if
 
 end subroutine number_to_lcsymbol
 

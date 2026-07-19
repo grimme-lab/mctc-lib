@@ -59,7 +59,7 @@ subroutine read_xyz(self, unit, error)
       return
    end if
 
-   if (n.lt.1) then
+   if (n<1) then
       call io_error(error, "Impossible number of atoms provided", &
          & fline, tnat, filename(unit), lnum, "expected positive integer value")
       return
@@ -86,12 +86,15 @@ subroutine read_xyz(self, unit, error)
          return
       end if
       call next_token(line, pos, tsym)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, x, stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, y, stat)
-      if (stat == 0) &
-         call read_next_token(line, pos, token, z, stat)
+      if (stat == 0) then
+        call read_next_token(line, pos, token, x, stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, y, stat)
+      end if
+      if (stat == 0) then
+        call read_next_token(line, pos, token, z, stat)
+      end if
       if (stat /= 0) then
          call io_error(error, "Could not parse coordinates from xyz file", &
             & line, token, filename(unit), lnum, "expected real value")

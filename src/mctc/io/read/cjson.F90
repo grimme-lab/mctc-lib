@@ -236,8 +236,9 @@ subroutine load_cjson(self, object, ctx, error)
    if (associated(array)) then
       call get_value(array, list, stat=stat, origin=origin)
    end if
-   if (.not.allocated(order) .and. allocated(list)) &
-      allocate(order(size(list)/2), source=1)
+   if (.not.allocated(order) .and. allocated(list)) then
+     allocate(order(size(list)/2), source=1)
+   end if
 
    if (allocated(list)) then
       if (2*size(order) /= size(list)) then
@@ -348,7 +349,7 @@ pure subroutine cell_to_dlat(cellpar, lattice)
       lattice(1, 2) = blen*cos(gam)
       lattice(2, 2) = blen*sin(gam)
       lattice(1, 3) = clen*cos(bet)
-      lattice(2, 3) = clen*(cos(alp) - cos(bet)*cos(gam))/sin(gam);
+      lattice(2, 3) = clen*(cos(alp) - cos(bet)*cos(gam))/sin(gam)
       lattice(3, 3) = dvol/(alen*blen*sin(gam))
 
    end associate

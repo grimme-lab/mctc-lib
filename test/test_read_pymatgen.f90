@@ -74,83 +74,83 @@ subroutine test_valid_mol1(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {},', &
       '      "label": "O"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [-1.1469443, 0.0697649, 1.1470196],', &
       '      "properties": {},', &
       '      "label": "O"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [-1.2798308, -0.5232169, 1.8902833],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [-1.0641398, -0.4956693, 0.356925],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [-0.1633508, -1.0289346, -1.2401808],', &
       '      "properties": {},', &
       '      "label": "O"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4914771, -0.3248733, -1.0784838],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [-0.5400907, -0.8496512, -2.1052499],', &
       '      "properties": {},', &
       '      "label": "H"', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
 
    call check(error, struc%nat, 9, "Number of atoms does not match")
@@ -171,17 +171,17 @@ subroutine test_valid_sol1(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
       '  "lattice": {', &
       '    "matrix": [', &
-      '      [5.59003664376222, 0.0, 0.0],', &
-      '      [0.0, 8.68089159045265, 0.0],', &
-      '      [0.0, 0.0, 8.68089159045265]', &
-      '    ],', &
+      "      [5.59003664376222, 0.0, 0.0],", &
+      "      [0.0, 8.68089159045265, 0.0],", &
+      "      [0.0, 0.0, 8.68089159045265]", &
+      "    ],", &
       '    "pbc": [true, true, true],', &
       '    "a": 5.59003664376222,', &
       '    "b": 8.68089159045265,', &
@@ -190,57 +190,57 @@ subroutine test_valid_sol1(error)
       '    "beta": 90.0,', &
       '    "gamma": 90.0,', &
       '    "volume": 421.253303917213', &
-      '  },', &
+      "  },", &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
    if (allocated(error)) return
 
    call check(error, struc%nat, 6, "Number of atoms does not match")
@@ -263,37 +263,37 @@ subroutine test_missing_module(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_missing_module
 
@@ -308,38 +308,38 @@ subroutine test_incorrect_module(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "mctc.io.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_module
 
@@ -353,37 +353,37 @@ subroutine test_missing_class(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_missing_class
 
@@ -398,38 +398,38 @@ subroutine test_incorrect_class(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Geometry",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_class
 
@@ -443,38 +443,38 @@ subroutine test_incorrect_charge(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": "neutral",', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_charge
 
@@ -488,38 +488,38 @@ subroutine test_incorrect_multiplicity(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": "singlet",', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_multiplicity
 
@@ -533,38 +533,38 @@ subroutine test_unphysical_multiplicity(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 0,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_unphysical_multiplicity
 
@@ -578,19 +578,19 @@ subroutine test_incorrect_sites(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": "missing",', &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_sites
 
@@ -604,8 +604,8 @@ subroutine test_incorrect_sites_entry(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
@@ -614,13 +614,13 @@ subroutine test_incorrect_sites_entry(error)
       '    ["O", 1.1847029, 1.1150792,-0.0344641],', &
       '    ["H", 0.4939088, 0.9563767, 0.6340089],', &
       '    ["H", 2.0242676, 1.0811246, 0.4301417]', &
-      '  ],', &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_sites_entry
 
@@ -634,38 +634,38 @@ subroutine test_incorrect_label(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": 8, "label": 8', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": 1, "label": 1', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": 1, "label": 1', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_label
 
@@ -679,38 +679,38 @@ subroutine test_incorrect_xyz(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": "1.1847029, 1.1150792, -0.0344641",', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": "0.4939088, 0.9563767, 0.6340089",', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": "2.0242676, 1.0811246, 0.4301417",', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_xyz
 
@@ -724,38 +724,38 @@ subroutine test_incorrect_xyz_size(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_xyz_size
 
@@ -769,38 +769,38 @@ subroutine test_incorrect_xyz_value(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, "1.1150792", -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}'
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_xyz_value
 
@@ -814,38 +814,38 @@ subroutine test_incorrect_root(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '[{', &
+   write(unit, "(a)") &
+      "[{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Molecule",', &
       '  "charge": 0,', &
       '  "spin_multiplicity": 1,', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "name": "O", "label": "O",', &
       '      "species": [{"element": "O", "occu": 1}],', &
       '      "xyz": [1.1847029, 1.1150792, -0.0344641],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [0.4939088, 0.9563767, 0.6340089],', &
       '      "properties": {}', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "name": "H", "label": "H",', &
       '      "species": [{"element": "H", "occu": 1}],', &
       '      "xyz": [2.0242676, 1.0811246, 0.4301417],', &
       '      "properties": {}', &
-      '    }', &
-      '  ],', &
+      "    }", &
+      "  ],", &
       '  "properties": {}', &
-      '}]'
+      "}]"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_root
 
@@ -859,8 +859,8 @@ subroutine test_incorrect_lattice(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
@@ -874,57 +874,57 @@ subroutine test_incorrect_lattice(error)
       '    "beta": 90.0,', &
       '    "gamma": 90.0,', &
       '    "volume": 421.253303917213', &
-      '  },', &
+      "  },", &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_lattice
 
@@ -938,17 +938,17 @@ subroutine test_incorrect_lattice_value(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
       '  "lattice": {', &
       '    "matrix": [', &
       '      ["5.59003664376222", 0.0, 0.0],', &
-      '      [0.0, 8.68089159045265, 0.0],', &
-      '      [0.0, 0.0, 8.68089159045265]', &
-      '    ],', &
+      "      [0.0, 8.68089159045265, 0.0],", &
+      "      [0.0, 0.0, 8.68089159045265]", &
+      "    ],", &
       '    "pbc": [true, true, true],', &
       '    "a": 5.59003664376222,', &
       '    "b": 8.68089159045265,', &
@@ -957,57 +957,57 @@ subroutine test_incorrect_lattice_value(error)
       '    "beta": 90.0,', &
       '    "gamma": 90.0,', &
       '    "volume": 421.253303917213', &
-      '  },', &
+      "  },", &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_lattice_value
 
@@ -1021,17 +1021,17 @@ subroutine test_incorrect_lattice_size(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
       '  "lattice": {', &
       '    "matrix": [', &
-      '      [5.59003664376222],', &
-      '      [8.68089159045265],', &
-      '      [8.68089159045265]', &
-      '    ],', &
+      "      [5.59003664376222],", &
+      "      [8.68089159045265],", &
+      "      [8.68089159045265]", &
+      "    ],", &
       '    "pbc": [true, true, true],', &
       '    "a": 5.59003664376222,', &
       '    "b": 8.68089159045265,', &
@@ -1040,57 +1040,57 @@ subroutine test_incorrect_lattice_size(error)
       '    "beta": 90.0,', &
       '    "gamma": 90.0,', &
       '    "volume": 421.253303917213', &
-      '  },', &
+      "  },", &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_lattice_size
 
@@ -1104,16 +1104,16 @@ subroutine test_incorrect_lattice_dim(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
       '  "lattice": {', &
       '    "matrix": [', &
-      '      [5.59003664376222, 0.0, 0.0],', &
-      '      [0.0, 8.68089159045265, 0.0],', &
-      '    ],', &
+      "      [5.59003664376222, 0.0, 0.0],", &
+      "      [0.0, 8.68089159045265, 0.0],", &
+      "    ],", &
       '    "pbc": [true, true, true],', &
       '    "a": 5.59003664376222,', &
       '    "b": 8.68089159045265,', &
@@ -1122,57 +1122,57 @@ subroutine test_incorrect_lattice_dim(error)
       '    "beta": 90.0,', &
       '    "gamma": 90.0,', &
       '    "volume": 421.253303917213', &
-      '  },', &
+      "  },", &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_lattice_dim
 
@@ -1186,17 +1186,17 @@ subroutine test_incorrect_lattice_rank(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
       '  "lattice": {', &
       '    "matrix": [', &
-      '      5.59003664376222,', &
-      '      8.68089159045265,', &
-      '      8.68089159045265', &
-      '    ],', &
+      "      5.59003664376222,", &
+      "      8.68089159045265,", &
+      "      8.68089159045265", &
+      "    ],", &
       '    "pbc": [true, true, true],', &
       '    "a": 5.59003664376222,', &
       '    "b": 8.68089159045265,', &
@@ -1205,57 +1205,57 @@ subroutine test_incorrect_lattice_rank(error)
       '    "beta": 90.0,', &
       '    "gamma": 90.0,', &
       '    "volume": 421.253303917213', &
-      '  },', &
+      "  },", &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_lattice_rank
 
@@ -1269,62 +1269,62 @@ subroutine test_incorrect_lattice_table(error)
    integer :: unit
 
    open(file=filename, newunit=unit)
-   write(unit, '(a)') &
-      '{', &
+   write(unit, "(a)") &
+      "{", &
       '  "@module": "pymatgen.core.structure",', &
       '  "@class": "Structure",', &
       '  "charge": 0.0,', &
       '  "lattice": [],', &
       '  "properties": {},', &
       '  "sites": [', &
-      '    {', &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.0, 0.0, 0.0],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [0.0, 0.0, 0.0]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "Ti", "occu": 1}],', &
       '      "abc": [0.5, 0.5000000000000007, 0.5000000000000007],', &
       '      "properties": {},', &
       '      "label": "Ti",', &
       '      "xyz": [2.79501832188111, 4.340445795226331, 4.340445795226331]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.30530000000000074, 0.30530000000000074],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 2.6502762025652005, 2.6502762025652005]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.0, 0.6947000000000005, 0.6947000000000005],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [0.0, 6.03061538788746, 6.03061538788746]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.1946999999999999, 0.8053000000000002],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 1.69016959266113, 6.99072199779152]', &
-      '    },', &
-      '    {', &
+      "    },", &
+      "    {", &
       '      "species": [{"element": "O", "occu": 1}], ', &
       '      "abc": [0.5, 0.8053000000000002, 0.1946999999999999],', &
       '      "properties": {},', &
       '      "label": "O",', &
       '      "xyz": [2.79501832188111, 6.99072199779152, 1.69016959266113]', &
-      '    }', &
-      '  ]', &
-      '}'
+      "    }", &
+      "  ]", &
+      "}"
    rewind(unit)
 
    call read_pymatgen(struc, unit, error)
-   close(unit, status='delete')
+   close(unit, status="delete")
 
 end subroutine test_incorrect_lattice_table
 

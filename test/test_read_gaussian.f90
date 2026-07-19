@@ -51,8 +51,8 @@ subroutine test_valid1_ein(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "         4         1         0         1", &
       "         7      0.000000000000      0.000000000000     -0.114091591161      0.000000000000 ", &
       "         1     -1.817280998039      0.000000000000      0.528409372569      0.000000000000 ", &
@@ -72,13 +72,13 @@ subroutine test_valid1_ein(error)
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
    if (allocated(error)) return
-   
+
    call check(error, struc%xyz(1,1), 0.000000000000_wp, thr=1.0e-10_wp, message="Coordinates do not match")
    if (allocated(error)) return
-  
+
    call check(error, struc%xyz(3,2), 0.528409372569_wp, thr=1.0e-10_wp,message="Coordinates do not match")
    if (allocated(error)) return
-   
+
    call check(error, struc%xyz(2,3), -1.573811509290_wp, thr=1.0e-10_wp, message="Coordinates do not match")
   if (allocated(error)) return
 
@@ -93,8 +93,8 @@ subroutine test_invalid1_ein(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "         4         1      zero       one", &
       "         7      0.000000000000      0.000000000000     -0.114091591161      0.000000000000 ", &
       "         1     -1.817280998039      0.000000000000      0.528409372569      0.000000000000 ", &
@@ -120,8 +120,8 @@ subroutine test_invalid2_ein(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "        -4         1         0         1", &
       "         7      0.000000000000      0.000000000000     -0.114091591161      0.000000000000 ", &
       "         1     -1.817280998039      0.000000000000      0.528409372569      0.000000000000 ", &
@@ -147,8 +147,8 @@ subroutine test_invalid3_ein(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "         4         1         0         1", &
       "         7      0.000000000000      0.000000000000     -0.114091591161      0.000000000000 ", &
       "         1     -1.817280998039      0.000000000000      0.528409372569      0.000000000000 ", &
@@ -174,8 +174,8 @@ subroutine test_invalid4_ein(error)
    type(structure_type) :: struc
    integer :: unit
 
-   open(status='scratch', newunit=unit)
-   write(unit, '(a)') &
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
       "         4         1         0         1", &
       "         7      0.000000000000      0.000000000000     -0.114091591161      0.000000000000 ", &
       "         1     -1.817280998039      0.000000000000      0.528409372569      0.000000000000 ", &

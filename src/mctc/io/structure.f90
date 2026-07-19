@@ -31,9 +31,9 @@
 !> Use [[new]] or [[new_structure]] to create structure instances.
 module mctc_io_structure
    use mctc_env_accuracy, only : wp
+   use mctc_io_structure_info, only : structure_info, pdb_data, sdf_data
    use mctc_io_symbols, only : to_number, to_symbol, symbol_length, get_identity, &
       & collect_identical
-   use mctc_io_structure_info, only : structure_info, pdb_data, sdf_data
    implicit none
    private
 

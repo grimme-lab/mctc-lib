@@ -38,12 +38,12 @@ subroutine get_argument(idx, arg)
    call get_command_argument(idx, length=length, status=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    allocate(character(len=length) :: arg, stat=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    if (length > 0) then
       call get_command_argument(idx, arg, status=stat)
@@ -70,12 +70,12 @@ subroutine get_variable(var, val)
    call get_environment_variable(var, length=length, status=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    allocate(character(len=length) :: val, stat=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    if (length > 0) then
       call get_environment_variable(var, val, status=stat)
@@ -97,14 +97,14 @@ function is_windows()
    character(len=:), allocatable :: tmp
 
    is_windows = .false.
-   call get_variable('OS', tmp)
+   call get_variable("OS", tmp)
    if (allocated(tmp)) then
-      is_windows = index(tmp, 'Windows_NT') > 0
+      is_windows = index(tmp, "Windows_NT") > 0
    end if
    if (.not.is_windows) then
-      call get_variable('OSTYPE', tmp)
+      call get_variable("OSTYPE", tmp)
       if (allocated(tmp)) then
-         is_windows = index(tmp, 'win') > 0 .or. index(tmp, 'msys') > 0
+         is_windows = index(tmp, "win") > 0 .or. index(tmp, "msys") > 0
       end if
    end if
 

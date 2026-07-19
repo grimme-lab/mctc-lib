@@ -35,12 +35,12 @@ module mctc_io_structure_info
       logical :: het = .false.
       integer :: charge = 0
       integer :: residue_number = 0
-      character(len=4) :: name = ' '
-      character(len=1) :: loc = ' '
-      character(len=3) :: residue = ' '
-      character(len=1) :: chains = ' '
-      character(len=1) :: code = ' '
-      character(len=4) :: segid = ' '
+      character(len=4) :: name = " "
+      character(len=1) :: loc = " "
+      character(len=3) :: residue = " "
+      character(len=1) :: chains = " "
+      character(len=1) :: code = " "
+      character(len=4) :: segid = " "
    end type pdb_data
 
 
@@ -108,7 +108,7 @@ subroutine resize_pdb_data(var, n)
          length = n
       else
          length = current_length + current_length/2 + 1
-      endif
+      end if
       allocate(tmp(length), source=pdb_data())
       tmp(:current_length) = var(:current_length)
       deallocate(var)
@@ -118,9 +118,9 @@ subroutine resize_pdb_data(var, n)
          length = n
       else
          length = 64
-      endif
+      end if
       allocate(var(length), source=pdb_data())
-   endif
+   end if
 end subroutine resize_pdb_data
 
 

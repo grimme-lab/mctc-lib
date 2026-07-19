@@ -14,10 +14,10 @@
 
 !> Coordination number implementation with single error function
 module mctc_ncoord_erf
+   use mctc_data_covrad, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
-   use mctc_data_covrad, only : get_covalent_rad
    use mctc_ncoord_type, only : ncoord_type
    implicit none
    private
@@ -39,7 +39,7 @@ module mctc_ncoord_erf
 
    !> Steepness of counting function
    real(wp), parameter :: default_kcn = 3.15_wp
-   !> Exponent of distance normalization 
+   !> Exponent of distance normalization
    real(wp), parameter :: default_norm_exp = 1.0_wp
    !> Real-space cutoff for coordination number
    real(wp), parameter :: default_cutoff = 25.0_wp
@@ -112,11 +112,11 @@ contains
       real(wp), intent(in) :: r
 
       real(wp) :: rc, count
-      
+
       rc = (self%rcov(izp) + self%rcov(jzp))
 
       count = 0.5_wp * (1.0_wp + erf(-self%kcn*(r-rc)/rc**self%norm_exp))
-      
+
    end function ncoord_count
 
    !> Derivative of the error counting function w.r.t. the distance.
