@@ -53,7 +53,7 @@ contains
       !> Molecular structure data
       type(structure_type), intent(in) :: mol
       !> Steepness of counting function
-      real(wp), optional :: kcn
+      real(wp), intent(in), optional :: kcn
       !> Real space cutoff
       real(wp), intent(in), optional :: cutoff
       !> Covalent radii

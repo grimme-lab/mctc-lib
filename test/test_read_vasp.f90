@@ -15,8 +15,8 @@
 module test_read_vasp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
-   use mctc_io_read_vasp
-   use mctc_io_structure
+   use mctc_io_read_vasp, only : read_vasp
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 

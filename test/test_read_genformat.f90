@@ -14,8 +14,8 @@
 
 module test_read_genformat
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_genformat
-   use mctc_io_structure
+   use mctc_io_read_genformat, only : read_genformat
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 

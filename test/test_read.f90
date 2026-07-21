@@ -16,7 +16,7 @@ module test_read
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_filetype, only : get_filetype
-   use mctc_io_read
+   use mctc_io_read, only : read_structure
    use mctc_io_structure, only : structure_type
    use mctc_version, only : get_mctc_feature
    implicit none

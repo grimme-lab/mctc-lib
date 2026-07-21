@@ -173,19 +173,19 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
       & template, template_format, read_dot_files, error)
 
    !> Input file name
-   character(len=:), allocatable :: input
+   character(len=:), allocatable, intent(out) :: input
 
    !> Input file format
    integer, allocatable, intent(out) :: input_format
 
    !> Output file name
-   character(len=:), allocatable :: output
+   character(len=:), allocatable, intent(out) :: output
 
    !> Output file format
    integer, allocatable, intent(out) :: output_format
 
    !> Template file name
-   character(len=:), allocatable :: template
+   character(len=:), allocatable, intent(out) :: template
 
    !> Template file format
    integer, allocatable, intent(out) :: template_format
@@ -340,6 +340,9 @@ subroutine read_file(filename, val, error)
    end if
 
    close(io, iostat=stat)
+   if (stat /= 0) then
+      call fatal_error(error, "Error: Could not close file '"//filename//"'")
+   end if
 
 end subroutine read_file
 

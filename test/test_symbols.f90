@@ -14,7 +14,7 @@
 
 module test_symbols
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_symbols
+   use mctc_io_symbols, only : symbol_length, to_number, to_symbol, get_identity
    implicit none
    private
 

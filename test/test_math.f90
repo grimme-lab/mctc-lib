@@ -15,7 +15,7 @@
 module test_math
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_math
+   use mctc_io_math, only : matdet_3x3, matinv_3x3, eigval_3x3, eigvec_3x3
    implicit none
    private
 

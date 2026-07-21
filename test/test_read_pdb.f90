@@ -15,7 +15,7 @@
 module test_read_pdb
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_pdb
+   use mctc_io_read_pdb, only : read_pdb
    use mctc_io_structure, only : structure_type
    implicit none
    private

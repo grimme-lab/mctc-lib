@@ -296,7 +296,7 @@ function select_test(tests, name) result(pos)
    character(len=*), intent(in) :: name
 
    !> Available unit tests
-   type(unittest_type) :: tests(:)
+   type(unittest_type), intent(in) :: tests(:)
 
    !> Selected test suite
    integer :: pos
@@ -321,7 +321,7 @@ function select_suite(suites, name) result(pos)
    character(len=*), intent(in) :: name
 
    !> Available test suites
-   type(testsuite_type) :: suites(:)
+   type(testsuite_type), intent(in) :: suites(:)
 
    !> Selected test suite
    integer :: pos

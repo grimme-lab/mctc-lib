@@ -14,8 +14,8 @@
 
 module test_read_ctfile
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_ctfile
-   use mctc_io_structure
+   use mctc_io_read_ctfile, only : read_molfile, read_sdf
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 

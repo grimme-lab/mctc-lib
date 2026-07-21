@@ -15,8 +15,8 @@
 module test_read_turbomole
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_turbomole
-   use mctc_io_structure
+   use mctc_io_read_turbomole, only : read_coord
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 
@@ -59,7 +59,8 @@ subroutine collect_read_turbomole(testsuite)
       & new_unittest("invalid13-coord", test_invalid13_coord, should_fail=.true.), &
       & new_unittest("invalid14-coord", test_invalid14_coord, should_fail=.true.), &
       & new_unittest("invalid15-coord", test_invalid15_coord, should_fail=.true.), &
-      & new_unittest("invalid16-coord", test_invalid16_coord, should_fail=.true.) &
+      & new_unittest("invalid16-coord", test_invalid16_coord, should_fail=.true.), &
+      & new_unittest("invalid17-cell", test_invalid17_cell, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_turbomole
@@ -1017,6 +1018,30 @@ subroutine test_invalid16_coord(error)
    close(unit)
 
 end subroutine test_invalid16_coord
+
+
+subroutine test_invalid17_cell(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "$coord", &
+      " 0.0 0.0 0.0 H", &
+      "$periodic 1", &
+      "$cell", &
+      "not-a-cell", &
+      "$end"
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid17_cell
 
 
 end module test_read_turbomole

@@ -15,9 +15,9 @@
 module test_write_ctfile
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_ctfile
-   use mctc_io_structure
-   use mctc_io_write_ctfile
+   use mctc_io_read_ctfile, only : read_molfile, read_sdf
+   use mctc_io_structure, only : structure_type, new
+   use mctc_io_write_ctfile, only : write_molfile, write_sdf
    use testsuite_structure, only : get_structure
    implicit none
    private

@@ -44,6 +44,8 @@ subroutine get_structure(self, name)
    case("x03"); call x03(self)
    case("x04"); call x04(self)
    case("x05"); call x05(self)
+   case default
+      continue
    end select
 
 end subroutine get_structure

@@ -431,6 +431,8 @@ subroutine read_molfile_v3k(self, unit, error)
                      case("HCOUNT")
                         token%first = equal + 1
                         call read_token(line, token, sdf(iatom)%hydrogens, stat)
+                     case default
+                        continue
                      end select
                   end if
                   if (stat /= 0) then
@@ -554,7 +556,7 @@ subroutine next_v30(unit, line, pos, lnum, iostat, iomsg)
    integer, intent(out) :: iostat
 
    !> Error message
-   character(len=:), allocatable, optional :: iomsg
+   character(len=:), allocatable, intent(out), optional :: iomsg
 
    call next_line(unit, line, pos, lnum, iostat, iomsg)
    if (iostat /= 0) return

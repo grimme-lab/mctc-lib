@@ -14,8 +14,8 @@
 
 module test_read_xyz
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_xyz
-   use mctc_io_structure
+   use mctc_io_read_xyz, only : read_xyz
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 

@@ -60,7 +60,7 @@ subroutine getline(unit, line, iostat, iomsg)
    integer, intent(out) :: iostat
 
    !> Error message
-   character(len=:), allocatable, optional :: iomsg
+   character(len=:), allocatable, intent(out), optional :: iomsg
 
    integer, parameter :: bufsize = 512
    character(len=bufsize) :: buffer
@@ -109,7 +109,7 @@ subroutine next_line(unit, line, pos, lnum, iostat, iomsg)
    integer, intent(out) :: iostat
 
    !> Error message
-   character(len=:), allocatable, optional :: iomsg
+   character(len=:), allocatable, intent(out), optional :: iomsg
 
    pos = 0
    call getline(unit, line, iostat, iomsg)
@@ -405,7 +405,9 @@ subroutine read_token_int(line, token, val, iostat, iomsg)
    character(len=512) :: msg
 
    if (token%first > 0 .and. token%last <= len(line)) then
+      val = 0
       read(line(token%first:token%last), *, iostat=iostat, iomsg=msg) val
+      if (iostat /= 0) val = 0
    else
       iostat = 1
       msg = "No input found"
@@ -437,7 +439,9 @@ subroutine read_token_real(line, token, val, iostat, iomsg)
    character(len=512) :: msg
 
    if (token%first > 0 .and. token%last <= len(line)) then
+      val = 0.0_wp
       read(line(token%first:token%last), *, iostat=iostat, iomsg=msg) val
+      if (iostat /= 0) val = 0.0_wp
    else
       iostat = 1
       msg = "No input found"

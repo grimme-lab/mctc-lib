@@ -14,10 +14,10 @@
 
 module test_write_vasp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_vasp
-   use mctc_io_structure
-   use mctc_io_structure_info
-   use mctc_io_write_vasp
+   use mctc_io_read_vasp, only : read_vasp
+   use mctc_io_structure, only : structure_type
+   use mctc_io_structure_info, only : structure_info
+   use mctc_io_write_vasp, only : write_vasp
    use testsuite_structure, only : get_structure
    implicit none
    private

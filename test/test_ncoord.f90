@@ -117,10 +117,10 @@ contains
       type(error_type), allocatable, intent(out) :: error
 
       !> Molecular structure data
-      type(structure_type) :: mol
+      type(structure_type), intent(in) :: mol
 
       !> Coordination number type
-      class(ncoord_type)   :: ncoord
+      class(ncoord_type), intent(in) :: ncoord
 
       !> Reference CNs
       real(wp), intent(in) :: ref(:)
@@ -149,7 +149,7 @@ contains
       type(structure_type), intent(inout) :: mol
 
       !> Coordination number type
-      class(ncoord_type)   :: ncoord
+      class(ncoord_type), intent(in) :: ncoord
 
       integer :: iat, ic
       real(wp), allocatable :: cn(:), cnr(:), cnl(:)
@@ -193,7 +193,7 @@ contains
       type(structure_type), intent(inout) :: mol
 
       !> Coordination number type
-      class(ncoord_type)   :: ncoord
+      class(ncoord_type), intent(in) :: ncoord
 
       integer :: ic, jc
       real(wp) :: eps(3, 3)

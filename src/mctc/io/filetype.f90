@@ -140,6 +140,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%pymatgen
       case("json")
          ftype = filetype%json
+      case default
+         continue
       end select
       if (ftype /= filetype%unknown) return
    else
@@ -158,6 +160,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%tmol
       case("poscar", "contcar")
          ftype = filetype%vasp
+      case default
+         continue
       end select
    end if
 

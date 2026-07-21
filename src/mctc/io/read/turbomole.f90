@@ -232,6 +232,8 @@ subroutine read_coord(mol, unit, error)
             call next_line(unit, cell_string, pos, lnum, stat)
             if (debug) print*, cell_string
 
+         case default
+            continue
          end select
       end if
       token = token_type(0, 0)
@@ -311,6 +313,11 @@ subroutine read_coord(mol, unit, error)
 
    if (has_cell) then
       read(cell_string, *, iostat=stat) latvec(:p_ncp(periodic))
+      if (stat /= 0) then
+         call io_error(error, "Cannot read cell parameters", line_cell, token, &
+            & filename(unit), lcell, "expected real values")
+         return
+      end if
       if (debug) print*, latvec(:p_ncp(periodic))
       if (lattice_in_bohr) then
          conv = 1.0_wp
@@ -326,6 +333,8 @@ subroutine read_coord(mol, unit, error)
             &       pi/2, pi/2, latvec(3)*pi/180.0_wp]
       case(3)
          cellpar = [latvec(1:3)*conv, latvec(4:6)*pi/180.0_wp]
+      case default
+         continue
       end select
       call cell_to_dlat(cellpar, lattice)
    end if
@@ -342,6 +351,11 @@ subroutine read_coord(mol, unit, error)
          return
       end if
       read(lattice_string, *, iostat=stat) latvec(:p_nlv(periodic))
+      if (stat /= 0) then
+         call io_error(error, "Cannot read lattice vectors", line_lattice, token, &
+            & filename(unit), llattice, "expected real values")
+         return
+      end if
       if (lattice_in_bohr) then
          conv = 1.0_wp
       else

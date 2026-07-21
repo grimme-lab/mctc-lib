@@ -15,9 +15,9 @@
 module test_write
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read
+   use mctc_io_read, only : read_structure
    use mctc_io_structure, only : structure_type
-   use mctc_io_write
+   use mctc_io_write, only : write_structure
    use mctc_version, only : get_mctc_feature
    use testsuite_structure, only : get_structure
    implicit none
