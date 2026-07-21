@@ -15,9 +15,9 @@
 module test_write_turbomole
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_convert, only : autoaa
-   use mctc_io_read_turbomole
-   use mctc_io_structure
-   use mctc_io_write_turbomole
+   use mctc_io_read_turbomole, only : read_coord
+   use mctc_io_structure, only : structure_type
+   use mctc_io_write_turbomole, only : write_coord
    use testsuite_structure, only : get_structure
    implicit none
    private

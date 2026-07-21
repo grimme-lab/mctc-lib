@@ -14,8 +14,8 @@
 
 module test_read_qcschema
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_qcschema
-   use mctc_io_structure
+   use mctc_io_read_qcschema, only : read_qcschema
+   use mctc_io_structure, only : structure_type
    use mctc_version, only : get_mctc_feature
    implicit none
    private

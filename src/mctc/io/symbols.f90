@@ -124,6 +124,8 @@ elemental subroutine symbol_to_number(number, symbol)
       select case(lcsymbol)
       case("d ", "t ")
          number = 1
+      case default
+         continue
       end select
    end if
 

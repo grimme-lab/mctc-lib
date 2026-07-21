@@ -185,6 +185,8 @@ subroutine get_structure_reader(reader, ftype)
    case(filetype%json)
       reader => read_json
 
+   case default
+      nullify(reader)
    end select
 
 end subroutine get_structure_reader

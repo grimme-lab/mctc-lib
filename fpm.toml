@@ -44,11 +44,7 @@ jonquil = "https://toml-f.github.io/jonquil/module/jonquil.html"
 ignore = [
   "C002",  # interface without implicit none
   "C003",  # implicit none(external)
-  "C011",  # no default in select case
-  "C061",  # missing intent attribute
-  "C072",  # assumed size character intent
-  "C121",  # use without explicit only
-  "C122",  # intrinsic missing for internal modules
-  "C181",  # iostat not checked
 ]
+per-file-ignores."src/mctc/io/symbols.f90" = ["C072"]
+per-file-ignores."src/mctc/io/resize.f90" = ["C072"]
 line-length = 132

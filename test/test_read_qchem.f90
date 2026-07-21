@@ -15,8 +15,8 @@
 module test_read_qchem
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_qchem
-   use mctc_io_structure
+   use mctc_io_read_qchem, only : read_qchem
+   use mctc_io_structure, only : structure_type
    implicit none
    private
 

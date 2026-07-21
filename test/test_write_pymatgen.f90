@@ -14,9 +14,9 @@
 
 module test_write_pymatgen
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
-   use mctc_io_read_pymatgen
-   use mctc_io_structure
-   use mctc_io_write_pymatgen
+   use mctc_io_read_pymatgen, only : read_pymatgen
+   use mctc_io_structure, only : structure_type
+   use mctc_io_write_pymatgen, only : write_pymatgen
    use mctc_version, only : get_mctc_feature
    use testsuite_structure, only : get_structure
    implicit none
