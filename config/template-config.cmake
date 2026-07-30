@@ -8,7 +8,6 @@ set(MCTCLIB_USE_TOMLF @MCTCLIB_USE_TOMLF@)
 enable_language("Fortran")
 
 if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
-  include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake")
   include(CMakeFindDependencyMacro)
 
   if(NOT TARGET "OpenMP::OpenMP_Fortran" AND MCTCLIB_WITH_OpenMP)
@@ -22,4 +21,6 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
   if(NOT TARGET "jonquil::jonquil" AND MCTCLIB_USE_JONQUIL)
     find_dependency("jonquil")
   endif()
+
+  include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake")
 endif()
