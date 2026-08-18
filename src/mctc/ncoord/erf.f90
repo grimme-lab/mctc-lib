@@ -35,6 +35,8 @@ module mctc_ncoord_erf
       procedure :: ncoord_count
       !> Evaluates the derivative of the error counting function
       procedure :: ncoord_dcount
+      !> Evaluates the second derivative of the error counting function
+      procedure :: ncoord_d2count
    end type erf_ncoord_type
 
    !> Steepness of counting function
@@ -140,5 +142,29 @@ contains
       count = -(self%kcn*expterm)/(sqrtpi*rc**self%norm_exp)
 
    end function ncoord_dcount
+
+
+   !> Second derivative of the error counting function w.r.t. the distance.
+   elemental function ncoord_d2count(self, izp, jzp, r) result(count)
+      !> Coordination number container
+      class(erf_ncoord_type), intent(in) :: self
+      !> Atom i index
+      integer, intent(in) :: izp
+      !> Atom j index
+      integer, intent(in) :: jzp
+      !> Current distance.
+      real(wp), intent(in) :: r
+
+      real(wp), parameter :: sqrtpi = sqrt(pi)
+      real(wp) :: rc, exponent, expterm, count, rcn
+
+      rc = self%rcov(izp) + self%rcov(jzp)
+      rcn = rc**self%norm_exp
+
+      exponent = self%kcn*(r - rc)/rcn
+      expterm = exp(-exponent**2)
+      count = 2.0_wp*self%kcn**2*exponent*expterm/(sqrtpi*rcn**2)
+
+   end function ncoord_d2count
 
 end module mctc_ncoord_erf

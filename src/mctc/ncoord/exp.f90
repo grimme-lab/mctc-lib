@@ -32,6 +32,8 @@ module mctc_ncoord_exp
       procedure :: ncoord_count
       !> Evaluates the derivative of the exponential counting function
       procedure :: ncoord_dcount
+      !> Evaluates the second derivative of the exponential counting function
+      procedure :: ncoord_d2count
    end type exp_ncoord_type
 
    !> Steepness of counting function
@@ -125,5 +127,28 @@ contains
       count = (-self%kcn*rc*expterm)/(r**2.0_wp*((expterm+1.0_wp)**2.0_wp))
 
    end function ncoord_dcount
+
+
+   !> Second derivative of the exponential counting function w.r.t. the distance.
+   elemental function ncoord_d2count(self, izp, jzp, r) result(count)
+      !> Coordination number container
+      class(exp_ncoord_type), intent(in) :: self
+      !> Atom i index
+      integer, intent(in) :: izp
+      !> Atom j index
+      integer, intent(in) :: jzp
+      !> Current distance.
+      real(wp), intent(in) :: r
+
+      real(wp) :: rc, cf, tmp, count
+
+      rc = self%rcov(izp) + self%rcov(jzp)
+      cf = 1.0_wp/(1.0_wp + exp(-self%kcn*(rc/r - 1.0_wp)))
+      tmp = cf*(1.0_wp - cf)
+
+      count = tmp*(1.0_wp - 2.0_wp*cf)*(self%kcn*rc)**2/r**4 &
+         & + 2.0_wp*tmp*self%kcn*rc/r**3
+
+   end function ncoord_d2count
 
 end module mctc_ncoord_exp
