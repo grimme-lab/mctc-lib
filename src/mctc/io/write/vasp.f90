@@ -66,7 +66,7 @@ subroutine write_vasp(self, unit, comment_line)
    ! write the lattice parameters
    if (any(self%periodic)) then
       if (size(self%lattice, 2) == 3) then
-         write(unit, "(3f20.14)") self%lattice
+         write(unit, "(3f20.14)") self%lattice*autoaa/self%info%scale
       else
          write(unit, "(3f20.14)") spread(0.0_wp, 1, 9)
       end if
