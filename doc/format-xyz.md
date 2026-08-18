@@ -6,19 +6,18 @@ title: XYZ Format
 
 | Property | Value |
 |----------|-------|
-| File extensions | `.xyz`, `.log` |
+| File extensions | `.xyz`, `.log`, `.extxyz` |
 | Coordinate units | Ångström |
-| Supports periodicity | No |
+| Supports periodicity | Yes, using Extended XYZ |
 | Supports bonds | No |
-| Format hint | `xyz` |
+| Format hints | `xyz`, `extxyz` |
 
 ## Specification
 
 @Note [Reference](http://www.ccl.net/chemistry/resources/messages/1996/10/21.005-dir/index.html)
 
-The xyz format is a simple ASCII format for storing Cartesian coordinates and element symbols.
-
-**File structure:**
+The XYZ format is a simple ASCII format for storing Cartesian coordinates and
+atomic symbols. The ordinary form contains:
 
 1. **Line 1**: Number of atoms (integer)
 2. **Line 2**: Comment line (can be empty, often contains title or energy)
@@ -26,9 +25,48 @@ The xyz format is a simple ASCII format for storing Cartesian coordinates and el
 
 Coordinates are given in Ångström and are internally converted to Bohr.
 
+The `.xyz` extension denotes the XYZ family. When a structure contains lattice
+or periodicity information, the writer automatically emits Extended XYZ so this
+information is not lost. Structures without such information are written as
+ordinary XYZ. The `.extxyz` extension or the `extxyz` format hint can be used to
+force Extended XYZ output.
+
+On input, `.xyz` files are inspected for Extended XYZ metadata. A valid
+`Properties` entry on the second line selects Extended XYZ parsing, including
+`Lattice` and `pbc`; otherwise the file is read as ordinary XYZ.
+
+## Extended XYZ
+
+Extended XYZ keeps the usual atom-count record, but interprets the second line
+as `key=value` metadata. The `Properties` key describes the typed per-atom
+columns, while `Lattice` stores the cell and `pbc` selects the periodic
+directions.
+
+Example:
+
+```text
+2
+Lattice="5.0 0.0 0.0 0.0 5.0 0.0 0.0 0.0 5.0" Properties=species:S:1:pos:R:3 pbc="T T T"
+H  0.0  0.0  0.0
+O  1.0  1.0  1.0
+```
+
+The reader uses `Properties` to locate structural columns rather than assuming a
+fixed column order. It supports:
+
+- `species:S:1` or `Z:I:1` for the element identity;
+- `pos:R:3` for Cartesian coordinates;
+- `Lattice` as a 9-vector or 3x3 matrix;
+- `pbc` as three logical values;
+- `comment` as an optional per-configuration string.
+
+Unknown per-atom properties and per-configuration metadata are parsed only as
+needed to locate the structural data and are otherwise discarded, because
+`structure_type` has no generic property dictionary.
+
 ## Example
 
-Caffeine molecule in xyz format:
+Caffeine molecule in ordinary XYZ format:
 
 ```text
 24
@@ -61,18 +99,14 @@ H            4.40017000000000       -5.16929000000000       -0.94780000000000
 
 ## Extensions
 
-The reader supports the following extensions beyond the standard format:
-
-- **Atomic numbers**: Integer atomic numbers are accepted instead of element symbols
-  and are automatically converted to capitalized element symbols
+The reader also accepts integer atomic numbers instead of element symbols and
+converts them to canonical symbols.
 
 ## Limitations
 
-The following features are currently not supported:
-
-- Scalar atomic quantities (4th column) are not preserved and dropped
-- Vector atomic quantities (columns 5-7) are not preserved and dropped
+For ordinary XYZ input, additional scalar or vector atomic quantities are not
+preserved. For Extended XYZ input, unknown properties are skipped according to
+the `Properties` schema but are not retained for writing.
 
 @Note Feel free to contribute support for missing features
       or bring missing features to our attention by opening an issue.
-

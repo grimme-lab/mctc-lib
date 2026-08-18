@@ -44,7 +44,8 @@ subroutine collect_read(testsuite)
       & new_unittest("valid-qcschema", test_qcschema, should_fail=.not.get_mctc_feature("json")), &
       & new_unittest("valid-vasp", test_vasp), &
       & new_unittest("valid-coord", test_coord), &
-      & new_unittest("valid-xyz", test_xyz) &
+      & new_unittest("valid-xyz", test_xyz), &
+      & new_unittest("valid-extxyz", test_extxyz) &
       & ]
 
 end subroutine collect_read
@@ -463,6 +464,36 @@ subroutine test_xyz(error)
    close(unit, status="delete")
 
 end subroutine test_xyz
+
+
+subroutine test_extxyz(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   character(len=:), allocatable :: name
+   integer :: unit
+
+   name = get_name() // ".extxyz"
+
+   open(file=name, newunit=unit)
+   write(unit, "(a)") &
+      "2", &
+      'Lattice="5 0 0 0 5 0 0 0 5" Properties=species:S:1:pos:R:3 pbc="T T T"', &
+      "H 0.0 0.0 0.0", &
+      "O 1.0 1.0 1.0"
+   close(unit)
+
+   call read_structure(struc, name, error)
+   if (.not.allocated(error)) then
+      call check(error, all(struc%periodic), .true., "Structure should be periodic")
+   end if
+
+   open(file=name, newunit=unit)
+   close(unit, status="delete")
+
+end subroutine test_extxyz
 
 
 subroutine test_qcschema(error)

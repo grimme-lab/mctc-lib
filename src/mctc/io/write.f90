@@ -27,7 +27,7 @@ module mctc_io_write
    use mctc_io_write_qcschema, only : write_qcschema
    use mctc_io_write_turbomole, only : write_coord
    use mctc_io_write_vasp, only : write_vasp
-   use mctc_io_write_xyz, only : write_xyz
+   use mctc_io_write_xyz, only : write_xyz, write_extxyz
    implicit none
    private
 
@@ -111,6 +111,9 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
 
    case(filetype%xyz)
       call write_xyz(self, unit)
+
+   case(filetype%extxyz)
+      call write_extxyz(self, unit)
 
    case(filetype%molfile)
       call write_molfile(self, unit)
