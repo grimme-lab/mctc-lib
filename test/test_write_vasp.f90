@@ -13,6 +13,7 @@
 ! limitations under the License.
 
 module test_write_vasp
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_read_vasp, only : read_vasp
    use mctc_io_structure, only : structure_type
@@ -51,10 +52,12 @@ subroutine test_valid1_poscar(error)
 
    type(structure_type) :: struc
    integer :: unit, nat, nid
+   real(wp), allocatable :: lattice(:, :)
 
    call get_structure(struc, "x01")
    nat = struc%nat
    nid = struc%nid
+   lattice = struc%lattice
 
    open(status="scratch", newunit=unit)
    call write_vasp(struc, unit)
@@ -67,6 +70,9 @@ subroutine test_valid1_poscar(error)
    call check(error, struc%nat, nat, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, nid, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, maxval(abs(struc%lattice-lattice)), 0.0_wp, thr=1.0e-10_wp, &
+      & message="Lattice does not match")
    if (allocated(error)) return
 
 end subroutine test_valid1_poscar
@@ -111,10 +117,12 @@ subroutine test_valid3_poscar(error)
    type(structure_type) :: struc
    type(structure_info) :: info
    integer :: unit, nat, nid
+   real(wp), allocatable :: lattice(:, :)
 
    call get_structure(struc, "x03")
    nat = struc%nat
    nid = struc%nid
+   lattice = struc%lattice
    info = structure_info(scale=0.5291772105638411)
    struc%info = info
 
@@ -129,6 +137,9 @@ subroutine test_valid3_poscar(error)
    call check(error, struc%nat, nat, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, nid, "Number of species does not match")
+   if (allocated(error)) return
+   call check(error, maxval(abs(struc%lattice-lattice)), 0.0_wp, thr=1.0e-10_wp, &
+      & message="Lattice does not match")
    if (allocated(error)) return
 
 end subroutine test_valid3_poscar
