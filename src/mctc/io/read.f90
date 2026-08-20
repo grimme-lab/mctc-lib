@@ -143,7 +143,7 @@ subroutine get_structure_reader(reader, ftype)
    nullify(reader)
 
    select case(ftype)
-   case(filetype%xyz)
+   case(filetype%xyz, filetype%extxyz)
       reader => read_xyz
 
    case(filetype%molfile)

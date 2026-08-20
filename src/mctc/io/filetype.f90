@@ -73,6 +73,9 @@ module mctc_io_filetype
       !> General JSON format
       integer :: json = 14
 
+      !> Extended XYZ format
+      integer :: extxyz = 15
+
    end type enum_filetype
 
    !> File type enumerator
@@ -92,6 +95,7 @@ module mctc_io_filetype
    !> | `filetype%pymatgen` | Pymatgen | Pymatgen JSON format |
    !> | `filetype%aims` | FHI-aims | geometry.in format |
    !> | `filetype%qchem` | Q-Chem | Molecule block format |
+   !> | `filetype%extxyz` | extxyz | Extended XYZ format |
    type(enum_filetype), parameter :: filetype = enum_filetype()
 
 
@@ -118,6 +122,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%tmol
       case("xyz", "log")
          ftype = filetype%xyz
+      case("extxyz")
+         ftype = filetype%extxyz
       case("mol")
          ftype = filetype%molfile
       case("sdf")

@@ -7,7 +7,7 @@ All formats can be auto-detected by file extension or explicitly specified using
 
 ## General ASCII Formats
 
-- [xyz format](./format-xyz.html) - Simple Cartesian coordinate format (`.xyz`, `.log`)
+- [XYZ format](./format-xyz.html) - Ordinary and Extended XYZ (`.xyz`, `.log`, `.extxyz`)
 - [Connection table files](./format-ctfile.html) - MDL molfile and SDF formats (`.mol`, `.sdf`)
 - [Protein Data Bank](./format-pdb.html) - PDB format for biomolecules (`.pdb`)
 

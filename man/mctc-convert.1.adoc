@@ -30,9 +30,9 @@ The following geometry formats are supported for both reading and writing:
 |===
 |Format hint |Description |File extensions
 
-|xyz
-|Xmol/xyz coordinate files
-|.xyz, .log
+|xyz, extxyz
+|XYZ coordinate files; periodic structures are written as Extended XYZ
+|.xyz, .log, .extxyz
 
 |tmol, coord
 |Turbomole coord files (including periodic/riper)
@@ -82,6 +82,11 @@ The following geometry formats are supported for both reading and writing:
 |Q-Chem molecule block
 |.qchem
 |===
+
+The `.xyz` extension is used for both ordinary and Extended XYZ. When writing,
+lattice or periodicity information automatically selects Extended XYZ. The
+`extxyz` hint or `.extxyz` extension forces Extended XYZ output. On input,
+Extended XYZ metadata is detected automatically in `.xyz` files.
 
 NOTE: JSON format support requires mctc-lib to be compiled with the jonquil dependency.
 

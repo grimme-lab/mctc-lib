@@ -45,7 +45,8 @@ subroutine collect_write(testsuite)
       & new_unittest("valid-qcschema", test_qcschema, should_fail=.not.get_mctc_feature("json")), &
       & new_unittest("valid-vasp", test_vasp), &
       & new_unittest("valid-coord", test_coord), &
-      & new_unittest("valid-xyz", test_xyz) &
+      & new_unittest("valid-xyz", test_xyz), &
+      & new_unittest("valid-extxyz", test_extxyz) &
       & ]
 
 end subroutine collect_write
@@ -226,9 +227,43 @@ subroutine test_xyz(error)
 
    type(structure_type) :: struc
    character(len=:), allocatable :: name
+   real(wp), allocatable :: lattice(:, :)
    integer :: unit
 
    name = get_name() // ".xyz"
+
+   call get_structure(struc, "x01")
+   lattice = struc%lattice
+
+   call write_structure(struc, name, error)
+   if (.not.allocated(error)) then
+      call read_structure(struc, name, error)
+   end if
+
+   if (.not.allocated(error)) then
+      call check(error, maxval(abs(struc%lattice-lattice)), 0.0_wp, &
+         & "Lattice does not match", thr=1.0e-12_wp)
+   end if
+   if (.not.allocated(error)) then
+      call check(error, all(struc%periodic), "Periodicity does not match")
+   end if
+
+   open(file=name, newunit=unit)
+   close(unit, status="delete")
+
+end subroutine test_xyz
+
+
+subroutine test_extxyz(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   character(len=:), allocatable :: name
+   integer :: unit
+
+   name = get_name() // ".extxyz"
 
    call get_structure(struc, "mindless04")
 
@@ -240,7 +275,7 @@ subroutine test_xyz(error)
    open(file=name, newunit=unit)
    close(unit, status="delete")
 
-end subroutine test_xyz
+end subroutine test_extxyz
 
 
 subroutine test_qcschema(error)
