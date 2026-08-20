@@ -54,6 +54,7 @@ contains
       & new_unittest("dcndr-mb04_dexp", test_dcndr_mb04_dexp), &
       & new_unittest("dcndr-mb05_dexp", test_dcndr_mb05_dexp), &
       & new_unittest("dcndr-ammonia_dexp", test_dcndr_ammonia_dexp), &
+      & new_unittest("hessian-mb04_dexp", test_hessian_mb04_dexp), &
       & new_unittest("dcndL-mb06_dexp", test_dcndL_mb06_dexp), &
       & new_unittest("dcndL-mb07_dexp", test_dcndL_mb07_dexp), &
       & new_unittest("dcndL-antracene_dexp", test_dcndL_anthracene_dexp), &
@@ -65,6 +66,7 @@ contains
       & new_unittest("dcndr-mb04_exp", test_dcndr_mb04_exp), &
       & new_unittest("dcndr-mb05_exp", test_dcndr_mb05_exp), &
       & new_unittest("dcndr-ammonia_exp", test_dcndr_ammonia_exp), &
+      & new_unittest("hessian-mb04_exp", test_hessian_mb04_exp), &
       & new_unittest("dcndL-mb06_exp", test_dcndL_mb06_exp), &
       & new_unittest("dcndL-mb07_exp", test_dcndL_mb07_exp), &
       & new_unittest("dcndL-antracene_exp", test_dcndL_anthracene_exp), &
@@ -76,6 +78,7 @@ contains
       & new_unittest("dcndr-mb04_erf", test_dcndr_mb04_erf), &
       & new_unittest("dcndr-mb05_erf", test_dcndr_mb05_erf), &
       & new_unittest("dcndr-ammonia_erf", test_dcndr_ammonia_erf), &
+      & new_unittest("hessian-mb04_erf", test_hessian_mb04_erf), &
       & new_unittest("dcndL-mb06_erf", test_dcndL_mb06_erf), &
       & new_unittest("dcndL-mb07_erf", test_dcndL_mb07_erf), &
       & new_unittest("dcndL-antracene_erf", test_dcndL_anthracene_erf), &
@@ -87,6 +90,7 @@ contains
       & new_unittest("dcndr-mb04_erf_en", test_dcndr_mb04_erf_en), &
       & new_unittest("dcndr-mb05_erf_en", test_dcndr_mb05_erf_en), &
       & new_unittest("dcndr-ammonia_erf_en", test_dcndr_ammonia_erf_en), &
+      & new_unittest("hessian-mb04_erf_en", test_hessian_mb04_erf_en), &
       & new_unittest("dcndL-mb06_erf_en", test_dcndL_mb06_erf_en), &
       & new_unittest("dcndL-mb07_erf_en", test_dcndL_mb07_erf_en), &
       & new_unittest("dcndL-antracene_erf_en", test_dcndL_anthracene_erf_en), &
@@ -100,6 +104,7 @@ contains
       & new_unittest("dcndr-mb04_erf_dftd4", test_dcndr_mb04_erf_dftd4), &
       & new_unittest("dcndr-mb05_erf_dftd4", test_dcndr_mb05_erf_dftd4), &
       & new_unittest("dcndr-ammonia_erf_dftd4", test_dcndr_ammonia_erf_dftd4), &
+      & new_unittest("hessian-ammonia_erf_dftd4", test_hessian_ammonia_erf_dftd4), &
       & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
       & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
@@ -182,6 +187,130 @@ contains
       end if
 
    end subroutine test_numgrad
+
+
+   subroutine test_numhessian(error, mol, ncoord)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      !> Molecular structure data
+      type(structure_type), intent(inout) :: mol
+
+      !> Coordination number type
+      class(ncoord_type), intent(in) :: ncoord
+
+      integer :: iat, ic, ii
+      real(wp), allocatable :: dEdcn(:), gradient(:, :), gr(:, :), gl(:, :)
+      real(wp), allocatable :: hessian(:, :), numhessian(:, :), lattr(:, :)
+      real(wp) :: sigma(3, 3)
+      real(wp), parameter :: step = 1.0e-5_wp
+      real(wp), parameter :: hthr = 100.0_wp*thr2
+
+      allocate(dEdcn(mol%nat), gradient(3, mol%nat), gr(3, mol%nat), &
+         & gl(3, mol%nat), hessian(3*mol%nat, 3*mol%nat), &
+         & numhessian(3*mol%nat, 3*mol%nat))
+
+      do iat = 1, mol%nat
+         dEdcn(iat) = 0.125_wp*real(iat, wp) - 0.375_wp
+      end do
+
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+
+      hessian(:, :) = 0.0_wp
+      call ncoord%add_coordination_number_hessian(mol, lattr, dEdcn, hessian)
+
+      do iat = 1, mol%nat
+         do ic = 1, 3
+            mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
+            gradient(:, :) = 0.0_wp
+            sigma(:, :) = 0.0_wp
+            call ncoord%add_coordination_number_derivs(mol, lattr, dEdcn, gradient, sigma)
+            gr(:, :) = gradient(:, :)
+
+            mol%xyz(ic, iat) = mol%xyz(ic, iat) - 2.0_wp*step
+            gradient(:, :) = 0.0_wp
+            sigma(:, :) = 0.0_wp
+            call ncoord%add_coordination_number_derivs(mol, lattr, dEdcn, gradient, sigma)
+            gl(:, :) = gradient(:, :)
+
+            mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
+            ii = 3*(iat - 1) + ic
+            numhessian(:, ii) = reshape(0.5_wp*(gr - gl)/step, [3*mol%nat])
+         end do
+      end do
+
+      if (maxval(abs(hessian - numhessian)) > hthr) then
+         call test_failed(error, "Coordination number Hessian does not match numerical derivative")
+         print "(a,es21.14)", "Max Hessian deviation: ", maxval(abs(hessian - numhessian))
+         return
+      end if
+
+      if (maxval(abs(hessian - transpose(hessian))) > 1000.0_wp*epsilon(1.0_wp)) then
+         call test_failed(error, "Coordination number Hessian is not symmetric")
+         return
+      end if
+
+      if (maxval(abs(sum(hessian, dim=2))) > 1000.0_wp*epsilon(1.0_wp)) then
+         call test_failed(error, "Coordination number Hessian violates translational invariance")
+      end if
+
+   end subroutine test_numhessian
+
+
+   subroutine test_hessian_mb04_dexp(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+      type(dexp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "mindless04")
+      call new_dexp_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_numhessian(error, mol, ncoord)
+   end subroutine test_hessian_mb04_dexp
+
+
+   subroutine test_hessian_mb04_exp(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+      type(exp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "mindless04")
+      call new_exp_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_numhessian(error, mol, ncoord)
+   end subroutine test_hessian_mb04_exp
+
+
+   subroutine test_hessian_mb04_erf(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+      type(erf_ncoord_type) :: ncoord
+
+      call get_structure(mol, "mindless04")
+      call new_erf_ncoord(ncoord, mol, cutoff=30.0_wp, norm_exp=0.8_wp)
+      call test_numhessian(error, mol, ncoord)
+   end subroutine test_hessian_mb04_erf
+
+
+   subroutine test_hessian_mb04_erf_en(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+      type(erf_en_ncoord_type) :: ncoord
+
+      call get_structure(mol, "mindless04")
+      call new_erf_en_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_numhessian(error, mol, ncoord)
+   end subroutine test_hessian_mb04_erf_en
+
+
+   subroutine test_hessian_ammonia_erf_dftd4(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+      type(erf_dftd4_ncoord_type) :: ncoord
+
+      call get_structure(mol, "x04")
+      call new_erf_dftd4_ncoord(ncoord, mol, cutoff=12.0_wp)
+      call test_numhessian(error, mol, ncoord)
+   end subroutine test_hessian_ammonia_erf_dftd4
 
 
    subroutine test_numsigma(error, mol, ncoord)
