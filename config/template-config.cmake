@@ -14,8 +14,8 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
     find_dependency("OpenMP")
   endif()
 
-  if(NOT TARGET "tomlf::tomlf" AND MCTCLIB_USE_TOMLF)
-    find_dependency("tomlf")
+  if(NOT TARGET "toml-f::toml-f" AND MCTCLIB_USE_TOMLF)
+    find_dependency("toml-f")
   endif()
 
   if(NOT TARGET "jonquil::jonquil" AND MCTCLIB_USE_JONQUIL)
