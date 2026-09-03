@@ -20,11 +20,11 @@
 ! Source: 
 
 module mctc_data_mass
-    use mctc_env, only : wp
-    use mctc_io_convert, only : gmoltoau
-    use mctc_io_symbols, only : to_number
-    implicit none
-    private
+   use mctc_env, only : wp
+   use mctc_io_convert, only : gmoltoau
+   use mctc_io_symbols, only : to_number
+   implicit none
+   private
 
     public :: get_atomic_mass
 
