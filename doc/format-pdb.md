@@ -18,9 +18,18 @@ title: Protein Data Bank (PDB) Format
 
 The Protein Data Bank (PDB) format is a standard for representing macromolecular structures.
 This implementation reads atomic coordinates from ATOM and HETATM records and bond connectivity from CONECT records.
-Alternative locations are resolved by keeping, for each atomic site, the conformer with the highest occupancy.
-Duplicated partial-occupancy sites are accepted only when at least one record uses an alternative-location indicator.
-When writing PDB, occupancy values are taken from PDB atom annotations if they are present.
+Alternative conformations are resolved per residue. The mean occupancy of the atoms carrying
+each alternative-location identifier is used to select one conformer, without favoring a
+conformer merely because it contains more atoms. If occupancies tie, the first identifier in
+the input is selected. Atoms with a blank alternative-location identifier are shared by all
+conformations and are retained.
+
+Alternate residue identities at the same chain, sequence number, and insertion code are treated
+as conformers of one residue. If a fractionally occupied atom name is repeated at one residue
+position, every copy must have a unique, nonblank alternative-location identifier, as required
+by the PDB format. A fractional occupancy without a repeated atom site is valid and is retained.
+
+Occupancies are preserved in the PDB atom annotations and used when writing PDB output.
 
 ### Supported Record Types
 

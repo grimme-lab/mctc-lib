@@ -13,12 +13,13 @@
 ! limitations under the License.
 
 module test_write_pdb
+   use, intrinsic :: ieee_arithmetic, only : ieee_quiet_nan, ieee_value
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use testsuite_structure, only : get_structure
-   use mctc_io_write_pdb
-   use mctc_io_read_pdb
-   use mctc_io_structure
+   use mctc_io_write_pdb, only : write_pdb
+   use mctc_io_read_pdb, only : read_pdb
+   use mctc_io_structure, only : structure_type, new
    implicit none
    private
 
@@ -38,7 +39,8 @@ subroutine collect_write_pdb(testsuite)
       & new_unittest("valid1-pdb", test_valid1_pdb), &
       & new_unittest("valid2-pdb", test_valid2_pdb), &
       & new_unittest("invalid1-pdb", test_invalid1_pdb, should_fail=.true.), &
-      & new_unittest("invalid2-pdb", test_invalid2_pdb, should_fail=.true.) &
+      & new_unittest("invalid2-pdb", test_invalid2_pdb, should_fail=.true.), &
+      & new_unittest("invalid3-pdb", test_invalid3_pdb, should_fail=.true.) &
       & ]
 
 end subroutine collect_write_pdb
@@ -177,6 +179,33 @@ subroutine test_invalid2_pdb(error)
    close(unit)
 
 end subroutine test_invalid2_pdb
+
+
+subroutine test_invalid3_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+   real(wp) :: xyz(3, 1)
+
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+
+   call new(struc, [character(len=2) :: "O "], xyz)
+   allocate(struc%pdb(struc%nat))
+
+   struc%pdb(1)%residue = "HOH"
+   struc%pdb(1)%chains = "A"
+   struc%pdb(1)%residue_number = 1
+   ! NaN value for the occupancy, which is unphysical
+   struc%pdb(1)%occupancy = ieee_value(0.0_wp, ieee_quiet_nan)
+
+   open(status='scratch', newunit=unit)
+   call write_pdb(struc, unit, error=error)
+   close(unit)
+
+end subroutine test_invalid3_pdb
 
 
 end module test_write_pdb

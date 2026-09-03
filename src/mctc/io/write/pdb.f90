@@ -13,10 +13,12 @@
 ! limitations under the License.
 
 module mctc_io_write_pdb
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
    use mctc_env_accuracy, only : wp
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_convert, only : autoaa
    use mctc_io_structure, only : structure_type
+   use mctc_io_utils, only : to_string
    implicit none
    private
 
@@ -42,8 +44,6 @@ subroutine write_pdb(mol, unit, number, error)
    character(len=*), parameter :: pdb_format = &
       &  '(a6,i5,1x,a4,a1,a3,1x,a1,i4,a1,3x,3f8.3,2f6.2,6x,a4,a2,a2)'
 
-
-   if (present(number)) write(unit, '("MODEL ",4x,i4)') number
    if (allocated(mol%pdb)) then
       call validate_pdb_occupancy(mol, local_error)
       if (allocated(local_error)) then
@@ -54,7 +54,10 @@ subroutine write_pdb(mol, unit, number, error)
             error stop local_error%message
          end if
       end if
+   end if
 
+   if (present(number)) write(unit, '("MODEL ",4x,i4)') number
+   if (allocated(mol%pdb)) then
       offset = 0
       last_chain = mol%pdb(1)%chains
       last_het = mol%pdb(1)%het
@@ -127,12 +130,12 @@ subroutine validate_pdb_occupancy(mol, error)
    type(error_type), allocatable, intent(out) :: error
 
    integer :: iat
-   character(len=32) :: atom_index
 
    do iat = 1, mol%nat
-      if (mol%pdb(iat)%occupancy < 0.0_wp .or. mol%pdb(iat)%occupancy > 1.0_wp) then
-         write(atom_index, '(i0)') iat
-         call fatal_error(error, "PDB occupancy must be in [0.0, 1.0], got invalid value at atom " // trim(atom_index))
+      if (.not.ieee_is_finite(mol%pdb(iat)%occupancy) .or. &
+         & mol%pdb(iat)%occupancy < 0.0_wp .or. mol%pdb(iat)%occupancy > 1.0_wp) then
+         call fatal_error(error, "PDB occupancy must be in [0.0, 1.0], got "// &
+            & "invalid value at atom "//to_string(iat))
          return
       end if
    end do

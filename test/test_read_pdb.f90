@@ -16,7 +16,7 @@ module test_read_pdb
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_convert, only : aatoau
-   use mctc_io_read_pdb
+   use mctc_io_read_pdb, only : read_pdb
    use mctc_io_structure, only : structure_type
    implicit none
    private
@@ -43,11 +43,17 @@ subroutine collect_read_pdb(testsuite)
       & new_unittest("valid7-pdb", test_valid7_pdb), &
       & new_unittest("valid8-pdb", test_valid8_pdb), &
       & new_unittest("valid9-pdb", test_valid9_pdb), &
+      & new_unittest("valid10-pdb", test_valid10_pdb), &
+      & new_unittest("valid11-pdb", test_valid11_pdb), &
       & new_unittest("invalid1-pdb", test_invalid1_pdb, should_fail=.true.), &
       & new_unittest("invalid2-pdb", test_invalid2_pdb, should_fail=.true.), &
       & new_unittest("invalid3-pdb", test_invalid3_pdb, should_fail=.true.), &
       & new_unittest("invalid4-pdb", test_invalid4_pdb, should_fail=.true.), &
-      & new_unittest("invalid5-pdb", test_invalid5_pdb, should_fail=.true.) &
+      & new_unittest("invalid5-pdb", test_invalid5_pdb, should_fail=.true.), &
+      & new_unittest("invalid6-pdb", test_invalid6_pdb, should_fail=.true.), &
+      & new_unittest("invalid7-pdb", test_invalid7_pdb, should_fail=.true.), &
+      & new_unittest("invalid8-pdb", test_invalid8_pdb, should_fail=.true.), &
+      & new_unittest("invalid9-pdb", test_invalid9_pdb, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_pdb
@@ -152,6 +158,9 @@ subroutine test_valid1_pdb(error)
    call check(error, struc%nid, 4, "Number of species does not match")
    if (allocated(error)) return
    call check(error, struc%charge, 0.0_wp, "Total charge is not correct")
+   if (allocated(error)) return
+   call check(error, struc%pdb(74)%occupancy, 0.91_wp, &
+      & "Unique partial occupancy was not preserved")
    if (allocated(error)) return
 
 end subroutine test_valid1_pdb
@@ -479,10 +488,11 @@ subroutine test_valid9_pdb(error)
    open(status='scratch', newunit=unit)
    write(unit, '(a)') &
       "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
-      "ATOM      2  CA BSER A   1       1.000   0.000   0.000  0.50 10.00           C", &
-      "ATOM      3  CA  SER A   1       2.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      2  CA ASER A   1       1.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      3  CA BSER A   1       2.000   0.000   0.000  0.50 10.00           C", &
       "ATOM      4  C   SER A   1       3.000   0.000   0.000  1.00 10.00           C", &
-      "ATOM      5  O   SER A   1       4.000   0.000   0.000  1.00 10.00           O", &
+      "ATOM      5  O  BSER A   1       4.000   0.000   0.000  0.50 10.00           O", &
+      "ATOM      6  O  ASER A   1       5.000   0.000   0.000  0.50 10.00           O", &
       "END"
    rewind(unit)
 
@@ -492,11 +502,94 @@ subroutine test_valid9_pdb(error)
 
    call check(error, struc%nat, 4, "Number of atoms does not match")
    if (allocated(error)) return
-   call check(error, struc%xyz(1, 2), 2.0_wp*aatoau, thr=1.0e-12_wp, &
-      & message="Primary location should win tie against alternate location")
+   call check(error, struc%pdb(2)%loc, "A", &
+      & "Tie did not retain the first alternate conformation")
+   if (allocated(error)) return
+   call check(error, struc%pdb(4)%loc, "A", &
+      & "Atoms from different alternate conformations were mixed")
    if (allocated(error)) return
 
 end subroutine test_valid9_pdb
+
+
+subroutine test_valid10_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   ! Atomic coordinates are taken from the GLU 4 alternate conformations in 1A6M.
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM     26  CB AGLU A   4      -0.240  13.427  24.764  0.57 12.43           C  ", &
+      "ATOM     27  CB BGLU A   4      -0.348  13.314  24.713  0.43 12.28           C  ", &
+      "ATOM     28  CG AGLU A   4      -0.998  14.701  25.049  0.57 13.70           C  ", &
+      "ATOM     29  CG BGLU A   4       0.722  13.364  25.766  0.43 12.57           C  ", &
+      "ATOM     30  CD AGLU A   4      -0.235  16.019  25.130  0.57 12.95           C  ", &
+      "ATOM     31  CD BGLU A   4       1.620  14.595  25.723  0.43 12.08           C  ", &
+      "ATOM     32  OE1AGLU A   4       0.997  15.968  25.169  0.57 16.22           O  ", &
+      "ATOM     33  OE1BGLU A   4       1.176  15.696  25.424  0.43 11.14           O  ", &
+      "ATOM     34  OE2AGLU A   4      -0.894  17.080  25.119  0.57 12.43           O  ", &
+      "ATOM     35  OE2BGLU A   4       2.821  14.287  25.928  0.43 12.02           O  ", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 5, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, all(struc%pdb%loc == "A"), .true., &
+      & "Highest-occupancy 1A6M conformation was not selected")
+   if (allocated(error)) return
+   call check(error, struc%pdb(1)%occupancy, 0.57_wp, &
+      & "Selected PDB occupancy was not preserved")
+   if (allocated(error)) return
+
+end subroutine test_valid10_pdb
+
+
+subroutine test_valid11_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   ! Residue 10 in 1EN2 contains alternate SER and GLY identities.
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM     57  N  ASER A  10      -6.973   7.149  19.576  0.33 23.87           N  ", &
+      "ATOM     58  CA ASER A  10      -6.498   5.882  20.072  0.33 23.51           C  ", &
+      "ATOM     59  C  ASER A  10      -5.157   5.939  20.783  0.33 20.73           C  ", &
+      "ATOM     60  O  ASER A  10      -4.407   6.920  20.735  0.33 18.63           O  ", &
+      "ATOM     61  CB ASER A  10      -6.423   4.843  18.935  0.33 25.06           C  ", &
+      "ATOM     62  OG ASER A  10      -5.085   4.685  18.488  0.33 26.99           O  ", &
+      "ATOM     63  N  BGLY A  10      -6.973   7.149  19.576  0.67 23.87           N  ", &
+      "ATOM     64  CA BGLY A  10      -6.498   5.882  20.072  0.67 23.51           C  ", &
+      "ATOM     65  C  BGLY A  10      -5.157   5.939  20.783  0.67 20.73           C  ", &
+      "ATOM     66  O  BGLY A  10      -4.407   6.920  20.735  0.67 18.63           O  ", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 4, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, all(struc%pdb%loc == "B"), .true., &
+      & "Highest-occupancy 1EN2 residue identity was not selected")
+   if (allocated(error)) return
+   call check(error, struc%pdb(1)%residue, "GLY", &
+      & "Incorrect 1EN2 residue identity was selected")
+   if (allocated(error)) return
+
+end subroutine test_valid11_pdb
 
 
 subroutine test_invalid1_pdb(error)
@@ -763,6 +856,94 @@ subroutine test_invalid5_pdb(error)
    close(unit)
 
 end subroutine test_invalid5_pdb
+
+
+subroutine test_invalid6_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   ! one alternative CA has blank alternative location, while the other uses B
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.00 10.00           N", &
+      "ATOM      2  CA  SER A   1       1.000   0.000   0.000  0.40 10.00           C", &
+      "ATOM      3  CA BSER A   1       2.000   0.000   0.000  0.60 10.00           C", &
+      "ATOM      4  C   SER A   1       3.000   0.000   0.000  1.00 10.00           C", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid6_pdb
+
+
+subroutine test_invalid7_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   ! both alternative CA positions use identifer A
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  CA ASER A   1       1.000   0.000   0.000  0.50 10.00           C", &
+      "ATOM      2  CA ASER A   1       2.000   0.000   0.000  0.50 10.00           C", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid7_pdb
+
+
+subroutine test_invalid8_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   ! occupancy is greater than 1, which is unphysical
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000  1.10 10.00           N", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid8_pdb
+
+
+subroutine test_invalid9_pdb(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   ! occupancy is NaN
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "ATOM      1  N   SER A   1       0.000   0.000   0.000   NaN 10.00           N", &
+      "END"
+   rewind(unit)
+
+   call read_pdb(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid9_pdb
 
 
 end module test_read_pdb
