@@ -121,5 +121,7 @@ install(
 )
 
 # add the testsuite
-enable_testing()
-add_subdirectory("test")
+if (PROJECT_IS_TOP_LEVEL)
+  enable_testing()
+  add_subdirectory("test")
+endif ()
