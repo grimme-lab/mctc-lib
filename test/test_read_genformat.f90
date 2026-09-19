@@ -158,8 +158,8 @@ subroutine test_valid3_gen(error)
 end subroutine test_valid3_gen
 
 
-!> Regression test for a bug where the origin was not converted to bohr 
-!> before being subtracted. Usually invisible because the origin is at 
+!> Regression test for a bug where the origin was not converted to bohr
+!> before being subtracted. Usually invisible because the origin is at
 !> (0,0,0). Here, the origin is at (1,0,0) Angstrom.
 subroutine test_valid7_gen(error)
 

@@ -204,7 +204,7 @@ subroutine read_genformat(mol, unit, error)
          return
       end if
 
-      ! Store helical axis in *first* lattice vector, however it is not an 
+      ! Store helical axis in *first* lattice vector, however it is not an
       ! actual lattice vector as on would expect but a screw axis
       lattice(:, 1) = [coord(1) * aatoau, coord(2) * pi / 180.0_wp, coord(3)]
    end if
