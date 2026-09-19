@@ -268,8 +268,11 @@ subroutine load_cjson(self, object, ctx, error)
       & origin=origin)
 
    xyz(1:3, 1:size(geo)/3) => geo
-   xyz(:, :) = xyz * aatoau
-   if (.not.cartesian) then
+   if (cartesian) then
+      xyz(:, :) = xyz * aatoau
+   else
+      ! fractional coordinates are dimensionless; only the (already
+      ! bohr-converted) lattice below carries a unit, so no aatoau here
       xyz(:, :) = matmul(lattice, xyz(:, :))
    end if
    call new(self, num, xyz, lattice=lattice, charge=real(charge, wp), uhf=multiplicity - 1)

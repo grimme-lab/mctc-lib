@@ -13,7 +13,9 @@
 ! limitations under the License.
 
 module test_read_cjson
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
+   use mctc_io_convert, only : aatoau
    use mctc_io_read_cjson, only : read_cjson
    use mctc_io_structure, only : structure_type
    use mctc_version, only : get_mctc_feature
@@ -184,6 +186,14 @@ subroutine test_valid2(error)
    call check(error, struc%nat, 6, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, 2, "Number of species does not match")
+   if (allocated(error)) return
+
+   ! regression test for a bug where fractional coordinates were also
+   ! multiplied by aatoau before the lattice transform: atom 2 sits at
+   ! fractional (0.5, 0.5, 0.5), so its cartesian x is half the (bohr)
+   ! lattice constant "a" -- not scaled by aatoau a second time
+   call check(error, struc%xyz(1, 2), 0.5_wp*2.95812_wp*aatoau, &
+      & "Fractional coordinates do not match", thr=1.0e-8_wp)
    if (allocated(error)) return
 
 end subroutine test_valid2
