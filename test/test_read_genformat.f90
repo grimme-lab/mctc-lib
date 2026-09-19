@@ -13,7 +13,9 @@
 ! limitations under the License.
 
 module test_read_genformat
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
+   use mctc_io_convert, only : aatoau
    use mctc_io_read_genformat, only : read_genformat
    use mctc_io_structure, only : structure_type
    implicit none
@@ -38,6 +40,7 @@ subroutine collect_read_genformat(testsuite)
       & new_unittest("valid4-gen", test_valid4_gen), &
       & new_unittest("valid5-gen", test_valid5_gen), &
       & new_unittest("valid6-gen", test_valid6_gen), &
+      & new_unittest("valid7-gen", test_valid7_gen), &
       & new_unittest("invalid1-gen", test_invalid1_gen, should_fail=.true.), &
       & new_unittest("invalid2-gen", test_invalid2_gen, should_fail=.true.), &
       & new_unittest("invalid3-gen", test_invalid3_gen, should_fail=.true.), &
@@ -153,6 +156,39 @@ subroutine test_valid3_gen(error)
    if (allocated(error)) return
 
 end subroutine test_valid3_gen
+
+
+!> Regression test for a bug where the origin was not converted to bohr
+!> before being subtracted. Usually invisible because the origin is at
+!> (0,0,0). Here, the origin is at (1,0,0) Angstrom.
+subroutine test_valid7_gen(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "1 S", &
+      "H", &
+      "1 1 0.0 0.0 0.0", &
+      "1.0 0.0 0.0", &
+      "5.0 0.0 0.0", &
+      "0.0 5.0 0.0", &
+      "0.0 0.0 5.0"
+   rewind(unit)
+
+   call read_genformat(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%xyz(1, 1), -aatoau, &
+      & "Origin is not converted to bohr", thr=1.0e-8_wp)
+   if (allocated(error)) return
+
+end subroutine test_valid7_gen
 
 
 subroutine test_valid4_gen(error)

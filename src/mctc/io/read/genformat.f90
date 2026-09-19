@@ -204,13 +204,15 @@ subroutine read_genformat(mol, unit, error)
          return
       end if
 
-      ! Store helical axis in *first* lattice vector, however it is not an actual
-      ! lattice vector as on would expect but a screw axis
+      ! Store helical axis in *first* lattice vector, however it is not an
+      ! actual lattice vector as on would expect but a screw axis
       lattice(:, 1) = [coord(1) * aatoau, coord(2) * pi / 180.0_wp, coord(3)]
    end if
 
    if (any(periodic)) then
-      xyz(:, :) = xyz - spread(origin, 2, natoms)
+      ! origin is given in the same (Angstrom) unit as the coordinates and
+      ! lattice vectors above, both of which are already converted to bohr
+      xyz(:, :) = xyz - spread(origin * aatoau, 2, natoms)
    end if
 
    info = structure_info(cartesian=cartesian)
