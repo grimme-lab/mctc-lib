@@ -115,7 +115,7 @@ subroutine spgemv_csr(m, a, ia, ja, x, y, transa)
    real(wp), allocatable :: y_priv(:)
 
    trans = .false.
-   if (present(transa)) trans = scan(transa, 'TtCc') > 0
+   if (present(transa)) trans = scan(transa, "TtCc") > 0
 
    if (.not. trans) then
       !$omp parallel do default(none) schedule(guided) &
@@ -217,7 +217,7 @@ subroutine gemv_csr(m, a, ia, ja, x, y, transa)
    real(wp), allocatable :: y_priv(:)
 
    trans = .false.
-   if (present(transa)) trans = scan(transa, 'TtCc') > 0
+   if (present(transa)) trans = scan(transa, "TtCc") > 0
 
    if (.not. trans) then
       !$omp parallel do default(none) schedule(guided) &
@@ -288,7 +288,7 @@ subroutine spsymv_csr(m, a, ia, ja, x, y, uplo)
    real(wp), allocatable :: y_priv(:)
 
    upper = .true.
-   if (present(uplo)) upper = scan(uplo, 'Uu') > 0
+   if (present(uplo)) upper = scan(uplo, "Uu") > 0
 
    y(:m) = 0.0_wp
 
@@ -385,7 +385,7 @@ subroutine dspsymv_csr(m, a, ia, ja, x, y, uplo)
    real(wp), allocatable :: y_priv(:)
 
    upper = .true.
-   if (present(uplo)) upper = scan(uplo, 'Uu') > 0
+   if (present(uplo)) upper = scan(uplo, "Uu") > 0
 
    y(:m) = 0.0_wp
 
@@ -572,7 +572,7 @@ recursive subroutine spspmm_csr(trans, request, sort, m, n, k, a, ja, ia, &
    info = 0
 
    ! Transposed product, form A^T explicitly and evaluate A^T*B
-   if (scan(trans, 'TtCc') > 0) then
+   if (scan(trans, "TtCc") > 0) then
       allocate(iat(n + 1), source=0_i8)
       do ka = 1, ia(m+1) - 1
          iat(ja(ka) + 1) = iat(ja(ka) + 1) + 1
@@ -593,7 +593,7 @@ recursive subroutine spspmm_csr(trans, request, sort, m, n, k, a, ja, ia, &
          end do
       end do
 
-      call spspmm_csr('N', request, sort, n, m, k, at, jat, iat, &
+      call spspmm_csr("N", request, sort, n, m, k, at, jat, iat, &
          & b, jb, ib, c, jc, ic, nzmax, info)
       return
    end if
@@ -734,7 +734,7 @@ subroutine spgemm_csr(transa, m, n, k, alpha, matdescra, val, indx, pntrb, &
    integer, intent(in) :: ldb
 
    !> Dense right-hand side block, k-by-n for 'N' and m-by-n for 'T'
-   real(wp), intent(in) :: b(ldb, *)
+   real(wp), intent(in) :: b(ldb, n)
 
    !> Existing-matrix scaling factor
    real(wp), intent(in) :: beta
@@ -743,7 +743,7 @@ subroutine spgemm_csr(transa, m, n, k, alpha, matdescra, val, indx, pntrb, &
    integer, intent(in) :: ldc
 
    !> Dense product block, m-by-n for 'N' and k-by-n for 'T'
-   real(wp), intent(inout) :: c(ldc, *)
+   real(wp), intent(inout) :: c(ldc, n)
 
    integer :: i, j, nrow
    integer(i8) :: kk
@@ -751,9 +751,10 @@ subroutine spgemm_csr(transa, m, n, k, alpha, matdescra, val, indx, pntrb, &
    real(wp) :: v
    real(wp), allocatable :: c_tmp(:), c_priv(:, :)
 
-   trans = scan(transa, 'TtCc') > 0
-   sym = scan(matdescra(1:1), 'SsHh') > 0
-   upper = scan(matdescra(2:2), 'Uu') > 0
+   trans = scan(transa, "TtCc") > 0
+   sym = scan(matdescra(1:1), "SsHh") > 0
+   upper = .false.
+   if (sym .and. len(matdescra) > 1) upper = scan(matdescra(2:2), "Uu") > 0
 
    nrow = m
    if (trans .and. .not. sym) nrow = k

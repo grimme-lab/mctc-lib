@@ -220,7 +220,7 @@ subroutine test_spgemv_csr_complete(error)
    end if
 
    ! The matrix is symmetric, the transposed product must agree
-   call spgemv_csr(5, mlist, list%inl, list%nlat, vec, y, transa='T')
+   call spgemv_csr(5, mlist, list%inl, list%nlat, vec, y, transa="T")
 
    if (any(abs(y - vrhs) > thr)) then
       call test_failed(error, "Transposed version of the spgemv crashed.")
@@ -230,7 +230,7 @@ subroutine test_spgemv_csr_complete(error)
    end if
 
    ! Symmetric products only reference one triangle of the complete list
-   call spsymv_csr(5, mlist, list%inl, list%nlat, vec, y, uplo='L')
+   call spsymv_csr(5, mlist, list%inl, list%nlat, vec, y, uplo="L")
 
    if (any(abs(y - vrhs) > thr)) then
       call test_failed(error, "Lower triangle version of the SymMV crashed.")
@@ -360,11 +360,11 @@ subroutine test_spmm_csr_sparse(error)
 
    ! Two-stage product, first the row offsets, then the elements of C
    allocate(nlatc(0), clist(0))
-   call spmm_csr('N', 1, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
+   call spmm_csr("N", 1, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
       & clist, nlatc, inlc, 0_i8, info)
    deallocate(nlatc, clist)
    allocate(nlatc(inlc(n+1) - 1), clist(inlc(n+1) - 1))
-   call spmm_csr('N', 2, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
+   call spmm_csr("N", 2, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
       & clist, nlatc, inlc, 0_i8, info)
 
    call check(error, info, 0)
@@ -381,7 +381,7 @@ subroutine test_spmm_csr_sparse(error)
    ! Single-stage transposed product within the maximal number of elements
    deallocate(nlatc, clist)
    allocate(nlatc(n*n), clist(n*n))
-   call spmm_csr('T', 0, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
+   call spmm_csr("T", 0, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
       & clist, nlatc, inlc, int(n*n, i8), info)
 
    call check(error, info, 0)
@@ -396,7 +396,7 @@ subroutine test_spmm_csr_sparse(error)
    end if
 
    ! Insufficient space is reported by the row exceeding nzmax
-   call spmm_csr('N', 0, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
+   call spmm_csr("N", 0, 0, n, n, n, alist, nlata, inla, blist, nlatb, inlb, &
       & clist, nlatc, inlc, 1_i8, info)
    call check(error, info, 1)
 
@@ -434,7 +434,7 @@ subroutine test_spmm_csr_dense(error)
    cref(:, :) = cmat(:, :)
    cref(:n, :) = beta*cmat(:n, :) + alpha*matmul(adns, bmat)
 
-   call spmm_csr('N', n, m, n, alpha, 'G', alist, nlata, inla(:n), inla(2:), &
+   call spmm_csr("N", n, m, n, alpha, "G", alist, nlata, inla(:n), inla(2:), &
       & bmat, n, beta, cmat, nrow)
 
    if (any(abs(cmat - cref) > thr)) then

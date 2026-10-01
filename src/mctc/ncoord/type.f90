@@ -14,10 +14,10 @@
 
 !> Declaration of base class for coordination number evaluations
 module mctc_ncoord_type
+   use mctc_csrlist, only : csr_list
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp, i8
    use mctc_io, only : structure_type
-   use mctc_csrlist, only : csr_list
 
    implicit none
    private
