@@ -18,6 +18,8 @@ program tester
    use mctc_env_system, only : get_argument
    use mctc_env_testing, only : run_testsuite, new_testsuite, testsuite_type, &
       & select_suite, run_selected
+   use test_csrlist, only : collect_csrlist
+   use test_csrlist_linal, only : collect_csrlist_linal
    use test_cutoff, only : collect_cutoff
    use test_data, only : collect_data
    use test_math, only : collect_math
@@ -39,6 +41,7 @@ program tester
    use test_symbols, only : collect_symbols
    use test_timer, only : collect_timer
    use test_utils, only : collect_utils
+   use test_wignerseitz, only : collect_wignerseitz
    use test_write, only : collect_write
    use test_write_aims, only : collect_write_aims
    use test_write_cjson, only : collect_write_cjson
@@ -61,6 +64,8 @@ program tester
    stat = 0
 
    testsuites = [ &
+      & new_testsuite("csrlist", collect_csrlist), &
+      & new_testsuite("csrlist-linal", collect_csrlist_linal), &
       & new_testsuite("cutoff", collect_cutoff), &
       & new_testsuite("data", collect_data), &
       & new_testsuite("math", collect_math), &
@@ -82,6 +87,7 @@ program tester
       & new_testsuite("read-turbomole", collect_read_turbomole), &
       & new_testsuite("read-vasp", collect_read_vasp), &
       & new_testsuite("read-xyz", collect_read_xyz), &
+      & new_testsuite("wignerseitz", collect_wignerseitz), &
       & new_testsuite("write", collect_write), &
       & new_testsuite("write-aims", collect_write_aims), &
       & new_testsuite("write-cjson", collect_write_cjson), &

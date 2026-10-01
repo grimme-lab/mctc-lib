@@ -13,6 +13,8 @@
 # limitations under the License.
 
 tests = [
+  'csrlist',
+  'csrlist-linal',
   'cutoff',
   'data',
   'math',
@@ -32,7 +34,9 @@ tests = [
   'read-vasp',
   'read-xyz',
   'symbols',
+  'timer',
   'utils',
+  'wignerseitz',
   'write',
   'write-aims',
   'write-cjson',
@@ -46,7 +50,6 @@ tests = [
   'write-turbomole',
   'write-vasp',
   'write-xyz',
-  'timer',
 ]
 
 test_srcs = files(

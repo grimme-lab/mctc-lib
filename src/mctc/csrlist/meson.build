@@ -12,20 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-subdir('csrlist')
-subdir('data')
-subdir('env')
-subdir('io')
-subdir('ncoord')
-subdir('wignerseitz')
-
 srcs += files(
-  'csrlist.f90',
-  'cutoff.f90',
-  'data.f90',
-  'env.f90',
-  'io.f90',
-  'ncoord.f90',
-  'version.F90',
-  'wignerseitz.f90'
+  'linal.f90',
+  'type.f90',
 )
