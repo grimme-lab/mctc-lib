@@ -15,6 +15,8 @@
 # Unit testing
 set(
   tests
+  "csrlist"
+  "csrlist-linal"
   "cutoff"
   "data"
   "math"
@@ -34,6 +36,8 @@ set(
   "read-vasp"
   "read-xyz"
   "symbols"
+  "timer"
+  "wignerseitz"
   "write"
   "write-aims"
   "write-cjson"
@@ -47,7 +51,6 @@ set(
   "write-turbomole"
   "write-vasp"
   "write-xyz"
-  "timer"
 )
 set(
   test-srcs
