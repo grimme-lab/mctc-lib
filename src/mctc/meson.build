@@ -17,7 +17,6 @@ subdir('data')
 subdir('env')
 subdir('io')
 subdir('ncoord')
-subdir('wignerseitz')
 
 srcs += files(
   'csrlist.f90',

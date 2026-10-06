@@ -17,7 +17,6 @@ add_subdirectory("data")
 add_subdirectory("env")
 add_subdirectory("io")
 add_subdirectory("ncoord")
-add_subdirectory("wignerseitz")
 
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 

@@ -216,8 +216,8 @@ subroutine build_list(self, mol, error, wsc)
 
    type(grid_type) :: grid
 
-   logical :: periodic, use_wsc, lshift, lmulti, isok
-   integer :: nat, iat, nself, nimg_max, nimg_count, n_xyz(3), self_tridx(27)
+   logical :: periodic, use_wsc, lshift, lmulti
+   integer :: nat, iat, nself, nimg_max, nimg_count, self_tridx(27)
    integer(i8) :: npair, nimgs
    real(wp) :: cutoff2, lat_inv(3, 3), cell_w(3), min_xyz(3), zero_vec(3), r2_min, det
 
