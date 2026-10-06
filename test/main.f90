@@ -38,6 +38,7 @@ program tester
    use test_read_xyz, only : collect_read_xyz
    use test_symbols, only : collect_symbols
    use test_timer, only : collect_timer
+   use test_utils, only : collect_utils
    use test_write, only : collect_write
    use test_write_aims, only : collect_write_aims
    use test_write_cjson, only : collect_write_cjson
@@ -66,6 +67,7 @@ program tester
       & new_testsuite("ncoord", collect_ncoord), &
       & new_testsuite("timer", collect_timer), &
       & new_testsuite("symbols", collect_symbols), &
+      & new_testsuite("utils", collect_utils), &
       & new_testsuite("read", collect_read), &
       & new_testsuite("read-aims", collect_read_aims), &
       & new_testsuite("read-cjson", collect_read_cjson), &
