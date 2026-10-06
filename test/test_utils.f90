@@ -13,10 +13,10 @@
 ! limitations under the License.
 
 module test_utils
-   use mctc_env_accuracy, only : wp
+   use mctc_env_accuracy, only : wp, i8
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
-   use mctc_io_utils, only : token_type, read_token
+   use mctc_io_utils, only : token_type, read_token, read_next_token
    implicit none
    private
 
@@ -38,6 +38,12 @@ subroutine collect_utils(testsuite)
       & new_unittest("real-exponent", test_real_exponent), &
       & new_unittest("real-fallback", test_real_fallback), &
       & new_unittest("real-out-of-range", test_real_out_of_range), &
+      & new_unittest("real-boundaries", test_real_boundaries), &
+      & new_unittest("real-rounding", test_real_rounding), &
+      & new_unittest("real-roundtrip", test_real_roundtrip), &
+      & new_unittest("real-long", test_real_long), &
+      & new_unittest("real-special", test_real_special), &
+      & new_unittest("real-next-token", test_real_next_token), &
       & new_unittest("real-invalid", test_real_invalid), &
       & new_unittest("real-invalid-iomsg", test_real_invalid_iomsg), &
       & new_unittest("real-bad-token", test_real_bad_token) &
@@ -66,7 +72,7 @@ subroutine test_real_gen(error, str)
       call check(error, stat, stat_ref, "Status differs for '"//trim(str(i))//"'")
       if (allocated(error)) return
 
-      call check(error, val, ref, thr=0.0_wp, &
+      call check(error, transfer(val, 0_i8) == transfer(ref, 0_i8), &
          & message="Value differs for '"//trim(str(i))//"'")
       if (allocated(error)) return
    end do
@@ -146,13 +152,194 @@ subroutine test_real_out_of_range(error)
 end subroutine test_real_out_of_range
 
 
+subroutine test_real_boundaries(error)
+
+   type(error_type), allocatable, intent(out) :: error
+
+   integer(i8), parameter :: mant(*) = [0_i8, 1_i8, 3_i8, 7_i8, &
+      & 999999999999999_i8, 1000000000000001_i8, &
+      & 2_i8**52-1, 2_i8**52, 2_i8**52+1, &
+      & 2_i8**53-1, 2_i8**53, 2_i8**53+1, huge(0_i8)]
+   character(len=64) :: str(2)
+   integer :: i, ex
+
+   do ex = -23, 23
+      do i = 1, size(mant)
+         write(str(1), '(i0,a,i0)') mant(i), "e", ex
+         str(2) = "-"//trim(str(1))
+         call test_real_gen(error, str)
+         if (allocated(error)) return
+      end do
+   end do
+
+   call test_real_gen(error, [character(len=64) :: &
+      & "0.1e23", "0.1e24", "0.1e-21", "0.1e-22", &
+      & "1.e+00022", ".1E+00023", "0009007199254740992", &
+      & "-0", "-0e22", "-0e-22", "-0e23", "-0e-23", &
+      & "1e100", "1e101", "1e-100", "1e-101", &
+      & "1e2147483647", "1e2147483648", "1e-2147483648", &
+      & "1e999999999999999999999999999999999999"])
+
+end subroutine test_real_boundaries
+
+
+!> Check against known results, independently of the runtime decimal reader
+subroutine check_real_value(error, str, ref)
+
+   type(error_type), allocatable, intent(out) :: error
+   character(len=*), intent(in) :: str
+   real(wp), intent(in) :: ref
+
+   real(wp) :: val
+   integer :: stat
+
+   call read_token(str, token_type(1, len(str)), val, stat)
+   call check(error, stat, 0, "Failed to read '"//str//"'")
+   if (allocated(error)) return
+
+   call check(error, transfer(val, 0_i8) == transfer(ref, 0_i8), &
+      & message="Incorrect rounding for '"//str//"'")
+
+end subroutine check_real_value
+
+
+subroutine test_real_rounding(error)
+
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: str(*) = [character(len=80) :: &
+      & "1.00000000000000011102230246251565404236316680908203124", &
+      & "1.00000000000000011102230246251565404236316680908203125", &
+      & "1.00000000000000011102230246251565404236316680908203126", &
+      & "1.00000000000000033306690738754696212708950042724609375", &
+      & "4503599627370498e1", "4503599627370502e1", &
+      & "9007199254740993", "9007199254740995", &
+      & "1.0000000000000002", "0.9999999999999999", &
+      & "1.7976931348623157e308", "2.2250738585072014e-308", &
+      & "2.225073858507201e-308", "4.9406564584124654e-324", &
+      & "2.4703282292062327e-324", "2.4703282292062328e-324"]
+   real(wp) :: ref(size(str))
+   integer :: i
+
+   ref = [1.0_wp, 1.0_wp, nearest(1.0_wp, 1.0_wp), &
+      & 1.0_wp + 2*epsilon(1.0_wp), &
+      & 45035996273704976.0_wp, 45035996273705024.0_wp, &
+      & 9007199254740992.0_wp, 9007199254740996.0_wp, &
+      & nearest(1.0_wp, 1.0_wp), nearest(1.0_wp, -1.0_wp), &
+      & huge(1.0_wp), tiny(1.0_wp), nearest(tiny(1.0_wp), -1.0_wp), &
+      & nearest(0.0_wp, 1.0_wp), 0.0_wp, nearest(0.0_wp, 1.0_wp)]
+
+   do i = 1, size(str)
+      call check_real_value(error, trim(str(i)), ref(i))
+      if (allocated(error)) return
+      call check_real_value(error, "-"//trim(str(i)), -ref(i))
+      if (allocated(error)) return
+   end do
+
+end subroutine test_real_rounding
+
+
+!> Seventeen significant decimal digits must recover every sampled binary64 value
+subroutine test_real_roundtrip(error)
+
+   type(error_type), allocatable, intent(out) :: error
+
+   integer(i8), parameter :: fraction(*) = [0_i8, 1_i8, &
+      & int(z'5555555555555', i8), int(z'AAAAAAAAAAAAA', i8), 2_i8**52-1]
+   integer(i8) :: bits
+   integer :: ex, i, sgn
+   real(wp) :: ref
+   character(len=32) :: str
+
+   call check(error, radix(1.0_wp) == 2 .and. digits(1.0_wp) == 53 &
+      & .and. storage_size(1.0_wp) == 64, "Test requires binary64 working precision")
+   if (allocated(error)) return
+
+   ! Include subnormals and signed zero, but exclude the nonfinite exponent.
+   do ex = 0, 2046
+      do i = 1, size(fraction)
+         do sgn = 0, 1
+            bits = ior(shiftl(int(ex, i8), 52), fraction(i))
+            if (sgn == 1) bits = ibset(bits, 63)
+            ref = transfer(bits, ref)
+            write(str, '(es24.16e3)') ref
+            call check_real_value(error, trim(adjustl(str)), ref)
+            if (allocated(error)) return
+         end do
+      end do
+   end do
+
+end subroutine test_real_roundtrip
+
+
+subroutine test_real_long(error)
+
+   type(error_type), allocatable, intent(out) :: error
+
+   call test_real_gen(error, [ &
+      & repeat("0", 400)//"1", &
+      & "1e"//repeat("0", 396)//"+22", &
+      & "1e+"//repeat("0", 396)//"22"])
+   if (allocated(error)) return
+
+   call check_real_value(error, "0."//repeat("0", 99)//"1e100", 1.0_wp)
+   if (allocated(error)) return
+   call check_real_value(error, "0."//repeat("0", 100)//"1e101", 1.0_wp)
+   if (allocated(error)) return
+   call check_real_value(error, "0."//repeat("0", 399)//"1e400", 1.0_wp)
+   if (allocated(error)) return
+   call check_real_value(error, "1."//repeat("0", 400), 1.0_wp)
+
+end subroutine test_real_long
+
+
+subroutine test_real_special(error)
+
+   type(error_type), allocatable, intent(out) :: error
+
+   call test_real_gen(error, [character(len=12) :: &
+      & "Inf", "+Infinity", "-Inf", "NaN", "-NaN"])
+
+end subroutine test_real_special
+
+
+!> Tokens embedded in a line must only be parsed within their bounds
+subroutine test_real_next_token(error)
+
+   type(error_type), allocatable, intent(out) :: error
+
+   character(len=*), parameter :: line = &
+      & "C"//achar(9)//"-1.5e3  .25"//achar(9)//"7  1d0 0.1"//achar(13)
+   real(wp), parameter :: ref(*) = [-1.5e3_wp, 0.25_wp, 7.0_wp, 1.0_wp, 0.1_wp]
+   type(token_type) :: token
+   integer :: i, pos, stat
+   real(wp) :: val
+
+   pos = 1
+   do i = 1, size(ref)
+      call read_next_token(line, pos, token, val, stat)
+      call check(error, stat, 0, "Failed to read token in line")
+      if (allocated(error)) return
+      call check(error, transfer(val, 0_i8) == transfer(ref(i), 0_i8), &
+         & message="Value differs for '"//line(token%first:token%last)//"'")
+      if (allocated(error)) return
+   end do
+
+   call read_next_token(line, pos, token, val, stat)
+   call check(error, stat /= 0, "Read past the last token")
+
+end subroutine test_real_next_token
+
+
 subroutine test_real_invalid(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
    character(len=*), parameter :: str(*) = [character(len=24) :: &
-      & "abc", "1.2.3", "-", "+", ".", "--1", "1e5e5", "12x", "e5"]
+      & "abc", "1.2.3", "-", "+", ".", "--1", "1e5e5", "12x", "e5", &
+      & "", "+.", "-.", ".e1", "1e+", "1e-", "1e++2", "1e--2", &
+      & "1e+-2", "1e2x", "1e2.0", "1..", "1.0e1.0"]
    integer :: i, stat
    real(wp) :: val
 
@@ -175,25 +362,29 @@ subroutine test_real_invalid_iomsg(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   character(len=*), parameter :: str = "12.5"
+   character(len=*), parameter :: str(*) = [character(len=24) :: &
+      & "12.5", "1D0", "9007199254740993", "1e23", "-0e-23"]
    character(len=:), allocatable :: msg
-   integer :: stat
+   integer :: stat, i
    real(wp) :: val
 
-   call read_token(str, token_type(1, len(str)), val, stat, msg)
-   call check(error, stat, 0)
-   if (allocated(error)) return
+   do i = 1, size(str)
+      call read_token("abc", token_type(1, 3), val, stat, msg)
+      if (stat == 0) then
+         call test_failed(error, "Accepted invalid number")
+         return
+      end if
 
-   call check(error, len(msg), 0, "Message set on successful read")
-   if (allocated(error)) return
+      call check(error, len(msg) > 0, "Missing message for failed read")
+      if (allocated(error)) return
 
-   call read_token("abc", token_type(1, 3), val, stat, msg)
-   if (stat == 0) then
-      call test_failed(error, "Accepted invalid number")
-      return
-   end if
+      call read_token(trim(str(i)), token_type(1, len_trim(str(i))), val, stat, msg)
+      call check(error, stat, 0)
+      if (allocated(error)) return
 
-   call check(error, len(msg) > 0, "Missing message for failed read")
+      call check(error, len(msg), 0, "Message set on successful read of '"//trim(str(i))//"'")
+      if (allocated(error)) return
+   end do
 
 end subroutine test_real_invalid_iomsg
 

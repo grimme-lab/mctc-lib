@@ -459,12 +459,22 @@ subroutine read_token_real(line, token, val, iostat, iomsg)
       end if
       val = 0.0_wp
       read(line(token%first:token%last), *, iostat=iostat, iomsg=msg) val
-      if (iostat /= 0) val = 0.0_wp
+      if (iostat /= 0) then
+         val = 0.0_wp
+      else
+         msg = ""
+      end if
    else
       iostat = 1
       msg = "No input found"
    end if
-   if (present(iomsg)) iomsg = trim(msg)
+   if (present(iomsg)) then
+      if (iostat == 0) then
+         iomsg = ""
+      else
+         iomsg = trim(msg)
+      end if
+   end if
 end subroutine read_token_real
 
 
