@@ -13,7 +13,7 @@
 ! limitations under the License.
 
 module mctc_io_utils
-   use mctc_env_accuracy, only : wp
+   use mctc_env_accuracy, only : wp, i8
    use mctc_env_error, only : error_type, fatal_error
    implicit none
    private
@@ -68,12 +68,22 @@ subroutine getline(unit, line, iostat, iomsg)
    integer :: size
    integer :: stat
 
-   allocate(character(len=0) :: line)
    do
-      read(unit, "(a)", advance="no", iostat=stat, iomsg=msg, size=size) &
-         & buffer
+      ! Passing iomsg to every read statement is costly, only do so on request
+      if (present(iomsg)) then
+         read(unit, "(a)", advance="no", iostat=stat, iomsg=msg, size=size) &
+            & buffer
+      else
+         read(unit, "(a)", advance="no", iostat=stat, size=size) buffer
+      end if
       if (stat > 0) exit
-      line = line // buffer(:size)
+
+      ! Most lines fit into the buffer and need a single allocation
+      if (allocated(line)) then
+         line = line // buffer(:size)
+      else
+         line = buffer(:size)
+      end if
       if (stat < 0) then
          if (is_iostat_eor(stat)) then
             stat = 0
@@ -81,6 +91,7 @@ subroutine getline(unit, line, iostat, iomsg)
          exit
       end if
    end do
+   if (.not.allocated(line)) allocate(character(len=0) :: line)
 
    if (stat /= 0) then
       if (present(iomsg)) iomsg = trim(msg)
@@ -437,17 +448,128 @@ subroutine read_token_real(line, token, val, iostat, iomsg)
    character(len=:), allocatable, intent(out), optional :: iomsg
 
    character(len=512) :: msg
+   logical :: fast
 
    if (token%first > 0 .and. token%last <= len(line)) then
+      call parse_real_fast(line(token%first:token%last), val, fast)
+      if (fast) then
+         iostat = 0
+         if (present(iomsg)) iomsg = ""
+         return
+      end if
       val = 0.0_wp
       read(line(token%first:token%last), *, iostat=iostat, iomsg=msg) val
-      if (iostat /= 0) val = 0.0_wp
+      if (iostat /= 0) then
+         val = 0.0_wp
+      else
+         msg = ""
+      end if
    else
       iostat = 1
       msg = "No input found"
    end if
-   if (present(iomsg)) iomsg = trim(msg)
+   if (present(iomsg)) then
+      if (iostat == 0) then
+         iomsg = ""
+      else
+         iomsg = trim(msg)
+      end if
+   end if
 end subroutine read_token_real
+
+
+!> Fast, exact parser for plain decimal numbers ([+-]ddd[.ddd][(e|E)[+-]dd]).
+!> Uses the exactly rounded Clinger fast path (mantissa up to 2^53 and a decimal
+!> exponent of at most 22). Everything else is not handled (ok is false) and has
+!> to be passed on to the general list-directed read.
+pure subroutine parse_real_fast(str, val, ok)
+
+   !> String holding a single token
+   character(len=*), intent(in) :: str
+
+   !> Parsed value, zero if not handled
+   real(wp), intent(out) :: val
+
+   !> Token was parsed completely, otherwise fall back to the general read
+   logical, intent(out) :: ok
+
+   integer, parameter :: maxexp = 22
+   integer(i8), parameter :: maxmant = 2_i8**53
+   integer :: k
+   real(wp), parameter :: pow10(0:maxexp) = [(10.0_wp**k, k=0, maxexp)]
+
+   integer :: i, n, c, ndig, nfrac, ex, exsign
+   integer(i8) :: mant
+   logical :: neg, seen_dot
+
+   ok = .false.
+   val = 0.0_wp
+   n = len(str)
+   i = 1
+   neg = .false.
+   if (n < 1) return
+   if (str(1:1) == "-") then
+      neg = .true.
+      i = 2
+   else if (str(1:1) == "+") then
+      i = 2
+   end if
+
+   mant = 0_i8
+   ndig = 0
+   nfrac = 0
+   seen_dot = .false.
+   do while (i <= n)
+      c = iachar(str(i:i)) - 48
+      if (c >= 0 .and. c <= 9) then
+         mant = mant * 10_i8 + int(c, i8)
+         ndig = ndig + 1
+         if (seen_dot) nfrac = nfrac + 1
+         if (mant > maxmant) return
+      else if (str(i:i) == "." .and. .not.seen_dot) then
+         seen_dot = .true.
+      else
+         exit
+      end if
+      i = i + 1
+   end do
+   if (ndig == 0) return
+
+   ex = 0
+   if (i <= n) then
+      if (str(i:i) /= "e" .and. str(i:i) /= "E") return
+      i = i + 1
+      exsign = 1
+      if (i <= n) then
+         if (str(i:i) == "-") then
+            exsign = -1
+            i = i + 1
+         else if (str(i:i) == "+") then
+            i = i + 1
+         end if
+      end if
+      if (i > n) return
+      do while (i <= n)
+         c = iachar(str(i:i)) - 48
+         if (c < 0 .or. c > 9) return
+         ex = ex * 10 + c
+         if (ex > 100) return
+         i = i + 1
+      end do
+      ex = exsign * ex
+   end if
+
+   ex = ex - nfrac
+   if (abs(ex) > maxexp) return
+   val = real(mant, wp)
+   if (ex < 0) then
+      val = val / pow10(-ex)
+   else
+      val = val * pow10(ex)
+   end if
+   if (neg) val = -val
+   ok = .true.
+end subroutine parse_real_fast
 
 
 !> Convert input string to lowercase

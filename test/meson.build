@@ -32,6 +32,7 @@ tests = [
   'read-vasp',
   'read-xyz',
   'symbols',
+  'utils',
   'write',
   'write-aims',
   'write-cjson',
