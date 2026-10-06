@@ -165,7 +165,7 @@ subroutine test_real_boundaries(error)
 
    do ex = -23, 23
       do i = 1, size(mant)
-         write(str(1), '(i0,a,i0)') mant(i), "e", ex
+         write(str(1), "(i0,a,i0)") mant(i), "e", ex
          str(2) = "-"//trim(str(1))
          call test_real_gen(error, str)
          if (allocated(error)) return
@@ -262,7 +262,7 @@ subroutine test_real_roundtrip(error)
             bits = ior(shiftl(int(ex, i8), 52), fraction(i))
             if (sgn == 1) bits = ibset(bits, 63)
             ref = transfer(bits, ref)
-            write(str, '(es24.16e3)') ref
+            write(str, "(es24.16e3)") ref
             call check_real_value(error, trim(adjustl(str)), ref)
             if (allocated(error)) return
          end do
