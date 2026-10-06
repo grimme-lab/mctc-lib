@@ -90,9 +90,6 @@ module mctc_csrlist_type
       !> Offset index in the neighbor map
       integer(i8), allocatable :: inl(:)
 
-      !> Number of neighbors for each atom
-      integer, allocatable :: nnl(:)
-
       !> Index of the neighboring atom
       integer, allocatable :: nlat(:)
 
