@@ -13,10 +13,11 @@
 ! limitations under the License.
 
 module test_ncoord
+   use mctc_csrlist, only : csr_list, new_csr_list
    use mctc_cutoff, only : get_lattice_points
    use mctc_data_covrad, only : get_covalent_rad
    use mctc_data_paulingen, only : get_pauling_en
-   use mctc_env, only : wp
+   use mctc_env, only : wp, i8
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
    & test_failed, check
    use mctc_io_structure, only : structure_type
@@ -108,6 +109,14 @@ contains
       & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
       & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
+      & new_unittest("cn-list-mb01_dexp", test_cn_list_mb01_dexp), &
+      & new_unittest("dcndr-list-x04_erf", test_dcndr_list_x04_erf), &
+      & new_unittest("derivs-list-x04_exp-cut", test_derivs_list_x04_exp_cut), &
+      & new_unittest("hessian-list-mb04_erf_en", test_hessian_list_mb04_erf_en), &
+      & new_unittest("cn-list-pyrazole_erf", test_cn_list_pyrazole_erf), &
+      & new_unittest("dcndr-list-pyrazole_exp-cut", test_dcndr_list_pyrazole_exp_cut), &
+      & new_unittest("derivs-list-pyrazole_dexp", test_derivs_list_pyrazole_dexp), &
+      & new_unittest("hessian-list-pyrazole_erf_en", test_hessian_list_pyrazole_erf_en), &
       & new_unittest("cn_unknown", test_cn_unknown, should_fail=.true.), &
       & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
       & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string) &
@@ -256,6 +265,254 @@ contains
       end if
 
    end subroutine test_numhessian
+
+   !> Compare the list based coordination numbers against the dense evaluation
+   subroutine test_cn_list_gen(error, mol, ncoord)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+
+      !> Coordination number type
+      class(ncoord_type), intent(in) :: ncoord
+
+      type(csr_list) :: list
+      real(wp), allocatable :: cn(:), cnl(:), lattr(:, :)
+
+      allocate(cn(mol%nat), cnl(mol%nat))
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call ncoord%get_coordination_number(mol, lattr, cn)
+
+      call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.false.)
+      if (allocated(error)) return
+      call ncoord%get_coordination_number(mol, lattr, cnl, list=list)
+
+      if (any(abs(cnl - cn) > thr)) then
+         call test_failed(error, "Coordination numbers from the "// &
+            & "upper-triangular list do not match")
+         print "(3es21.14)", cnl - cn
+         return
+      end if
+
+      call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.true.)
+      if (allocated(error)) return
+      call ncoord%get_coordination_number(mol, lattr, cnl, list=list)
+
+      if (any(abs(cnl - cn) > thr)) then
+         call test_failed(error, "Coordination numbers from the "// &
+            & "complete list do not match")
+         print "(3es21.14)", cnl - cn
+         return
+      end if
+
+   end subroutine test_cn_list_gen
+
+   !> Compare the list based CN derivatives against the dense evaluation
+   subroutine test_dcndr_list_gen(error, mol, ncoord)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+
+      !> Coordination number type
+      class(ncoord_type), intent(in) :: ncoord
+
+      integer :: iat, jat
+      integer(i8) :: kat
+      type(csr_list) :: list
+      real(wp), allocatable :: cn(:), cnl(:), dcnp(:), lattr(:, :)
+      real(wp), allocatable :: dcndr(:, :, :), dcndL(:, :, :)
+      real(wp), allocatable :: dcndrlist(:, :), dcndrl(:, :, :), dcndLl(:, :, :)
+
+      allocate(cn(mol%nat), cnl(mol%nat), dcnp(mol%nat), &
+         & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), &
+         & dcndrl(3, mol%nat, mol%nat), dcndLl(3, 3, mol%nat))
+
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call ncoord%get_coordination_number(mol, lattr, cn, dcndr, dcndL)
+
+      call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.false.)
+      if (allocated(error)) return
+
+      allocate(dcndrlist(3, size(list%nlat)))
+      call ncoord%get_coordination_number(mol, lattr, cnl, dcndL=dcndLl, &
+         & list=list, dcndrlist=dcndrlist)
+
+      ! Derivative of the CN cutoff, dCN'/dCN = 1 - exp(CN')/(1 + exp(cut))
+      if (ncoord%cut > 0.0_wp) then
+         dcnp(:) = 1.0_wp - exp(cnl)/(1.0_wp + exp(ncoord%cut))
+      else
+         dcnp(:) = 1.0_wp
+      end if
+
+      ! Expand to the dense representation, mirroring the upper triangular list
+      dcndrl(:, :, :) = 0.0_wp
+      do iat = 1, mol%nat
+         do kat = list%inl(iat), list%inl(iat + 1) - 1
+            jat = list%nlat(kat)
+            dcndrl(:, iat, jat) = dcndrl(:, iat, jat) + dcndrlist(:, kat)
+            if (iat /= jat) then
+               dcndrl(:, jat, iat) = dcndrl(:, jat, iat) - ncoord%directed_factor &
+                  & * dcnp(iat)/dcnp(jat) * dcndrlist(:, kat)
+            end if
+         end do
+      end do
+
+      if (any(abs(cnl - cn) > thr)) then
+         call test_failed(error, "Coordination numbers from the "// &
+            & "upper-triangular list do not match")
+         print "(3es21.14)", cnl - cn
+         return
+      end if
+
+      if (any(abs(dcndrl - dcndr) > thr*max(1.0_wp, maxval(abs(dcndr))))) then
+         call test_failed(error, "Cartesian CN derivative from the "// &
+            & "upper-triangular list does not match")
+         print "(a,es21.14)", "Max deviation: ", maxval(abs(dcndrl - dcndr))
+         return
+      end if
+
+      if (any(abs(dcndLl - dcndL) > thr*max(1.0_wp, maxval(abs(dcndL))))) then
+         call test_failed(error, "CN strain derivative from the "// &
+            & "upper-triangular list does not match")
+         print "(a,es21.14)", "Max deviation: ", maxval(abs(dcndLl - dcndL))
+         return
+      end if
+
+   end subroutine test_dcndr_list_gen
+
+   !> Compare the list based CN gradient and strain against the dense evaluation
+   subroutine test_derivs_list_gen(error, mol, ncoord)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+
+      !> Coordination number type
+      class(ncoord_type), intent(in) :: ncoord
+
+      integer :: iat
+      type(csr_list) :: list
+      real(wp) :: sigma(3, 3), sigmal(3, 3)
+      real(wp), allocatable :: dEdcn(:), gradient(:, :), gradl(:, :), lattr(:, :)
+
+      allocate(dEdcn(mol%nat), gradient(3, mol%nat), gradl(3, mol%nat))
+      do iat = 1, mol%nat
+         dEdcn(iat) = 0.125_wp*real(iat, wp) - 0.375_wp
+      end do
+
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      gradient(:, :) = 0.0_wp
+      sigma(:, :) = 0.0_wp
+      call ncoord%add_coordination_number_derivs(mol, lattr, dEdcn, gradient, sigma)
+
+      call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.false.)
+      if (allocated(error)) return
+
+      gradl(:, :) = 0.0_wp
+      sigmal(:, :) = 0.0_wp
+      call ncoord%add_coordination_number_derivs_list(mol, lattr, dEdcn, &
+         & gradl, sigmal, list)
+
+      if (any(abs(gradl - gradient) > thr*max(1.0_wp, maxval(abs(gradient))))) then
+         call test_failed(error, "CN gradient from the "// &
+            & "upper-triangular list does not match")
+         print "(3es21.14)", gradl - gradient
+         return
+      end if
+
+      if (any(abs(sigmal - sigma) > thr*max(1.0_wp, maxval(abs(sigma))))) then
+         call test_failed(error, "CN strain derivative from the "// &
+            & "upper-triangular list does not match")
+         print "(3es21.14)", sigmal - sigma
+         return
+      end if
+
+      call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.true.)
+      if (allocated(error)) return
+
+      gradl(:, :) = 0.0_wp
+      sigmal(:, :) = 0.0_wp
+      call ncoord%add_coordination_number_derivs_list(mol, lattr, dEdcn, &
+         & gradl, sigmal, list)
+
+      if (any(abs(gradl - gradient) > thr*max(1.0_wp, maxval(abs(gradient))))) then
+         call test_failed(error, "CN gradient from the "// &
+            & "complete list does not match")
+         print "(3es21.14)", gradl - gradient
+         return
+      end if
+
+      if (any(abs(sigmal - sigma) > thr*max(1.0_wp, maxval(abs(sigma))))) then
+         call test_failed(error, "CN strain derivative from the "// &
+            & "complete list does not match")
+         print "(3es21.14)", sigmal - sigma
+         return
+      end if
+
+   end subroutine test_derivs_list_gen
+
+   !> Compare the list based CN Hessian against the dense evaluation
+   subroutine test_hessian_list_gen(error, mol, ncoord)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+
+      !> Coordination number type
+      class(ncoord_type), intent(in) :: ncoord
+
+      integer :: iat
+      type(csr_list) :: list
+      real(wp), allocatable :: dEdcn(:), hessian(:, :), hessl(:, :), lattr(:, :)
+
+      allocate(dEdcn(mol%nat), hessian(3*mol%nat, 3*mol%nat), &
+         & hessl(3*mol%nat, 3*mol%nat))
+      do iat = 1, mol%nat
+         dEdcn(iat) = 0.125_wp*real(iat, wp) - 0.375_wp
+      end do
+
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      hessian(:, :) = 0.0_wp
+      call ncoord%add_coordination_number_hessian(mol, lattr, dEdcn, hessian)
+
+      call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.false.)
+      if (allocated(error)) return
+
+      hessl(:, :) = 0.0_wp
+      call ncoord%add_coordination_number_hessian_list(mol, lattr, dEdcn, &
+         & hessl, list)
+
+      if (any(abs(hessl - hessian) > thr*max(1.0_wp, maxval(abs(hessian))))) then
+         call test_failed(error, "CN Hessian from the "// &
+            & "upper-triangular list does not match")
+         print "(a,es21.14)", "Max Hessian deviation: ", maxval(abs(hessl - hessian))
+         return
+      end if
+
+      call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.true.)
+      if (allocated(error)) return
+
+      hessl(:, :) = 0.0_wp
+      call ncoord%add_coordination_number_hessian_list(mol, lattr, dEdcn, &
+         & hessl, list)
+
+      if (any(abs(hessl - hessian) > thr*max(1.0_wp, maxval(abs(hessian))))) then
+         call test_failed(error, "CN Hessian from the "// &
+            & "complete list does not match")
+         print "(a,es21.14)", "Max Hessian deviation: ", maxval(abs(hessl - hessian))
+         return
+      end if
+
+   end subroutine test_hessian_list_gen
 
 
    subroutine test_hessian_mb04_dexp(error)
@@ -2065,6 +2322,130 @@ contains
       call test_numsigma(error, mol, erf_dftd4_ncoord)
 
    end subroutine test_dcndL_anthracene_erf_dftd4
+
+   !> ----------------------------------------------------
+   !> Tests for the CSR neighbour list based evaluation
+   !> ----------------------------------------------------
+
+   subroutine test_cn_list_mb01_dexp(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(dexp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "mindless01")
+      call new_dexp_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_cn_list_gen(error, mol, ncoord)
+
+   end subroutine test_cn_list_mb01_dexp
+
+
+   subroutine test_dcndr_list_x04_erf(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_ncoord_type) :: ncoord
+
+      call get_structure(mol, "x04")
+      call new_erf_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_dcndr_list_gen(error, mol, ncoord)
+
+   end subroutine test_dcndr_list_x04_erf
+
+
+   subroutine test_derivs_list_x04_exp_cut(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(exp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "x04")
+      call new_exp_ncoord(ncoord, mol, cutoff=30.0_wp, cut=2.5_wp)
+      call test_derivs_list_gen(error, mol, ncoord)
+
+   end subroutine test_derivs_list_x04_exp_cut
+
+
+   subroutine test_hessian_list_mb04_erf_en(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_en_ncoord_type) :: ncoord
+
+      call get_structure(mol, "mindless04")
+      call new_erf_en_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_hessian_list_gen(error, mol, ncoord)
+
+   end subroutine test_hessian_list_mb04_erf_en
+
+
+   subroutine test_cn_list_pyrazole_erf(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_ncoord_type) :: ncoord
+
+      ! Cutoff below the cell size, some pairs only interact across the boundary
+      call get_structure(mol, "pyrazole")
+      call new_erf_ncoord(ncoord, mol, cutoff=10.0_wp)
+      call test_cn_list_gen(error, mol, ncoord)
+
+   end subroutine test_cn_list_pyrazole_erf
+
+
+   subroutine test_dcndr_list_pyrazole_exp_cut(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(exp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "pyrazole")
+      call new_exp_ncoord(ncoord, mol, cutoff=10.0_wp, cut=2.5_wp)
+      call test_dcndr_list_gen(error, mol, ncoord)
+
+   end subroutine test_dcndr_list_pyrazole_exp_cut
+
+
+   subroutine test_derivs_list_pyrazole_dexp(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(dexp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "pyrazole")
+      call new_dexp_ncoord(ncoord, mol, cutoff=10.0_wp)
+      call test_derivs_list_gen(error, mol, ncoord)
+
+   end subroutine test_derivs_list_pyrazole_dexp
+
+
+   subroutine test_hessian_list_pyrazole_erf_en(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_en_ncoord_type) :: ncoord
+
+      call get_structure(mol, "pyrazole")
+      call new_erf_en_ncoord(ncoord, mol, cutoff=10.0_wp)
+      call test_hessian_list_gen(error, mol, ncoord)
+
+   end subroutine test_hessian_list_pyrazole_erf_en
 
 
    subroutine test_cn_unknown(error)

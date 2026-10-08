@@ -27,7 +27,7 @@ module mctc_wignerseitz
    !> Wigner-Seitz cell and its nearest image translations
    type :: wignerseitz_cell
       !> Maximum number of images per atom pair
-      integer :: nimg_max
+      integer :: nimg_max = 0
       !> Number of images for each atom pair
       integer, allocatable :: nimg(:, :)
       !> Translation indices for each atom pair
@@ -88,10 +88,10 @@ subroutine new_wignerseitz_cell(self, mol)
       end do
    end do
 
+   if (mol%nat > 0) self%nimg_max = maxval(self%nimg)
    call move_alloc(trans, self%trans)
 
 end subroutine new_wignerseitz_cell
-
 
 !> Find the nearest translation images for an interatomic vector
 subroutine get_pairs(iws, trans, rij, list)
@@ -153,38 +153,40 @@ subroutine get_pairs_csr(trans, rij, iws, list, min_r2)
    real(wp), intent(in) :: rij(3)
    !> Number of images for a pair
    integer, intent(out) :: iws
-   !> List of image indices for a pair
+   !> Indices of the nearest translation images
    integer, intent(out) :: list(:)
    !> Minimum squared distance found
    real(wp), intent(out) :: min_r2
 
-   real(wp) :: dx, dy, dz, r2
-   integer :: itr, ntr, img
+   real(wp) :: dx, dy, dz, dist(size(trans, 2))
+   integer :: itr, pos
 
-   ntr = size(trans, 2)
    iws = 0
-   img = 0
    min_r2 = huge(1.0_wp)
 
-   do itr = 1, ntr
+   ! First pass, distances of all images and the actual minimum
+   do itr = 1, size(trans, 2)
       dx = rij(1) - trans(1, itr)
       dy = rij(2) - trans(2, itr)
       dz = rij(3) - trans(3, itr)
-      r2 = dx*dx + dy*dy + dz*dz
+      dist(itr) = dx*dx + dy*dy + dz*dz
+      if (dist(itr) < thr) cycle
+      min_r2 = min(min_r2, dist(itr))
+   end do
 
-      if (r2 < thr) cycle
-      img = img + 1
-
-      if (r2 < min_r2 - tol) then
-         ! Found a strictly better minimum
-         min_r2 = r2
-         iws = 1
-         list(1) = img
-      else if (r2 < min_r2 + tol) then
-         ! Within tolerance: record degeneracy
-         iws = iws + 1
-         list(iws) = img
-      end if
+   ! Second pass, collect all images within the tolerance of the minimum,
+   ! sorted by distance via insertion
+   do itr = 1, size(trans, 2)
+      if (dist(itr) < thr) cycle
+      if (dist(itr) - min_r2 > tol) cycle
+      iws = iws + 1
+      pos = iws
+      do while (pos > 1)
+         if (dist(list(pos - 1)) <= dist(itr)) exit
+         list(pos) = list(pos - 1)
+         pos = pos - 1
+      end do
+      list(pos) = itr
    end do
 
 end subroutine get_pairs_csr

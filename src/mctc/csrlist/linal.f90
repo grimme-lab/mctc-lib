@@ -480,7 +480,7 @@ subroutine spmspv_csr(list, mlist, xptr, xval, yptr, yval, alpha)
          y_tmp_i = y_tmp_i + mlist(k) * xdense(j)
       end do
       ydense(i) = a * y_tmp_i
-      yflag(i) = y_tmp_i /= 0.0_wp
+      yflag(i) = ydense(i) /= 0.0_wp
    end do
    !$omp end parallel do
 

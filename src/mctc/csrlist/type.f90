@@ -459,6 +459,7 @@ subroutine neighbor_pass(self, grid, lstore, tridx, cnt, icnt, nself, &
             ! Check the wsc translation images (if requested)
             if (use_wsc) then
                do checkat = checkatst, checkatfin
+                  if (grid%cellatidx(checkat) == iat) cycle
                   vec(1) = xi - grid%x(checkat)
                   vec(2) = yi - grid%y(checkat)
                   vec(3) = zi - grid%z(checkat)
@@ -777,7 +778,7 @@ subroutine build_stencil(grid, lmulti)
    !> Cells are visited as several periodic images of each other
    logical, intent(out) :: lmulti
 
-   integer :: n(3), lo(3), hi(3)
+   integer :: lo(3), hi(3)
    integer :: dim, di, dj, dk, nsten
    integer, allocatable :: off(:, :)
 
