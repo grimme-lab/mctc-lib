@@ -117,6 +117,10 @@ contains
       & new_unittest("dcndr-list-pyrazole_exp-cut", test_dcndr_list_pyrazole_exp_cut), &
       & new_unittest("derivs-list-pyrazole_dexp", test_derivs_list_pyrazole_dexp), &
       & new_unittest("hessian-list-pyrazole_erf_en", test_hessian_list_pyrazole_erf_en), &
+      & new_unittest("cn-list-ice-ii_exp", test_cn_list_ice_ii_exp), &
+      & new_unittest("dcndr-list-nacl_erf_en", test_dcndr_list_nacl_erf_en), &
+      & new_unittest("derivs-list-x05_erf-cut", test_derivs_list_x05_erf_cut), &
+      & new_unittest("hessian-list-feo2_dexp", test_hessian_list_feo2_dexp), &
       & new_unittest("cn_unknown", test_cn_unknown, should_fail=.true.), &
       & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
       & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string) &
@@ -2446,6 +2450,66 @@ contains
       call test_hessian_list_gen(error, mol, ncoord)
 
    end subroutine test_hessian_list_pyrazole_erf_en
+
+
+   subroutine test_cn_list_ice_ii_exp(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(exp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "ice-ii")
+      call new_exp_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_cn_list_gen(error, mol, ncoord)
+
+   end subroutine test_cn_list_ice_ii_exp
+
+
+   subroutine test_dcndr_list_nacl_erf_en(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_en_ncoord_type) :: ncoord
+
+      call get_structure(mol, "nacl")
+      call new_erf_en_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_dcndr_list_gen(error, mol, ncoord)
+
+   end subroutine test_dcndr_list_nacl_erf_en
+
+
+   subroutine test_derivs_list_x05_erf_cut(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(erf_ncoord_type) :: ncoord
+
+      call get_structure(mol, "x05")
+      call new_erf_ncoord(ncoord, mol, cutoff=30.0_wp, cut=2.5_wp)
+      call test_derivs_list_gen(error, mol, ncoord)
+
+   end subroutine test_derivs_list_x05_erf_cut
+
+
+   subroutine test_hessian_list_feo2_dexp(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      type(dexp_ncoord_type) :: ncoord
+
+      call get_structure(mol, "feo2")
+      call new_dexp_ncoord(ncoord, mol, cutoff=30.0_wp)
+      call test_hessian_list_gen(error, mol, ncoord)
+
+   end subroutine test_hessian_list_feo2_dexp
 
 
    subroutine test_cn_unknown(error)
