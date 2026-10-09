@@ -733,7 +733,7 @@ contains
    end subroutine add_coordination_number_derivs_list
 
    !> Add dE/dCN contracted with the Cartesian Hessian of the
-   !> coordination numbers.
+   !> coordination numbers, including the smooth CN cutoff if enabled.
    subroutine add_coordination_number_hessian(self, mol, trans, dEdcn, hessian)
 
       !> Coordination number container
@@ -757,6 +757,7 @@ contains
       real(wp) :: countd, countd2, box(3, 3), pair_box(3, 3)
       real(wp) :: idamp, jdamp
       real(wp), allocatable :: cn(:)
+      real(wp), allocatable :: dcndr(:, :, :), dcndL(:, :, :)
 
       ! Only diagonal Cartesian boxes receive contributions from more than one
       ! unordered atom pair. Keep those thread-private and write off-diagonal
@@ -767,8 +768,10 @@ contains
       npair = mol%nat*(mol%nat - 1)/2
 
       if (self%cut > 0.0_wp) then
-         allocate(cn(mol%nat), source=0.0_wp)
-         call ncoord(self, mol, trans, cn)
+         allocate(cn(mol%nat), dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat))
+         call ncoord_d(self, mol, trans, cn, dcndr, dcndL)
+         call add_cn_cut_hessian(self%cut, cn, dcndr, dEdcn, hessian)
+         deallocate(dcndr, dcndL)
       end if
 
       !$omp parallel default(none) &
@@ -852,7 +855,8 @@ contains
    end subroutine add_coordination_number_hessian
 
    !> Add dE/dCN contracted with the Cartesian Hessian of the
-   !> coordination numbers using the CSR-based neighbour list.
+   !> coordination numbers using the CSR-based neighbour list,
+   !> including the smooth CN cutoff if enabled.
    subroutine add_coordination_number_hessian_list(self, mol, trans, dEdcn, hessian, list)
 
       !> Coordination number container
@@ -881,6 +885,7 @@ contains
       real(wp) :: countd, countd2, box(3, 3), pair_box(3, 3)
       real(wp) :: idamp, jdamp
       real(wp), allocatable :: cn(:), lattr(:, :)
+      real(wp), allocatable :: dcndr(:, :, :), dcndL(:, :, :), dcndrlist(:, :)
 
       real(wp), allocatable :: diagonal_local(:, :, :)
 
@@ -889,8 +894,24 @@ contains
       half = .not. list%complete
 
       if (self%cut > 0.0_wp) then
-         allocate(cn(mol%nat), source=0.0_wp)
-         call ncoord_list(self, mol, trans, cn, list)
+         allocate(cn(mol%nat), dcndr(3, mol%nat, mol%nat), &
+            & dcndL(3, 3, mol%nat), dcndrlist(3, size(list%nlat)))
+         call ncoord_d_list(self, mol, trans, cn, dcndrlist, dcndL, list)
+
+         ! Sum all images of each atom before forming the CN gradient outer product.
+         dcndr(:, :, :) = 0.0_wp
+         do iat = 1, mol%nat
+            do kat = list%inl(iat), list%inl(iat + 1) - 1
+               jat = list%nlat(kat)
+               dcndr(:, iat, jat) = dcndr(:, iat, jat) + dcndrlist(:, kat)
+               if (half .and. iat /= jat) then
+                  dcndr(:, jat, iat) = dcndr(:, jat, iat) &
+                     & - self%directed_factor*dcndrlist(:, kat)
+               end if
+            end do
+         end do
+         call add_cn_cut_hessian(self%cut, cn, dcndr, dEdcn, hessian)
+         deallocate(dcndr, dcndL, dcndrlist)
       end if
 
       if (trlist) then
@@ -915,6 +936,8 @@ contains
 
          do kat = list%inl(iat) + 1, list%inl(iat + 1) - 1
             jat = list%nlat(kat)
+            ! Self-images move rigidly with the atom, no Cartesian Hessian.
+            if (iat == jat) cycle
             jzp = mol%id(jat)
             den = self%get_en_factor(izp, jzp)
 
@@ -983,6 +1006,47 @@ contains
       !$omp end parallel
 
    end subroutine add_coordination_number_hessian_list
+
+
+   !> Add the cutoff-curvature term sum_k dE/dCN'_k f''(CN_k) grad(CN_k) grad(CN_k)^T.
+   !> The f'(CN_k) Hessian(CN_k) term is handled by the pairwise Hessian routines.
+   subroutine add_cn_cut_hessian(cnmax, cn, dcndr, dEdcn, hessian)
+      !> Maximum coordination number
+      real(wp), intent(in) :: cnmax
+      !> Unmodified coordination numbers and Cartesian derivatives
+      real(wp), intent(in) :: cn(:), dcndr(:, :, :)
+      !> Derivative with respect to the capped coordination numbers
+      real(wp), intent(in) :: dEdcn(:)
+      !> Cartesian Hessian in flattened (3*nat, 3*nat) representation
+      real(wp), intent(inout) :: hessian(:, :)
+
+      integer :: iat, jat, kat, ic, jc, ii, jj
+      real(wp) :: factor
+      real(wp), allocatable :: weights(:)
+
+      weights = dEdcn*d2log_cn_cut(cn, cnmax)
+
+      ! Each thread owns complete Hessian columns, avoiding a matrix reduction.
+      !$omp parallel do collapse(2) schedule(runtime) default(none) &
+      !$omp shared(cn, dcndr, weights, hessian) &
+      !$omp private(iat, jat, kat, ic, jc, ii, jj, factor)
+      do jat = 1, size(cn)
+         do jc = 1, 3
+            jj = 3*(jat - 1) + jc
+            do kat = 1, size(cn)
+               factor = weights(kat)*dcndr(jc, jat, kat)
+               if (factor == 0.0_wp) cycle
+               do iat = 1, size(cn)
+                  do ic = 1, 3
+                     ii = 3*(iat - 1) + ic
+                     hessian(ii, jj) = hessian(ii, jj) + factor*dcndr(ic, iat, kat)
+                  end do
+               end do
+            end do
+         end do
+      end do
+      !$omp end parallel do
+   end subroutine add_cn_cut_hessian
 
 
    !> Evaluates the pairwise electronegativity factor
@@ -1079,5 +1143,18 @@ contains
       real(wp) :: dcnpdcn
       dcnpdcn = exp(cnmax)/(exp(cnmax) + exp(cn))
    end function dlog_cn_cut
+
+   !> Evaluates the second derivative of the smooth coordination number cutoff
+   elemental function d2log_cn_cut(cn, cnmax) result(d2cnpdcn2)
+      !> Coordination number
+      real(wp), intent(in) :: cn
+      !> Maximum coordination number
+      real(wp), intent(in) :: cnmax
+
+      real(wp) :: d2cnpdcn2, arg
+
+      arg = exp(-abs(cnmax - cn))
+      d2cnpdcn2 = -arg/(1.0_wp + arg)**2
+   end function d2log_cn_cut
 
 end module mctc_ncoord_type
