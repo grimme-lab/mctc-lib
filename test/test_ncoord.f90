@@ -106,6 +106,9 @@ contains
       & new_unittest("dcndr-mb05_erf_dftd4", test_dcndr_mb05_erf_dftd4), &
       & new_unittest("dcndr-ammonia_erf_dftd4", test_dcndr_ammonia_erf_dftd4), &
       & new_unittest("hessian-ammonia_erf_dftd4", test_hessian_ammonia_erf_dftd4), &
+      & new_unittest("hessian-mb04-cut", test_hessian_mb04_cut), &
+      & new_unittest("hessian-ammonia-cut", test_hessian_ammonia_cut), &
+      & new_unittest("hessian-feo2-cut", test_hessian_feo2_cut), &
       & new_unittest("dcndL-mb06_erf_dftd4", test_dcndL_mb06_erf_dftd4), &
       & new_unittest("dcndL-mb07_erf_dftd4", test_dcndL_mb07_erf_dftd4), &
       & new_unittest("dcndL-antracene_erf_dftd4", test_dcndL_anthracene_erf_dftd4), &
@@ -230,8 +233,10 @@ contains
 
       call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
 
-      hessian(:, :) = 0.0_wp
+      ! The routine must add to, rather than overwrite, the caller's Hessian.
+      hessian(:, :) = 0.125_wp
       call ncoord%add_coordination_number_hessian(mol, lattr, dEdcn, hessian)
+      hessian(:, :) = hessian - 0.125_wp
 
       do iat = 1, mol%nat
          do ic = 1, 3
@@ -572,6 +577,60 @@ contains
       call new_erf_dftd4_ncoord(ncoord, mol, cutoff=12.0_wp)
       call test_numhessian(error, mol, ncoord)
    end subroutine test_hessian_ammonia_erf_dftd4
+
+
+   subroutine test_hessian_mb04_cut(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+
+      call get_structure(mol, "mindless04")
+      call test_hessian_cut_gen(error, mol, 30.0_wp)
+   end subroutine test_hessian_mb04_cut
+
+
+   subroutine test_hessian_ammonia_cut(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+
+      call get_structure(mol, "x04")
+      call test_hessian_cut_gen(error, mol, 12.0_wp)
+   end subroutine test_hessian_ammonia_cut
+
+
+   subroutine test_hessian_feo2_cut(error)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type) :: mol
+
+      call get_structure(mol, "feo2")
+      call test_hessian_cut_gen(error, mol, 12.0_wp)
+   end subroutine test_hessian_feo2_cut
+
+
+   !> Check the smooth cutoff for all counting functions, including directed CNs
+   subroutine test_hessian_cut_gen(error, mol, cutoff)
+      type(error_type), allocatable, intent(out) :: error
+      type(structure_type), intent(inout) :: mol
+      real(wp), intent(in) :: cutoff
+
+      class(ncoord_type), allocatable :: ncoord
+      integer :: it, icut
+      integer, parameter :: counts(*) = [cn_count%exp, cn_count%dexp, &
+         & cn_count%erf, cn_count%erf_en, cn_count%dftd4]
+      real(wp), parameter :: cuts(*) = [0.0_wp, 2.5_wp, 8.0_wp]
+
+      do it = 1, size(counts)
+         do icut = 1, size(cuts)
+            call new_ncoord(ncoord, mol, counts(it), error, cutoff=cutoff, cut=cuts(icut))
+            if (allocated(error)) return
+            call test_numhessian(error, mol, ncoord)
+            if (.not. allocated(error)) call test_hessian_list_gen(error, mol, ncoord)
+            if (allocated(error)) then
+               error%message = get_cn_count_string(counts(it))//": "//error%message
+               return
+            end if
+         end do
+      end do
+   end subroutine test_hessian_cut_gen
 
 
    subroutine test_numsigma(error, mol, ncoord)
