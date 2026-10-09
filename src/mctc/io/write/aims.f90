@@ -34,6 +34,13 @@ subroutine write_aims(self, unit)
    integer :: iat, ilt
    logical :: expo
 
+   if (self%charge /= 0.0_wp) then
+      write(unit, '(a, 1x, es24.14)') "initial_charge", self%charge
+   end if
+   if (self%uhf /= 0) then
+      write(unit, '(a, 1x, es24.14)') "initial_moment", real(self%uhf, wp)
+   end if
+
    expo = maxval(self%xyz) > 1.0e+5 .or. minval(self%xyz) < -1.0e+5
    if (expo) then
       do iat = 1, self%nat

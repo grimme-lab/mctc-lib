@@ -28,6 +28,10 @@ The format is identified by:
 | `atom` | Cartesian coordinates in Ångström |
 | `atom_frac` | Fractional coordinates (periodic systems) |
 | `lattice_vector` | Lattice vector (3 reals, one per line) |
+| `initial_charge` | Global initial total molecular charge |
+| `initial_moment` | Global initial spin moment / unpaired-electron count |
+
+The reader and writer support the optional global `initial_charge` and `initial_moment` keywords for preserving molecular charge and spin information in `geometry.in` files.
 
 ### Atom Specification
 
