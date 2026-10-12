@@ -70,6 +70,7 @@ The [[structure_type]] is the central data structure for molecular and periodic 
 | `lattice(3, 3)` | real(wp) | Lattice vectors (Bohr), optional |
 | `periodic(3)` | logical | Periodic directions, optional |
 | `bond(2, nbd)` | integer | Bond connectivity, optional |
+| `z_eff(nat)` | integer | Effective nuclear charges with ECP core electrons subtracted, optional |
 
 ### Creating Structures
 

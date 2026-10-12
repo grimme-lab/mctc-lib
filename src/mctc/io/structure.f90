@@ -24,6 +24,7 @@
 !> - `xyz(3, nat)`: Cartesian coordinates in Bohr
 !> - `num(nid)`: Atomic numbers for each unique species
 !> - `id(nat)`: Species index for each atom
+!> - `z_eff(nat)`: Effective nuclear charges for each atom (optional)
 !> - `charge`: Total molecular charge
 !> - `uhf`: Number of unpaired electrons
 !> - `lattice(3, 3)`: Lattice vectors for periodic systems (optional)
@@ -52,17 +53,20 @@ module mctc_io_structure
       !> Number of bonds
       integer :: nbd = 0
 
-      !> Species identifier
+      !> Species identifier (nat)
       integer, allocatable :: id(:)
 
-      !> Atomic number for each species
+      !> Atomic number for each species (nid)
       integer, allocatable :: num(:)
 
-      !> Element symbol for each species
+      !> Element symbol for each species (nid)
       character(len=symbol_length), allocatable :: sym(:)
 
-      !> Cartesian coordinates, in Bohr
+      !> Cartesian coordinates in Bohr (3, nat)
       real(wp), allocatable :: xyz(:, :)
+
+      !> Effective nuclear charge with ECP electrons subtracted (nat)
+      integer, allocatable :: z_eff(:)
 
       !> Number of unpaired electrons
       integer :: uhf = 0
@@ -70,13 +74,13 @@ module mctc_io_structure
       !> Total charge
       real(wp) :: charge = 0.0_wp
 
-      !> Lattice parameters
+      !> Lattice parameters (3, :), (0, 0) if not set
       real(wp), allocatable :: lattice(:, :)
 
-      !> Periodic directions
+      !> Periodic directions (3), (1) if not set
       logical, allocatable :: periodic(:)
 
-      !> Bond indices
+      !> Bond indices (3, nbd)
       integer, allocatable :: bond(:, :)
 
       !> Comment, name or identifier for this structure
@@ -85,10 +89,10 @@ module mctc_io_structure
       !> Vendor specific structure annotations
       type(structure_info) :: info = structure_info()
 
-      !> SDF atomic data annotations
+      !> SDF atomic data annotations (nat)
       type(sdf_data), allocatable :: sdf(:)
 
-      !> PDB atomic data annotations
+      !> PDB atomic data annotations (nat)
       type(pdb_data), allocatable :: pdb(:)
 
    end type structure_type
@@ -106,7 +110,7 @@ contains
 
 !> Constructor for structure representations
 subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
-      & info, bond)
+      & info, bond, z_eff)
 
    !> Instance of the structure representation
    type(structure_type), intent(out) :: self
@@ -137,6 +141,9 @@ subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
 
    !> Bond topology of the system
    integer, intent(in), optional :: bond(:, :)
+
+   !> Effective nuclear charges for each atom, at least nat entries
+   integer, intent(in), optional :: z_eff(:)
 
    integer :: ndim, iid
    integer, allocatable :: map(:)
@@ -177,6 +184,10 @@ subroutine new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
    end do
    self%xyz(:, :) = xyz(:, :ndim)
 
+   if (present(z_eff)) then
+      self%z_eff = z_eff(:ndim)
+   end if
+
    if (present(charge)) then
       self%charge = charge
    else
@@ -205,7 +216,7 @@ end subroutine new_structure
 
 !> Simplified constructor for structure representations
 subroutine new_structure_num(self, num, xyz, charge, uhf, lattice, periodic, &
-      & info, bond)
+      & info, bond, z_eff)
 
    !> Instance of the structure representation
    type(structure_type), intent(out) :: self
@@ -234,6 +245,9 @@ subroutine new_structure_num(self, num, xyz, charge, uhf, lattice, periodic, &
    !> Bond topology of the system
    integer, intent(in), optional :: bond(:, :)
 
+   !> Effective nuclear charges for each atom, at least nat entries
+   integer, intent(in), optional :: z_eff(:)
+
    integer :: ndim, iat
    character(len=symbol_length), allocatable :: sym(:)
 
@@ -244,14 +258,14 @@ subroutine new_structure_num(self, num, xyz, charge, uhf, lattice, periodic, &
    end do
 
    call new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
-      & info, bond)
+      & info, bond, z_eff)
 
 end subroutine new_structure_num
 
 
 !> Simplified constructor for structure representations
 subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, &
-      & info, bond)
+      & info, bond, z_eff)
 
    !> Instance of the structure representation
    type(structure_type), intent(out) :: self
@@ -280,6 +294,9 @@ subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, &
    !> Bond topology of the system
    integer, intent(in), optional :: bond(:, :)
 
+   !> Effective nuclear charges for each atom, at least nat entries
+   integer, intent(in), optional :: z_eff(:)
+
    integer :: ndim, iat
    integer, allocatable :: num(:)
 
@@ -290,7 +307,7 @@ subroutine new_structure_sym(self, sym, xyz, charge, uhf, lattice, periodic, &
    end do
 
    call new_structure(self, num, sym, xyz, charge, uhf, lattice, periodic, &
-      & info, bond)
+      & info, bond, z_eff)
 
 end subroutine new_structure_sym
 

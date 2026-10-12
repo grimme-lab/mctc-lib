@@ -299,6 +299,7 @@ mol%periodic(:)   ! Periodic directions (3)
 
 ! Optional data
 mol%bond(:, :)    ! Bond connectivity
+mol%z_eff(:)      ! Effective nuclear charges for each atom (nat), e.g. with ECPs
 mol%comment       ! Structure title/comment
 ```
 
