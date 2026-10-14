@@ -45,7 +45,8 @@ subroutine collect_read(testsuite)
       & new_unittest("valid-vasp", test_vasp), &
       & new_unittest("valid-coord", test_coord), &
       & new_unittest("valid-xyz", test_xyz), &
-      & new_unittest("valid-extxyz", test_extxyz) &
+      & new_unittest("valid-extxyz", test_extxyz), &
+      & new_unittest("valid-cif", test_cif) &
       & ]
 
 end subroutine collect_read
@@ -392,6 +393,55 @@ subroutine test_vasp(error)
    close(unit, status="delete")
 
 end subroutine test_vasp
+
+
+subroutine test_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   character(len=:), allocatable :: name
+   integer :: unit
+
+   name = get_name() // ".cif"
+
+   open(file=name, newunit=unit)
+   write(unit, "(a)") &
+      "data_OPT_STEP_1", &
+      "_symmetry_space_group_name_H-M 'P 1'", &
+      "_cell_length_a    5.56900000", &
+      "_cell_length_b    5.56900000", &
+      "_cell_length_c    5.56900000", &
+      "_cell_angle_alpha 90.000000", &
+      "_cell_angle_beta  90.000000", &
+      "_cell_angle_gamma 90.000000", &
+      "", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na -0.0000000000 -0.0000000000 -0.0000000000", &
+      "Na -0.5000000000 -0.5000000000 -0.0000000000", &
+      "Na -0.5000000000 -0.0000000000 -0.5000000000", &
+      "Na 0.0000000000 -0.5000000000 -0.5000000000", &
+      "Cl -0.0000000000 -0.0000000000 -0.5000000000", &
+      "Cl -0.5000000000 -0.5000000000 -0.5000000000", &
+      "Cl -0.5000000000 -0.0000000000 0.0000000000", &
+      "Cl 0.0000000000 -0.5000000000 0.0000000000"
+   close(unit)
+
+   call read_structure(struc, name, error)
+
+   open(file=name, newunit=unit)
+   close(unit, status="delete")
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 8, "Number of atoms does not match")
+
+end subroutine test_cif
+
 
 
 subroutine test_xyz(error)

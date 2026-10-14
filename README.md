@@ -54,10 +54,12 @@ This library supports reading and writing in more than ten different geometry fo
 - [xyz][xyz] file format with ``xyz`` extension
 - [Protein data base][pdb] file format with ``pdb`` extension
 - [mol][ctfile] and [structure data][ctfile] connection table file formats with ``mol`` and ``sdf`` extension, respectively
+- [Crystallographic information file][cif] format with ``cif`` extension (read only)
 
 [xyz]: http://www.ccl.net/chemistry/resources/messages/1996/10/21.005-dir/index.html
 [pdb]: http://www.wwpdb.org/documentation/file-format-content/format33/v3.3.html
 [ctfile]: https://www.daylight.com/meetings/mug05/Kappler/ctfile.pdf
+[cif]: https://www.iucr.org/resources/cif
 
 *JSON based formats*
 
@@ -385,6 +387,7 @@ Available format identifiers:
 - ``filetype%cjson`` - Chemical JSON
 - ``filetype%pymatgen`` - Pymatgen JSON
 - ``filetype%aims`` - FHI-aims
+- ``filetype%cif`` - Crystallographic Information File (read only)
 - ``filetype%qchem`` - Q-Chem
 
 

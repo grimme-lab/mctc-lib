@@ -26,6 +26,7 @@ program tester
    use test_ncoord, only : collect_ncoord
    use test_read, only : collect_read
    use test_read_aims, only : collect_read_aims
+   use test_read_cif, only : collect_read_cif
    use test_read_cjson, only : collect_read_cjson
    use test_read_ctfile, only : collect_read_ctfile
    use test_read_gaussian, only : collect_read_gaussian
@@ -75,6 +76,7 @@ program tester
       & new_testsuite("utils", collect_utils), &
       & new_testsuite("read", collect_read), &
       & new_testsuite("read-aims", collect_read_aims), &
+      & new_testsuite("read-cif", collect_read_cif), &
       & new_testsuite("read-cjson", collect_read_cjson), &
       & new_testsuite("read-ctfile", collect_read_ctfile), &
       & new_testsuite("read-gaussian", collect_read_gaussian), &

@@ -21,6 +21,7 @@ tests = [
   'ncoord',
   'read',
   'read-aims',
+  'read-cif',
   'read-cjson',
   'read-ctfile',
   'read-gaussian',
