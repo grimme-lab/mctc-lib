@@ -51,7 +51,11 @@ subroutine collect_read_cif(testsuite)
       & new_unittest("invalid6-cif", test_invalid6_cif, should_fail=.true.), &
       & new_unittest("invalid7-cif", test_invalid7_cif, should_fail=.true.), &
       & new_unittest("invalid8-cif", test_invalid8_cif, should_fail=.true.), &
-      & new_unittest("invalid9-cif", test_invalid9_cif, should_fail=.true.) &
+      & new_unittest("invalid9-cif", test_invalid9_cif, should_fail=.true.), &
+      & new_unittest("invalid10-cif", test_invalid10_cif, should_fail=.true.), &
+      & new_unittest("invalid11-cif", test_invalid11_cif, should_fail=.true.), &
+      & new_unittest("invalid12-cif", test_invalid12_cif, should_fail=.true.), &
+      & new_unittest("invalid13-cif", test_invalid13_cif, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_cif
@@ -614,6 +618,122 @@ subroutine test_invalid9_cif(error)
    close(unit)
 
 end subroutine test_invalid9_cif
+
+
+subroutine test_invalid10_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_zero_length", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 0.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid10_cif
+
+
+subroutine test_invalid11_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_negative_length", &
+      "_cell_length_a -5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid11_cif
+
+
+subroutine test_invalid12_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_flat_cell", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "_cell_angle_alpha 45.0", &
+      "_cell_angle_beta 45.0", &
+      "_cell_angle_gamma 90.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid12_cif
+
+
+subroutine test_invalid13_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_nan_angle", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "_cell_angle_alpha NaN", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid13_cif
 
 
 end module test_read_cif

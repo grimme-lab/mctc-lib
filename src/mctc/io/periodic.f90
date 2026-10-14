@@ -18,7 +18,7 @@ module mctc_io_periodic
    implicit none
    private
 
-   public :: cell_to_dlat
+   public :: cell_to_dlat, dlat_to_cell
 
 
 contains
@@ -78,6 +78,28 @@ pure function cell_to_dvol(cellpar) result(dvol)
 
    end associate
 end function cell_to_dvol
+
+
+!> Convert direct lattice to cell parameters
+pure subroutine dlat_to_cell(lattice,cellpar)
+   implicit none
+   real(wp),intent(in)  :: lattice(3,3) !< direct lattice
+   real(wp),intent(out) :: cellpar(6)   !< cell parameters
+
+   associate( alen => cellpar(1), blen => cellpar(2), clen => cellpar(3), &
+      &       alp  => cellpar(4), bet  => cellpar(5), gam  => cellpar(6) )
+
+   alen = norm2(lattice(:,1))
+   blen = norm2(lattice(:,2))
+   clen = norm2(lattice(:,3))
+
+   alp = acos(dot_product(lattice(:,2),lattice(:,3))/(blen*clen))
+   bet = acos(dot_product(lattice(:,1),lattice(:,3))/(alen*clen))
+   gam = acos(dot_product(lattice(:,1),lattice(:,2))/(alen*blen))
+
+   end associate
+
+end subroutine dlat_to_cell
 
 
 end module mctc_io_periodic

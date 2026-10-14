@@ -13,7 +13,9 @@
 ! limitations under the License.
 
 module test_write_genformat
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
+   use mctc_io_math, only : matdet_3x3
    use mctc_io_read_genformat, only : read_genformat
    use mctc_io_structure, only : structure_type
    use mctc_io_structure_info, only : structure_info
@@ -37,7 +39,8 @@ subroutine collect_write_genformat(testsuite)
    testsuite = [ &
       & new_unittest("valid1-gen", test_valid1_gen), &
       & new_unittest("valid2-gen", test_valid2_gen), &
-      & new_unittest("valid3-gen", test_valid3_gen) &
+      & new_unittest("valid3-gen", test_valid3_gen), &
+      & new_unittest("valid4-gen", test_valid4_gen) &
       & ]
 
 end subroutine collect_write_genformat
@@ -128,6 +131,33 @@ subroutine test_valid3_gen(error)
    if (allocated(error)) return
 
 end subroutine test_valid3_gen
+
+
+subroutine test_valid4_gen(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+   real(wp) :: chirality
+
+   call get_structure(struc, "chiral")
+   chirality = matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3))
+
+   open(status="scratch", newunit=unit)
+   call write_genformat(struc, unit)
+   rewind(unit)
+
+   call read_genformat(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3)), &
+      & chirality, thr=1.0e-8_wp, message="Handedness of the structure is not preserved")
+   if (allocated(error)) return
+
+end subroutine test_valid4_gen
 
 
 end module test_write_genformat

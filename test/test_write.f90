@@ -36,6 +36,7 @@ subroutine collect_write(testsuite)
    type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
    testsuite = [ &
+      & new_unittest("valid-cif", test_cif), &
       & new_unittest("valid-cjson", test_cjson, should_fail=.not.get_mctc_feature("json")), &
       & new_unittest("valid-mol", test_mol), &
       & new_unittest("valid-sdf", test_sdf), &
@@ -194,6 +195,30 @@ subroutine test_coord(error)
    close(unit, status="delete")
 
 end subroutine test_coord
+
+
+subroutine test_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   character(len=:), allocatable :: name
+   integer :: unit
+
+   name = get_name() // ".cif"
+
+   call get_structure(struc, "x03")
+
+   call write_structure(struc, name, error)
+   if (.not.allocated(error)) then
+      call read_structure(struc, name, error)
+   end if
+
+   open(file=name, newunit=unit)
+   close(unit, status="delete")
+
+end subroutine test_cif
 
 
 subroutine test_vasp(error)

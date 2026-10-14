@@ -40,6 +40,7 @@ tests = [
   'wignerseitz',
   'write',
   'write-aims',
+  'write-cif',
   'write-cjson',
   'write-ctfile',
   'write-gaussian',

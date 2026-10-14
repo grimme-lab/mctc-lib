@@ -18,6 +18,7 @@ module mctc_io_read_cif
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_constants, only : pi
    use mctc_io_convert, only : aatoau
+   use mctc_io_math, only : matdet_3x3
    use mctc_io_periodic, only : cell_to_dlat
    use mctc_io_resize, only : resize
    use mctc_io_structure, only : structure_type, new
@@ -179,6 +180,14 @@ subroutine read_cif(self, unit, error)
    cellpar(1:3) = cellpar(1:3) * aatoau
    cellpar(4:6) = cellpar(4:6) * pi / 180.0_wp
    call cell_to_dlat(cellpar, lattice)
+
+   ! the negated comparison also rejects NaN entries
+   if (.not.(all(cellpar(1:3) > 0.0_wp) .and. &
+      & matdet_3x3(lattice) > sqrt(epsilon(1.0_wp)) * product(cellpar(1:3)))) then
+      call fatal_error(error, "Cell parameters in CIF data block '"//block//&
+         & "' do not describe a valid unit cell")
+      return
+   end if
 
    allocate(fimg(3, nsite*nop), xyz(3, nsite*nop), sym(nsite*nop))
    nat = 0
