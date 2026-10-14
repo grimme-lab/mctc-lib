@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.24)
 
 project(
   "mctc-lib"
@@ -24,74 +24,82 @@ project(
 # Follow GNU conventions for installing directories
 include(GNUInstallDirs)
 
-# General configuration information
-add_subdirectory("config")
+# Build options
+option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" OFF)
+option(CMAKE_POSITION_INDEPENDENT_CODE "Enable position independent code support" ON)
+# Unprefixed options are kept for compatibility and only provide the defaults
+option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP (deprecated, use MCTCLIB_WITH_OpenMP)" ON)
+option(WITH_JSON "Enable support for JSON parsing via jonquil (deprecated, use MCTCLIB_WITH_JSON)" OFF)
+option(MCTCLIB_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
+option(MCTCLIB_WITH_JSON "Enable support for JSON parsing via jonquil" ${WITH_JSON})
+
+set(MCTCLIB_USE_JONQUIL ${MCTCLIB_WITH_JSON})
+set(MCTCLIB_USE_TOMLF ${MCTCLIB_WITH_JSON})
+
+# Set build type as CMake does not provide defaults
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(
+    CMAKE_BUILD_TYPE "RelWithDebInfo"
+    CACHE STRING "Build type to be used."
+    FORCE
+  )
+  message(
+    STATUS
+    "Setting build type to '${CMAKE_BUILD_TYPE}' as none was specified."
+  )
+endif()
+
+# Compiler-specific configurations
+if(
+  "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "PGI"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "NVHPC"
+  OR "${CMAKE_Fortran_COMPILER_ID}" STREQUAL "Flang"
+)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -Mbackslash -Mallocatable=03")
+endif()
+
+# Install location of the generated Fortran module files
+set(
+  "${PROJECT_NAME}-module-dir"
+  "${PROJECT_NAME}/modules"
+  CACHE STRING
+  "Subdirectory to install generated module files to"
+)
+set(module-dir "${${PROJECT_NAME}-module-dir}")
 
 # Dependencies
-if(NOT TARGET "jonquil::jonquil" AND MCTCLIB_WITH_JSON)
-  find_package("toml-f" REQUIRED)
-  find_package("jonquil" REQUIRED)
+if(MCTCLIB_WITH_OpenMP)
+  find_package(OpenMP REQUIRED COMPONENTS Fortran)
 endif()
-
-# Collect source of the project
-set(srcs)
-add_subdirectory("src")
+if(MCTCLIB_WITH_JSON)
+  # Use an installed package if available, otherwise build it from source.
+  # A local checkout can be used with -DFETCHCONTENT_SOURCE_DIR_<NAME>=<path>.
+  include(FetchContent)
+  FetchContent_Declare(
+    "toml-f"
+    GIT_REPOSITORY "https://github.com/toml-f/toml-f"
+    GIT_TAG "v0.5.1"
+    GIT_SHALLOW TRUE
+    FIND_PACKAGE_ARGS CONFIG
+  )
+  FetchContent_Declare(
+    "jonquil"
+    GIT_REPOSITORY "https://github.com/toml-f/jonquil"
+    GIT_TAG "v0.3.1"
+    GIT_SHALLOW TRUE
+    FIND_PACKAGE_ARGS CONFIG
+  )
+  # toml-f must come first, so that jonquil picks up the same toml-f::toml-f target
+  FetchContent_MakeAvailable("toml-f" "jonquil")
+endif()
 
 # MCTC library target
-add_library(
-  "${PROJECT_NAME}-lib"
-  "${srcs}"
-)
-add_library("${PROJECT_NAME}::${PROJECT_NAME}-lib" ALIAS "${PROJECT_NAME}-lib")
-target_compile_definitions(
-  "${PROJECT_NAME}-lib"
-  PRIVATE
-  "WITH_JSON=$<BOOL:${WITH_JSON}>"
-)
-if(MCTCLIB_WITH_OpenMP)
-  find_package(OpenMP REQUIRED)
-  target_link_libraries(
-    "${PROJECT_NAME}-lib"
-    PRIVATE
-    OpenMP::OpenMP_Fortran
-  )
-endif()
-if(WITH_JSON)
-  target_link_libraries(
-    "${PROJECT_NAME}-lib"
-    PRIVATE
-    "jonquil::jonquil"
-    "toml-f::toml-f"
-  )
-endif()
-set_target_properties(
-  "${PROJECT_NAME}-lib"
-  PROPERTIES
-  POSITION_INDEPENDENT_CODE TRUE
-  OUTPUT_NAME "${PROJECT_NAME}"
-  VERSION "${PROJECT_VERSION}"
-  SOVERSION "${PROJECT_VERSION_MAJOR}"
-  Fortran_MODULE_DIRECTORY "${PROJECT_BINARY_DIR}/include"
-)
-target_include_directories(
-  "${PROJECT_NAME}-lib"
-  PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
-)
-if(NOT EXISTS "${PROJECT_BINARY_DIR}/include")
-  file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/include")
-endif()
+add_subdirectory("src")
 
 # Add example application
 add_subdirectory("app")
 
 # Export targets for other projects
-add_library("${PROJECT_NAME}" INTERFACE)
-add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
-target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
 install(
   TARGETS
   "${PROJECT_NAME}"
@@ -120,8 +128,51 @@ install(
   DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME}"
 )
 
-# add the testsuite
-if (PROJECT_IS_TOP_LEVEL)
+# CMake package configuration
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/config/template-config.cmake"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+write_basic_package_version_file(
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+  VERSION "${PROJECT_VERSION}"
+  COMPATIBILITY SameMinorVersion
+)
+install(
+  FILES
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+
+# pkg-config package configuration
+if(BUILD_SHARED_LIBS)
+  set(PKG_CONFIG_REQUIRES "Requires.private")
+else()
+  set(PKG_CONFIG_REQUIRES "Requires")
+endif()
+
+if(MCTCLIB_WITH_JSON)
+  set(PKG_CONFIG_REQUIREMENTS "jonquil toml-f")
+else()
+  set(PKG_CONFIG_REQUIREMENTS)
+endif()
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/config/template.pc"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}.pc"
+  @ONLY
+)
+install(
+  FILES
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}.pc"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+)
+
+# Add the testsuite
+if(PROJECT_IS_TOP_LEVEL)
   enable_testing()
   add_subdirectory("test")
-endif ()
+endif()
