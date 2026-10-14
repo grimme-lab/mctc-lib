@@ -45,6 +45,7 @@ program tester
    use test_wignerseitz, only : collect_wignerseitz
    use test_write, only : collect_write
    use test_write_aims, only : collect_write_aims
+   use test_write_cif, only : collect_write_cif
    use test_write_cjson, only : collect_write_cjson
    use test_write_ctfile, only : collect_write_ctfile
    use test_write_gaussian, only : collect_write_gaussian
@@ -92,6 +93,7 @@ program tester
       & new_testsuite("wignerseitz", collect_wignerseitz), &
       & new_testsuite("write", collect_write), &
       & new_testsuite("write-aims", collect_write_aims), &
+      & new_testsuite("write-cif", collect_write_cif), &
       & new_testsuite("write-cjson", collect_write_cjson), &
       & new_testsuite("write-ctfile", collect_write_ctfile), &
       & new_testsuite("write-gaussian", collect_write_gaussian), &

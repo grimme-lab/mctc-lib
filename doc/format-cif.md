@@ -47,6 +47,8 @@ All other data items and loops are ignored.
   earlier image of the same site (within 10⁻³ in fractional coordinates) are dropped.
 - Positions are not wrapped into the unit cell, P1 inputs keep their coordinates exactly.
 - The lattice is constructed with *a* along *x* and *b* in the *xy* plane.
+- Structures in a left-handed lattice are written with inverted fractional coordinates,
+  which keeps their handedness in the right-handed cell described by the cell parameters.
 
 ## Example
 
@@ -76,11 +78,13 @@ O 0.50000 0.50000 0.50000
 
 ## Limitations
 
-- Writing CIF files is not supported.
+- Written CIF files contain a single data block in space group P1 with cell parameters
+  and fractional atom site coordinates, named after the structure comment.
 - Files must list the compound's symmetry operations explicitly unless the space group is P1.
 - Cartesian atom site coordinates (`_atom_site_Cartn_x`) are not supported.
 - Partial occupancies (`_atom_site_occupancy` other than 1) and disordered sites
   (`_atom_site_disorder_group` other than `.` or `?`) are rejected with an error.
+- Cell parameters that do not describe a unit cell with positive volume are rejected with an error.
 - CIF 2.0 list and table values are not supported.
 
 @Note Feel free to bring missing features to our attention by opening an issue.
