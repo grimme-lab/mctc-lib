@@ -79,11 +79,11 @@ subroutine read_cif(self, unit, error)
    character(len=64), allocatable :: header(:)
    character(len=symbol_length), allocatable :: sym(:)
    type(token_type) :: token, elem_token
-   integer :: kind, pos, lnum, stat, i, isite, iop, nat, first
+   integer :: kind, pos, lnum, i, isite, iop, nat, first
    integer :: ncol, icol, loop_kind, ilab, ityp, ix, iy, iz, iocc, idis, isym
    integer :: nop, nsite, elem_num, elem_lnum
    logical :: in_header, in_body, has_atoms, has_cell(6), elem_set, elem_from_type
-   real(wp) :: cellpar(6), row(3), lattice(3, 3), g(3), d(3), val
+   real(wp) :: cellpar(6), row(3), lattice(3, 3), g(3), d(3)
    real(wp), allocatable :: rot(:, :), trans(:, :), frac(:, :), fimg(:, :), xyz(:, :)
    integer, allocatable :: num(:)
 
@@ -142,6 +142,9 @@ subroutine read_cif(self, unit, error)
             if (allocated(error)) return
             tag = ""
          end if
+      case default
+         call fatal_error(error, "Unknown CIF token kind")
+         return
       end select
    end do
 
@@ -274,6 +277,8 @@ contains
    !> Process a value inside a loop body
    subroutine loop_value
       logical :: unknown
+      integer :: stat
+      real(wp) :: val
       unknown = kind == cif_value .and. (str == "?" .or. str == ".")
       icol = icol + 1
       select case(loop_kind)
@@ -355,6 +360,8 @@ contains
 
    !> Process the value of a single data item
    subroutine item_value
+      integer :: i, stat
+      real(wp) :: val
       i = findloc(cell_tags, tag, 1)
       if (i > 0) then
          call read_cif_real(line, token, val, stat)
@@ -377,6 +384,7 @@ contains
    !> Parse the current value as symmetry operation and append it
    subroutine add_symop
       real(wp) :: r(3, 3), t(3)
+      integer :: stat
       if (kind == cif_text) then
          stat = 1
       else
