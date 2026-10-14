@@ -76,6 +76,9 @@ module mctc_io_filetype
       !> Extended XYZ format
       integer :: extxyz = 15
 
+      !> Crystallographic information file
+      integer :: cif = 16
+
    end type enum_filetype
 
    !> File type enumerator
@@ -96,6 +99,7 @@ module mctc_io_filetype
    !> | `filetype%aims` | FHI-aims | geometry.in format |
    !> | `filetype%qchem` | Q-Chem | Molecule block format |
    !> | `filetype%extxyz` | extxyz | Extended XYZ format |
+   !> | `filetype%cif` | CIF | Crystallographic Information File |
    type(enum_filetype), parameter :: filetype = enum_filetype()
 
 
@@ -144,6 +148,8 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%qchem
       case("pmgjson")
          ftype = filetype%pymatgen
+      case("cif")
+         ftype = filetype%cif
       case("json")
          ftype = filetype%json
       case default

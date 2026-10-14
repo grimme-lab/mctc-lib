@@ -22,6 +22,7 @@ srcs += files(
   'convert.f90',
   'filetype.f90',
   'math.f90',
+  'periodic.f90',
   'read.f90',
   'resize.f90',
   'structure.f90',
