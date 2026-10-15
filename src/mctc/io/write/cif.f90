@@ -69,12 +69,12 @@ subroutine write_cif(self, unit, error)
          end do
       end if
    end if
-   write(unit, '(a)') "data_" // block
+   write(unit, "(a)") "data_" // block
 
    call dlat_to_cell(self%lattice, cellpar)
    cellpar(1:3) = cellpar(1:3) * autoaa
    cellpar(4:6) = cellpar(4:6) * 180.0_wp / pi
-   write(unit, '(a, f18.10)') &
+   write(unit, "(a, f18.10)") &
       & "_cell_length_a    ", cellpar(1), &
       & "_cell_length_b    ", cellpar(2), &
       & "_cell_length_c    ", cellpar(3), &
@@ -82,13 +82,13 @@ subroutine write_cif(self, unit, error)
       & "_cell_angle_beta  ", cellpar(5), &
       & "_cell_angle_gamma ", cellpar(6)
 
-   write(unit, '(a)') &
+   write(unit, "(a)") &
       & "_symmetry_space_group_name_H-M 'P 1'", &
       & "loop_", &
       & "_space_group_symop_operation_xyz", &
       & "'x, y, z'"
 
-   write(unit, '(a)') &
+   write(unit, "(a)") &
       & "loop_", &
       & "_atom_site_label", &
       & "_atom_site_type_symbol", &
@@ -100,7 +100,7 @@ subroutine write_cif(self, unit, error)
    ! fractional coordinates keeps the handedness of a left-handed lattice
    if (matdet_3x3(self%lattice) < 0.0_wp) abc = -abc
    do iat = 1, self%nat
-      write(unit, '(a, 1x, a, 3(1x, f20.12))') &
+      write(unit, "(a, 1x, a, 3(1x, f20.12))") &
          & trim(to_symbol(self%num(self%id(iat)))) // to_string(iat), &
          & trim(to_symbol(self%num(self%id(iat)))), abc(:, iat)
    end do
