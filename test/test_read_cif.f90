@@ -43,6 +43,10 @@ subroutine collect_read_cif(testsuite)
       & new_unittest("valid4-cif", test_valid4_cif), &
       & new_unittest("valid5-cif", test_valid5_cif), &
       & new_unittest("valid6-cif", test_valid6_cif), &
+      & new_unittest("valid7-cif", test_valid7_cif), &
+      & new_unittest("valid8-cif", test_valid8_cif), &
+      & new_unittest("valid9-cif", test_valid9_cif), &
+      & new_unittest("valid10-cif", test_valid10_cif), &
       & new_unittest("invalid1-cif", test_invalid1_cif, should_fail=.true.), &
       & new_unittest("invalid2-cif", test_invalid2_cif, should_fail=.true.), &
       & new_unittest("invalid3-cif", test_invalid3_cif, should_fail=.true.), &
@@ -55,7 +59,21 @@ subroutine collect_read_cif(testsuite)
       & new_unittest("invalid10-cif", test_invalid10_cif, should_fail=.true.), &
       & new_unittest("invalid11-cif", test_invalid11_cif, should_fail=.true.), &
       & new_unittest("invalid12-cif", test_invalid12_cif, should_fail=.true.), &
-      & new_unittest("invalid13-cif", test_invalid13_cif, should_fail=.true.) &
+      & new_unittest("invalid13-cif", test_invalid13_cif, should_fail=.true.), &
+      & new_unittest("invalid14-cif", test_invalid14_cif, should_fail=.true.), &
+      & new_unittest("invalid15-cif", test_invalid15_cif, should_fail=.true.), &
+      & new_unittest("invalid16-cif", test_invalid16_cif, should_fail=.true.), &
+      & new_unittest("invalid17-cif", test_invalid17_cif, should_fail=.true.), &
+      & new_unittest("invalid18-cif", test_invalid18_cif, should_fail=.true.), &
+      & new_unittest("invalid19-cif", test_invalid19_cif, should_fail=.true.), &
+      & new_unittest("invalid20-cif", test_invalid20_cif, should_fail=.true.), &
+      & new_unittest("invalid21-cif", test_invalid21_cif, should_fail=.true.), &
+      & new_unittest("invalid22-cif", test_invalid22_cif, should_fail=.true.), &
+      & new_unittest("invalid23-cif", test_invalid23_cif, should_fail=.true.), &
+      & new_unittest("invalid24-cif", test_invalid24_cif, should_fail=.true.), &
+      & new_unittest("invalid25-cif", test_invalid25_cif, should_fail=.true.), &
+      & new_unittest("invalid26-cif", test_invalid26_cif, should_fail=.true.), &
+      & new_unittest("invalid27-cif", test_invalid27_cif, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_cif
@@ -559,6 +577,127 @@ subroutine test_valid6_cif(error)
 end subroutine test_valid6_cif
 
 
+subroutine test_valid7_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_single_symop", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "_symmetry_space_group_name_H-M ?", &
+      "_space_group_IT_number .", &
+      "_space_group_symop_operation_xyz 'x, y, z'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0.1 0.2 0.3"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 1, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, all(abs(struc%xyz(:, 1) - matmul(struc%lattice, &
+      & [0.1_wp, 0.2_wp, 0.3_wp])) < thr), "Atom position does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid7_cif
+
+
+subroutine test_valid8_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_many_symops", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_symmetry_equiv_pos_as_xyz", &
+      "'x, y, z'", &
+      "'-x, y, z'", &
+      "'x, -y, z'", &
+      "'x, y, -z'", &
+      "'-x, -y, z'", &
+      "'-x, y, -z'", &
+      "'x, -y, -z'", &
+      "'-x, -y, -z'", &
+      "'y, x, z'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0.1 0.2 0.3"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 9, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, all(abs(struc%xyz(:, 9) - matmul(struc%lattice, &
+      & [0.2_wp, 0.1_wp, 0.3_wp])) < thr), "Image of last operation does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid8_cif
+
+
+subroutine test_valid9_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit, i
+   integer, parameter :: nsite = 70
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_many_sites", &
+      "_cell_length_a 50.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z"
+   do i = 1, nsite
+      write(unit, "(a, i0, 1x, f6.4, a)") "H", i, real(i, wp) / 100, " 0 0"
+   end do
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, nsite, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, nsite), 0.7_wp*50.0_wp*aatoau, thr=thr)
+   if (allocated(error)) return
+
+end subroutine test_valid9_cif
+
+
 subroutine test_invalid8_cif(error)
 
    !> Error handling
@@ -734,6 +873,452 @@ subroutine test_invalid13_cif(error)
    close(unit)
 
 end subroutine test_invalid13_cif
+
+
+subroutine test_invalid14_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_incomplete_row", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0", &
+      "Cl 0.5 0.5"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid14_cif
+
+
+subroutine test_invalid15_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_empty_loop_header", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid15_cif
+
+
+subroutine test_invalid16_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_missing_fract_y", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_z", &
+      "Na 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid16_cif
+
+
+subroutine test_invalid17_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_bad_occupancy", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "_atom_site_occupancy", &
+      "Na 0 0 0 full"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid17_cif
+
+
+subroutine test_invalid18_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_unknown_type_symbol", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_type_symbol", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "? 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid18_cif
+
+
+subroutine test_invalid19_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_bad_cell_length", &
+      "_cell_length_a five", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid19_cif
+
+
+subroutine test_invalid20_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_text_field_symop", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_symmetry_equiv_pos_as_xyz", &
+      ";", &
+      "x, y, z", &
+      ";", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid20_cif
+
+
+subroutine test_valid10_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_parser_details", &
+      "_publ_author_name 'O'Brien, Pat'", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_symmetry_equiv_pos_as_xyz", &
+      "'x, y, z'", &
+      "'0.5x+1/2, y, z'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0.2 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 2, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, 2), 0.6_wp*5.0_wp*aatoau, thr=thr)
+   if (allocated(error)) return
+
+end subroutine test_valid10_cif
+
+
+subroutine test_invalid21_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_unterminated_text", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0", &
+      "_publ_section_title", &
+      ";", &
+      "Text field without end"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid21_cif
+
+
+subroutine test_invalid22_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_unterminated_quote", &
+      "_publ_author_name 'O'Brien, Pat", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid22_cif
+
+
+subroutine test_invalid23_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_empty_coordinate", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na '' 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid23_cif
+
+
+subroutine test_invalid24_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_empty_label", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "'' 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid24_cif
+
+
+subroutine test_invalid25_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_symop_four_components", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_symmetry_equiv_pos_as_xyz", &
+      "'x, y, z, x'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid25_cif
+
+
+subroutine test_invalid26_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_symop_bad_fraction", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_symmetry_equiv_pos_as_xyz", &
+      "'x+1/, y, z'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid26_cif
+
+
+subroutine test_invalid27_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_symop_bad_character", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_symmetry_equiv_pos_as_xyz", &
+      "'x, y, w'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid27_cif
 
 
 end module test_read_cif
