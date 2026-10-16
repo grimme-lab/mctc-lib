@@ -10,7 +10,7 @@ enable_language("Fortran")
 if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
   include(CMakeFindDependencyMacro)
 
-  if(@MCTCLIB_WITH_OpenMP@)
+  if(MCTCLIB_WITH_OpenMP)
     find_dependency("OpenMP" COMPONENTS Fortran)
   endif()
 
