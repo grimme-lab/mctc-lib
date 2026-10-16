@@ -20,7 +20,7 @@ module mctc_io_read_aims
    use mctc_io_structure, only : structure_type, new
    use mctc_io_symbols, only : symbol_length, to_number
    use mctc_io_utils, only : next_line, token_type, next_token, io_error, filename, &
-      read_next_token, to_string
+      read_next_token, to_lower, to_string
    implicit none
    private
 
@@ -44,7 +44,7 @@ subroutine read_aims(mol, unit, error)
    integer :: stat, pos, lnum, ilt, iat
    type(token_type) :: token
    character(len=:), allocatable :: line
-   real(wp) :: x, y, z
+   real(wp) :: x, y, z, charge, moment
    character(len=symbol_length), allocatable :: sym(:)
    real(wp), allocatable :: xyz(:, :), abc(:, :), lattice(:, :)
    logical :: is_frac, periodic(3)
@@ -58,6 +58,8 @@ subroutine read_aims(mol, unit, error)
    iat = 0
    ilt = 0
    periodic(:) = .false.
+   charge = 0.0_wp
+   moment = 0.0_wp
 
    lnum = 0
    stat = 0
@@ -68,7 +70,7 @@ subroutine read_aims(mol, unit, error)
       if (line(1:1) == "#") cycle
 
       call next_token(line, pos, token)
-      select case(line(token%first:token%last))
+      select case(to_lower(line(token%first:token%last)))
       case("atom", "atom_frac")
          is_frac = token%last - token%first + 1 > 4
          call read_next_token(line, pos, token, x, stat)
@@ -132,6 +134,22 @@ subroutine read_aims(mol, unit, error)
          if (.not.allocated(lattice)) allocate(lattice(3, 3), source=0.0_wp)
          lattice(:, ilt) = [x, y, z] * aatoau
 
+      case("initial_charge")
+         call read_next_token(line, pos, token, charge, stat)
+         if (stat /= 0) then
+            call io_error(error, "Cannot read initial charge", &
+               & line, token, filename(unit), lnum, "expected real value")
+            exit
+         end if
+
+      case("initial_moment")
+         call read_next_token(line, pos, token, moment, stat)
+         if (stat /= 0) then
+            call io_error(error, "Cannot read initial moment", &
+               & line, token, filename(unit), lnum, "expected real value")
+            exit
+         end if
+
       case default
          call io_error(error, "Unexpected keyword found", &
             & line, token, filename(unit), lnum, "invalid in this context")
@@ -154,7 +172,8 @@ subroutine read_aims(mol, unit, error)
       periodic(:ilt) = .true.
    end if
 
-   call new(mol, sym(:iat), xyz, lattice=lattice, periodic=periodic)
+   call new(mol, sym(:iat), xyz, charge=charge, uhf=nint(moment), &
+      & lattice=lattice, periodic=periodic)
 
 end subroutine read_aims
 

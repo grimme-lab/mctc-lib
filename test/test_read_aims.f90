@@ -40,6 +40,8 @@ subroutine collect_read_aims(testsuite)
       & new_unittest("valid5-aims", test_valid5_aims), &
       & new_unittest("valid6-aims", test_valid6_aims), &
       & new_unittest("valid7-aims", test_valid7_aims), &
+      & new_unittest("valid8-aims", test_valid8_aims), &
+      & new_unittest("valid9-aims", test_valid9_aims), &
       & new_unittest("invalid1-aims", test_invalid1_aims, should_fail=.true.), &
       & new_unittest("invalid2-aims", test_invalid2_aims, should_fail=.true.), &
       & new_unittest("invalid3-aims", test_invalid3_aims, should_fail=.true.), &
@@ -353,6 +355,61 @@ subroutine test_valid7_aims(error)
 
 end subroutine test_valid7_aims
 
+
+
+subroutine test_valid8_aims(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "initial_charge 1.0", &
+      "initial_moment 2.0", &
+      "atom 0.0 0.0 0.0 H", &
+      "atom 0.0 0.0 0.0 He"
+   rewind(unit)
+
+   call read_aims(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%charge, 1.0_wp, "Charge does not match")
+   if (allocated(error)) return
+   call check(error, struc%uhf, 2, "Spin information does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid8_aims
+
+
+subroutine test_valid9_aims(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status='scratch', newunit=unit)
+   write(unit, '(a)') &
+      "initial_charge -1.0", &
+      "initial_moment -2.0", &
+      "atom 0.0 0.0 0.0 H"
+   rewind(unit)
+
+   call read_aims(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%charge, -1.0_wp, "Charge does not match")
+   if (allocated(error)) return
+   call check(error, struc%uhf, -2, "Spin information does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid9_aims
 
 
 subroutine test_invalid1_aims(error)
