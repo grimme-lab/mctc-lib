@@ -269,8 +269,9 @@ meson setup _build -Djson=enabled -Dopenmp=true
 
 | Option | Description |
 |--------|-------------|
-| `WITH_JSON` | Enable JSON support |
-| `WITH_OpenMP` | Enable OpenMP |
+| `MCTCLIB_WITH_JSON` | Enable JSON support (default: OFF) |
+| `MCTCLIB_WITH_OpenMP` | Enable OpenMP (default: ON) |
+| `WITH_JSON`, `WITH_OpenMP` | Deprecated aliases, only used as defaults for the `MCTCLIB_*` options |
 
 ## Troubleshooting
 

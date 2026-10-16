@@ -111,9 +111,6 @@ if install
       output: meson.project_name() + '-targets.cmake',
       configuration: cmake_data,
     ),
-    files('config'/'cmake'/'Findjonquil.cmake'),
-    files('config'/'cmake'/'Findtoml-f.cmake'),
-    files('config'/'cmake'/'mctc-utils.cmake'),
   ]
   install_data(
     cmake_files,
