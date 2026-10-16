@@ -24,7 +24,7 @@ project(
 include(GNUInstallDirs)
 
 # Build options
-option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" OFF)
+option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" ON)
 option(CMAKE_POSITION_INDEPENDENT_CODE
        "Enable position independent code support" ON)
 # Unprefixed options are kept for compatibility and only provide the defaults
@@ -104,11 +104,8 @@ add_subdirectory("src")
 add_subdirectory("app")
 
 # Export targets for other projects
-install(
-  TARGETS "${PROJECT_NAME}" "${PROJECT_NAME}-lib"
-  EXPORT "${PROJECT_NAME}-targets"
-  LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-  ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+install(TARGETS "${PROJECT_NAME}" "${PROJECT_NAME}-lib"
+        EXPORT "${PROJECT_NAME}-targets")
 install(
   EXPORT "${PROJECT_NAME}-targets"
   NAMESPACE "${PROJECT_NAME}::"
