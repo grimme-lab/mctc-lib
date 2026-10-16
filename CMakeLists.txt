@@ -56,7 +56,7 @@ if(MCTCLIB_WITH_OpenMP)
     OpenMP::OpenMP_Fortran
   )
 endif()
-if(WITH_JSON)
+if(MCTCLIB_WITH_JSON)
   target_link_libraries(
     "${PROJECT_NAME}-lib"
     PRIVATE
