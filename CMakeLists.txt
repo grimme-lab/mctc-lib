@@ -70,7 +70,7 @@ set(module-dir "${${PROJECT_NAME}-module-dir}")
 # Dependencies
 
 if(MCTCLIB_WITH_OpenMP)
-  find_package(OpenMP COMPONENTS Fortran)
+  find_package(OpenMP REQUIRED COMPONENTS Fortran)
 endif()
 
 if(MCTCLIB_WITH_JSON)
