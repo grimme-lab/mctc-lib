@@ -81,6 +81,10 @@ The following geometry formats are supported for both reading and writing:
 |qchem
 |Q-Chem molecule block
 |.qchem
+
+|cif
+|Crystallographic Information File (read only)
+|.cif
 |===
 
 The `.xyz` extension is used for both ordinary and Extended XYZ. When writing,

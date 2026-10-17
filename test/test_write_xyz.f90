@@ -15,6 +15,7 @@
 module test_write_xyz
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
+   use mctc_io_math, only : matdet_3x3
    use mctc_io_read_xyz, only : read_xyz
    use mctc_io_structure, only : structure_type, new
    use mctc_io_write_xyz, only : write_xyz
@@ -36,7 +37,8 @@ subroutine collect_write_xyz(testsuite)
 
    testsuite = [ &
       & new_unittest("valid1-xyz", test_valid1_xyz), &
-      & new_unittest("valid2-periodic-xyz", test_valid2_periodic_xyz) &
+      & new_unittest("valid2-periodic-xyz", test_valid2_periodic_xyz), &
+      & new_unittest("valid3-xyz", test_valid3_xyz) &
       & ]
 
 end subroutine collect_write_xyz
@@ -108,6 +110,33 @@ subroutine test_valid2_periodic_xyz(error)
    call check(error, struc%comment, 'roundtrip "test"')
 
 end subroutine test_valid2_periodic_xyz
+
+
+subroutine test_valid3_xyz(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+   real(wp) :: chirality
+
+   call get_structure(struc, "chiral")
+   chirality = matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3))
+
+   open(status="scratch", newunit=unit)
+   call write_xyz(struc, unit)
+   rewind(unit)
+
+   call read_xyz(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3)), &
+      & chirality, thr=1.0e-8_wp, message="Handedness of the structure is not preserved")
+   if (allocated(error)) return
+
+end subroutine test_valid3_xyz
 
 
 end module test_write_xyz
