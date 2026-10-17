@@ -18,11 +18,12 @@ module mctc_wignerseitz
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp, i8
    use mctc_io, only : structure_type
+   use mctc_io_math, only : outerprod
    implicit none
    private
 
    public :: new_wignerseitz_cell, get_wignerseitz_weights, wignerseitz_cell, &
-   & get_pairs
+      & get_pairs
 
    !> Wigner-Seitz cell and its nearest image translations
    type :: wignerseitz_cell
@@ -265,8 +266,7 @@ subroutine get_wignerseitz_weights(self, jat, iat, rij, weight, dwdr, dwdL)
       delta = max(0.0_wp, dot_product(vec, vec) - dot_product(refvec, refvec))
       dshape = smooth_image_weight_derivative(delta)
       ddelta(:) = 2.0_wp*(vec - refvec)
-      ddeltaL(:, :) = 2.0_wp*(spread(vec, 1, 3)*spread(vec, 2, 3) &
-      & - spread(refvec, 1, 3)*spread(refvec, 2, 3))
+      ddeltaL(:, :) = 2.0_wp*(outerprod(vec, vec) - outerprod(refvec, refvec))
       sum_dr(:) = sum_dr + dshape*ddelta
       sum_dL(:, :) = sum_dL + dshape*ddeltaL
    end do
@@ -277,8 +277,7 @@ subroutine get_wignerseitz_weights(self, jat, iat, rij, weight, dwdr, dwdL)
       delta = max(0.0_wp, dot_product(vec, vec) - dot_product(refvec, refvec))
       dshape = smooth_image_weight_derivative(delta)
       ddelta(:) = 2.0_wp*(vec - refvec)
-      ddeltaL(:, :) = 2.0_wp*(spread(vec, 1, 3)*spread(vec, 2, 3) &
-      & - spread(refvec, 1, 3)*spread(refvec, 2, 3))
+      ddeltaL(:, :) = 2.0_wp*(outerprod(vec, vec) - outerprod(refvec, refvec))
       if (present(dwdr)) then
          dwdr(:, img) = (dshape*ddelta - weight(img)*sum_dr) / sum_shape
       end if

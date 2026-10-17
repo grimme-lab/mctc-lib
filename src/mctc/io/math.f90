@@ -19,7 +19,8 @@ module mctc_io_math
    implicit none
    private
 
-   public :: matdet_3x3, matinv_3x3, crossprod, eigval_3x3, eigvec_3x3
+   public :: matdet_3x3, matinv_3x3, crossprod, outerprod, &
+      & eigval_3x3, eigvec_3x3
 
 
    real(wp), parameter :: twothirdpi = 2.0_wp * pi / 3.0_wp
@@ -96,6 +97,29 @@ pure function crossprod(a,b) result(c)
 end function crossprod
 
 
+!> Implements the outer product of two vectors, c(i, j) = a(i) * b(j)
+pure function outerprod(a, b) result(c)
+
+   !> First vector
+   real(wp), intent(in) :: a(:)
+
+   !> Second vector
+   real(wp), intent(in) :: b(:)
+
+   !> Outer product matrix
+   real(wp) :: c(size(a), size(b))
+
+   integer :: i, j
+
+   do j = 1, size(b)
+      do i = 1, size(a)
+         c(i, j) = a(i) * b(j)
+      end do
+   end do
+
+end function outerprod
+
+
 !> Calculates eigenvalues based on the trigonometric solution of A = pB + qI
 pure subroutine eigval_3x3(a, w)
 
@@ -133,7 +157,7 @@ end subroutine eigval_3x3
 
 
 !> Calculates eigenvector using an analytical method based on vector cross
-!  products.
+!> products.
 pure subroutine eigvec_3x3(a, w, q)
    real(wp), intent(inout) :: a(3,3)
    real(wp), intent(out) :: w(3)
