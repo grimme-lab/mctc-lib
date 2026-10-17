@@ -20,6 +20,7 @@ module test_csrlist
    use mctc_env, only : wp, i8, timer_type, format_time
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed, check
+   use mctc_io_math, only : outerprod
    use mctc_io_resize, only : resize
    use mctc_io_structure, only : structure_type, new
    use mctc_wignerseitz, only : wignerseitz_cell, new_wignerseitz_cell
@@ -159,9 +160,9 @@ subroutine make_supercell(mol, rep)
 
    real(wp), allocatable :: xyz(:, :), lattice(:, :)
    integer, allocatable :: num(:)
-   integer :: i, j, k, c
+   integer :: i, j, k, l, c
 
-   num = reshape(spread([mol%num(mol%id)], 2, product(rep)), [product(rep)*mol%nat])
+   num = [(mol%num(mol%id), i=1, product(rep))]
    lattice = reshape(&
       [rep(1)*mol%lattice(:, 1), rep(2)*mol%lattice(:, 2), rep(3)*mol%lattice(:, 3)], &
       shape(mol%lattice))
@@ -171,7 +172,8 @@ subroutine make_supercell(mol, rep)
       do j = 0, rep(2)-1
          do k = 0, rep(3)-1
             xyz(:, c+1:c+mol%nat) = mol%xyz &
-               & + spread(matmul(mol%lattice, [real(wp):: i, j, k]), 2, mol%nat)
+               & + outerprod(matmul(mol%lattice, [real(wp):: i, j, k]), &
+               & [(1.0_wp, l=1, mol%nat)])
             c = c + mol%nat
          end do
       end do

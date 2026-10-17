@@ -18,6 +18,7 @@ module mctc_ncoord_type
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp, i8
    use mctc_io, only : structure_type
+   use mctc_io_math, only : outerprod
 
    implicit none
    private
@@ -393,7 +394,7 @@ contains
                   & + countd * self%directed_factor
                dcndr_local(:, jat, iat) = dcndr_local(:, jat, iat) - countd
 
-               sigma = spread(countd, 1, 3) * spread(rij, 2, 3)
+               sigma = outerprod(rij, countd)
 
                dcndL_local(:, :, iat) = dcndL_local(:, :, iat) + sigma
                if (iat /= jat) then
@@ -486,7 +487,7 @@ contains
 
                countf = den * self%ncoord_count(izp, jzp, r1)
                countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
-               sigma = spread(countd, 1, 3) * spread(rij, 2, 3)
+               sigma = outerprod(rij, countd)
 
                cn_local(iat) = cn_local(iat) + countf
                dcndL_local(:, :, iat) = dcndL_local(:, :, iat) + sigma
@@ -593,7 +594,7 @@ contains
                gradient_local(:, iat) = gradient_local(:, iat) + countd * dEdcnij
                gradient_local(:, jat) = gradient_local(:, jat) - countd * dEdcnij
 
-               ds = spread(countd, 1, 3) * spread(rij, 2, 3)
+               ds = outerprod(rij, countd)
 
                sigma_local(:, :) = sigma_local(:, :) &
                   & + ds * (dEdcn(iat) * idamp + &
@@ -710,7 +711,7 @@ contains
 
                countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
 
-               ds = spread(countd, 1, 3) * spread(rij, 2, 3)
+               ds = outerprod(rij, countd)
                sigma_local(:, :) = sigma_local(:, :) + ds * dEdcns
 
                if (iat == jat) cycle
