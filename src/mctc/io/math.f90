@@ -157,7 +157,7 @@ end subroutine eigval_3x3
 
 
 !> Calculates eigenvector using an analytical method based on vector cross
-!  products.
+!> products.
 pure subroutine eigvec_3x3(a, w, q)
    real(wp), intent(inout) :: a(3,3)
    real(wp), intent(out) :: w(3)
