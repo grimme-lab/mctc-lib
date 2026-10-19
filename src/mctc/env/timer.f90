@@ -143,7 +143,7 @@ function format_time(time) result(string)
    hours = int(secs/3600.0_wp)
    secs = secs - hours*3600.0_wp
    mins = int(secs/60.0_wp)
-   secs = time - mins*60.0_wp
+   secs = secs - mins*60.0_wp
 
    if (days > 0) then
       string = format_string_int(days, '(i0, " d,")')
