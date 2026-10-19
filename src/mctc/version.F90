@@ -23,10 +23,10 @@ module mctc_version
 
 
    !> String representation of the mctc-lib version
-   character(len=*), parameter :: mctc_version_string = "0.6.1"
+   character(len=*), parameter :: mctc_version_string = "0.7.0"
 
    !> Numeric representation of the mctc-lib version
-   integer, parameter :: mctc_version_compact(3) = [0, 6, 1]
+   integer, parameter :: mctc_version_compact(3) = [0, 7, 0]
 
 
    !> With support for JSON
