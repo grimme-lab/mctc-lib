@@ -25,6 +25,7 @@ list(
   "${dir}/convert.f90"
   "${dir}/filetype.f90"
   "${dir}/math.f90"
+  "${dir}/periodic.f90"
   "${dir}/read.f90"
   "${dir}/resize.f90"
   "${dir}/structure.f90"
