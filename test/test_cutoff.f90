@@ -16,7 +16,7 @@ module test_cutoff
    use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
-   & test_failed
+   & check, test_failed
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
    implicit none
@@ -39,6 +39,7 @@ contains
       testsuite = [ &
       & new_unittest("lattice-points-cutoff", test_lattice_points_cutoff), &
       & new_unittest("lattice-points-rep", test_lattice_points_rep), &
+      & new_unittest("lattice-points-partial-pbc", test_lattice_points_partial_pbc), &
       & new_unittest("wrap", test_wrap) &
       & ]
 
@@ -316,5 +317,104 @@ contains
       end if
 
    end subroutine test_wrap
+
+
+   subroutine test_lattice_points_partial_pbc(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      real(wp), allocatable :: trans1(:, :), trans2(:, :)
+      real(wp) :: lat(3, 3), a1(3), a2(3)
+      logical :: masks1d(3, 3), masks2d(3, 3)
+      integer :: imask, j, p1, p2, np
+
+      masks1d = reshape([ &
+         & .true., .false., .false., &
+         & .false., .true., .false., &
+         & .false., .false., .true.], [3, 3])
+      masks2d = reshape([ &
+         & .true., .true., .false., &
+         & .true., .false., .true., &
+         & .false., .true., .true.], [3, 3])
+
+      ! 1D rotated periodic vector (length 5.0) across TFF, FTF, FFT with zero nonperiodic columns
+      a1 = [3.0_wp, 4.0_wp, 0.0_wp]
+      do imask = 1, 3
+         lat = 0.0_wp
+         lat(:, imask) = a1
+         call get_lattice_points(masks1d(:, imask), lat, thr2, trans1)
+         call check(error, size(trans1, 1), 3)
+         if (allocated(error)) return
+         call check(error, size(trans1, 2), 3)
+         if (allocated(error)) return
+
+         ! ceiling(12.0 / 5.0) = 3 -> 2*3 + 1 = 7 translations
+         call get_lattice_points(masks1d(:, imask), lat, 12.0_wp, trans1)
+         call check(error, size(trans1, 2), 7)
+         if (allocated(error)) return
+
+         ! Nonperiodic lattice vectors must be completely ignored
+         do j = 1, 3
+            if (j /= imask) lat(:, j) = [100.0_wp * j, -50.0_wp, 250.0_wp]
+         end do
+         call get_lattice_points(masks1d(:, imask), lat, 12.0_wp, trans2)
+         call check(error, size(trans2, 2), 7)
+         if (allocated(error)) return
+         if (maxval(abs(trans1 - trans2)) > thr) then
+            call test_failed(error, "1D lattice points depend on nonperiodic lattice vectors")
+            return
+         end if
+      end do
+
+      ! 2D skewed periodic subspace across TTF, TFT, FTT with zero nonperiodic column
+      ! a1 = [5, 0, 0] (len1 = 5), a2 = [4, 3, 0] (len2 = 5), area = 15 -> h1 = h2 = 3.0
+      a1 = [5.0_wp, 0.0_wp, 0.0_wp]
+      a2 = [4.0_wp, 3.0_wp, 0.0_wp]
+      do imask = 1, 3
+         select case (imask)
+         case (1); p1 = 1; p2 = 2; np = 3
+         case (2); p1 = 1; p2 = 3; np = 2
+         case default; p1 = 2; p2 = 3; np = 1
+         end select
+         lat = 0.0_wp
+         lat(:, p1) = a1
+         lat(:, p2) = a2
+         call get_lattice_points(masks2d(:, imask), lat, thr2, trans1)
+         call check(error, size(trans1, 2), 9)
+         if (allocated(error)) return
+
+         ! rthr = 7.0 -> ceiling(7.0 / 3.0) = 3 along both active axes -> (2*3+1)^2 = 49
+         call get_lattice_points(masks2d(:, imask), lat, 7.0_wp, trans1)
+         call check(error, size(trans1, 2), 49)
+         if (allocated(error)) return
+
+         lat(:, np) = [42.0_wp, -99.0_wp, 500.0_wp]
+         call get_lattice_points(masks2d(:, imask), lat, 7.0_wp, trans2)
+         call check(error, size(trans2, 2), 49)
+         if (allocated(error)) return
+         if (maxval(abs(trans1 - trans2)) > thr) then
+            call test_failed(error, "2D lattice points depend on nonperiodic lattice vector")
+            return
+         end if
+      end do
+
+      ! Degenerate active periodic subspaces and negative cutoffs must return origin safely
+      lat = 0.0_wp
+      call get_lattice_points([.true., .false., .false.], lat, 10.0_wp, trans1)
+      call check(error, size(trans1, 2), 1)
+      if (allocated(error)) return
+
+      lat(:, 1) = a1
+      lat(:, 2) = 2.0_wp * a1
+      call get_lattice_points([.true., .true., .false.], lat, 10.0_wp, trans1)
+      call check(error, size(trans1, 2), 1)
+      if (allocated(error)) return
+
+      call get_lattice_points([.true., .false., .false.], lat, -1.0_wp, trans1)
+      call check(error, size(trans1, 2), 1)
+      if (allocated(error)) return
+
+   end subroutine test_lattice_points_partial_pbc
 
 end module test_cutoff

@@ -18,7 +18,7 @@
 !> Realspace cutoff and lattice point generator utilities
 module mctc_cutoff
    use mctc_env, only : wp
-   use mctc_io_math, only : matinv_3x3
+   use mctc_io_math, only : crossprod, matinv_3x3
    implicit none
    private
 
@@ -30,12 +30,15 @@ module mctc_cutoff
       module procedure :: get_lattice_points_rep_3d
    end interface get_lattice_points
 
+   !> Tolerance for detecting degenerate lattice vectors, areas, and volumes
+   real(wp), parameter :: tol_deg = 1.0e-12_wp
+
 
 contains
 
 
 !> Generate lattice points from repetitions
-subroutine get_lattice_points_rep_3d(lat, rep, origin, trans)
+pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans)
 
    !> Lattice vectors
    real(wp), intent(in) :: lat(:, :)
@@ -50,6 +53,7 @@ subroutine get_lattice_points_rep_3d(lat, rep, origin, trans)
    real(wp), allocatable, intent(out) :: trans(:, :)
 
    integer :: itr, ix, iy, iz, jx, jy, jz
+   real(wp) :: vec(3)
 
    itr = 0
    if (origin) then
@@ -61,8 +65,11 @@ subroutine get_lattice_points_rep_3d(lat, rep, origin, trans)
                   do jy = 1, merge(-1, 1, iy > 0), -2
                      do jz = 1, merge(-1, 1, iz > 0), -2
                         itr = itr + 1
-                        trans(:, itr) = lat(:, 1)*ix*jx &
-                           & + lat(:, 2)*iy*jy + lat(:, 3)*iz*jz
+                        vec = 0.0_wp
+                        if (ix > 0) vec = vec + lat(:, 1)*ix*jx
+                        if (iy > 0) vec = vec + lat(:, 2)*iy*jy
+                        if (iz > 0) vec = vec + lat(:, 3)*iz*jz
+                        trans(:, itr) = vec
                      end do
                   end do
                end do
@@ -79,8 +86,11 @@ subroutine get_lattice_points_rep_3d(lat, rep, origin, trans)
                   do jy = 1, merge(-1, 1, iy > 0), -2
                      do jz = 1, merge(-1, 1, iz > 0), -2
                         itr = itr + 1
-                        trans(:, itr) = lat(:, 1)*ix*jx &
-                           & + lat(:, 2)*iy*jy + lat(:, 3)*iz*jz
+                        vec = 0.0_wp
+                        if (ix > 0) vec = vec + lat(:, 1)*ix*jx
+                        if (iy > 0) vec = vec + lat(:, 2)*iy*jy
+                        if (iz > 0) vec = vec + lat(:, 3)*iz*jz
+                        trans(:, itr) = vec
                      end do
                   end do
                end do
@@ -93,7 +103,7 @@ end subroutine get_lattice_points_rep_3d
 
 
 !> Create lattice points within a given cutoff
-subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans)
+pure subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans)
 
    !> Periodic dimensions
    logical, intent(in) :: periodic(:)
@@ -113,51 +123,101 @@ subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans)
       allocate(trans(3, 1))
       trans(:, :) = 0.0_wp
    else
-      call get_translations(lat, rthr, rep)
+      call get_translations(periodic, lat, rthr, rep)
       call get_lattice_points(lat, rep, .true., trans)
    end if
 
 end subroutine get_lattice_points_cutoff
 
 
-!> Generate a supercell based on a realspace cutoff, this subroutine
-!> doesn't know anything about the convergence behaviour of the
-!> associated property.
-pure subroutine get_translations(lat, rthr, rep)
+!> Generate supercell repetition counts for active periodic directions based on a
+!> realspace cutoff using the metric of the active periodic subspace.
+pure subroutine get_translations(periodic, lat, rthr, rep)
+   logical, intent(in) :: periodic(:)
+   real(wp), intent(in) :: lat(:, :)
    real(wp), intent(in) :: rthr
-   real(wp), intent(in) :: lat(3, 3)
    integer, intent(out) :: rep(3)
+
+   integer :: i, ndim, p_axes(3)
+   real(wp) :: a1(3), a2(3), a3(3)
    real(wp) :: normx(3), normy(3), normz(3)
+   real(wp) :: len1, len2, len3, area, vol
    real(wp) :: cos10, cos21, cos32
 
-   ! find normal to the plane...
-   call crossproduct(lat(:, 2), lat(:, 3), normx)
-   call crossproduct(lat(:, 3), lat(:, 1), normy)
-   call crossproduct(lat(:, 1), lat(:, 2), normz)
-   ! ...normalize it...
-   normx = normx/norm2(normx)
-   normy = normy/norm2(normy)
-   normz = normz/norm2(normz)
-   ! cos angles between normals and lattice vectors
-   cos10 = sum(normx*lat(:, 1))
-   cos21 = sum(normy*lat(:, 2))
-   cos32 = sum(normz*lat(:, 3))
-   rep(1) = ceiling(abs(rthr/cos10))
-   rep(2) = ceiling(abs(rthr/cos21))
-   rep(3) = ceiling(abs(rthr/cos32))
+   rep(:) = 0
+   if (rthr < 0.0_wp .or. .not. is_finite_scalar(rthr)) return
+   if (size(lat, 1) < 3 .or. size(lat, 2) < 3) return
 
-contains
+   ndim = 0
+   p_axes(:) = 0
+   do i = 1, min(3, size(periodic))
+      if (periodic(i)) then
+         if (.not. is_finite_vec(lat(:, i))) return
+         ndim = ndim + 1
+         p_axes(ndim) = i
+      end if
+   end do
 
-   pure subroutine crossproduct(a, b, c)
-      real(wp), intent(in) :: a(3)
-      real(wp), intent(in) :: b(3)
-      real(wp), intent(out) :: c(3)
-      c(1)=a(2)*b(3)-b(2)*a(3)
-      c(2)=a(3)*b(1)-b(3)*a(1)
-      c(3)=a(1)*b(2)-b(1)*a(2)
-   end subroutine crossproduct
+   select case (ndim)
+   case (1)
+      a1 = lat(:, p_axes(1))
+      len1 = norm2(a1)
+      if (len1 <= tol_deg) return
+      rep(p_axes(1)) = ceiling(rthr / len1)
+
+   case (2)
+      a1 = lat(:, p_axes(1))
+      a2 = lat(:, p_axes(2))
+      len1 = norm2(a1)
+      len2 = norm2(a2)
+      if (len1 <= tol_deg .or. len2 <= tol_deg) return
+      area = norm2(crossprod(a1, a2))
+      if (area <= tol_deg * len1 * len2) return
+      rep(p_axes(1)) = ceiling(rthr * len2 / area)
+      rep(p_axes(2)) = ceiling(rthr * len1 / area)
+
+   case (3)
+      a1 = lat(:, 1)
+      a2 = lat(:, 2)
+      a3 = lat(:, 3)
+      len1 = norm2(a1)
+      len2 = norm2(a2)
+      len3 = norm2(a3)
+      if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg) return
+      normx = crossprod(a2, a3)
+      normy = crossprod(a3, a1)
+      normz = crossprod(a1, a2)
+      vol = abs(dot_product(a1, normx))
+      if (vol <= tol_deg * len1 * len2 * len3) return
+      cos10 = vol / norm2(normx)
+      cos21 = vol / norm2(normy)
+      cos32 = vol / norm2(normz)
+      rep(1) = ceiling(rthr / cos10)
+      rep(2) = ceiling(rthr / cos21)
+      rep(3) = ceiling(rthr / cos32)
+   case default
+      continue
+   end select
 
 end subroutine get_translations
+
+
+pure elemental function is_finite_scalar(val) result(finite)
+   real(wp), intent(in) :: val
+   logical :: finite
+
+   finite = (val == val) .and. (abs(val) <= huge(1.0_wp))
+
+end function is_finite_scalar
+
+
+pure function is_finite_vec(vec) result(finite)
+   real(wp), intent(in) :: vec(:)
+   logical :: finite
+
+   finite = all(is_finite_scalar(vec))
+
+end function is_finite_vec
 
 
 subroutine wrap_to_central_cell(xyz, lattice, periodic)
