@@ -40,7 +40,8 @@ contains
       & new_unittest("lattice-points-cutoff", test_lattice_points_cutoff), &
       & new_unittest("lattice-points-rep", test_lattice_points_rep), &
       & new_unittest("lattice-points-partial-pbc", test_lattice_points_partial_pbc), &
-      & new_unittest("wrap", test_wrap) &
+      & new_unittest("wrap", test_wrap), &
+      & new_unittest("wrap-partial-pbc", test_wrap_partial_pbc) &
       & ]
 
    end subroutine collect_cutoff
@@ -416,5 +417,112 @@ contains
       if (allocated(error)) return
 
    end subroutine test_lattice_points_partial_pbc
+
+
+   subroutine test_wrap_partial_pbc(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      real(wp) :: lat(3, 3), a1(3), a2(3), r_perp1(3), r_perp2(3)
+      real(wp) :: xyz_ref(3, 3), xyz_test(3, 3), xyz_dummy(3, 3)
+      logical :: masks1d(3, 3), masks2d(3, 3)
+      integer :: imask, j, p1, p2, np
+
+      masks1d = reshape([ &
+         & .true., .false., .false., &
+         & .false., .true., .false., &
+         & .false., .false., .true.], [3, 3])
+      masks2d = reshape([ &
+         & .true., .true., .false., &
+         & .true., .false., .true., &
+         & .false., .true., .true.], [3, 3])
+
+      ! 0D with zero lattice: no-op
+      lat = 0.0_wp
+      xyz_ref = reshape([ &
+         & 1.5_wp, -2.3_wp, 4.7_wp, &
+         & -8.1_wp, 12.4_wp, -0.5_wp, &
+         & 0.0_wp, 0.0_wp, 100.0_wp], [3, 3])
+      xyz_test = xyz_ref
+      call wrap_to_central_cell(xyz_test, lat, [.false., .false., .false.])
+      if (maxval(abs(xyz_test - xyz_ref)) > thr) then
+         call test_failed(error, "0D wrap_to_central_cell modified coordinates")
+         return
+      end if
+
+      ! 1D rotated periodic vector (a1 = [3, 4, 12], ||a1|| = 13) with orthogonal displacements
+      a1 = [3.0_wp, 4.0_wp, 12.0_wp]
+      r_perp1 = [4.0_wp, -3.0_wp, 0.0_wp] ! orthogonal to a1
+      r_perp2 = [12.0_wp, 0.0_wp, -3.0_wp] ! orthogonal to a1
+      xyz_ref(:, 1) = 0.25_wp * a1 + 1.7_wp * r_perp1 - 0.8_wp * r_perp2
+      xyz_ref(:, 2) = 0.80_wp * a1 - 2.3_wp * r_perp1 + 3.1_wp * r_perp2
+      ! Near-boundary point: s1 = 1.0 - 0.5e-14 wraps to -0.5e-14
+      xyz_ref(:, 3) = (-0.5e-14_wp) * a1 + 0.5_wp * r_perp1
+
+      do imask = 1, 3
+         lat = 0.0_wp
+         lat(:, imask) = a1
+         xyz_test(:, 1) = xyz_ref(:, 1) - 3.0_wp * a1
+         xyz_test(:, 2) = xyz_ref(:, 2) + 5.0_wp * a1
+         xyz_test(:, 3) = xyz_ref(:, 3) + 2.0_wp * a1
+         call wrap_to_central_cell(xyz_test, lat, masks1d(:, imask))
+         if (maxval(abs(xyz_test - xyz_ref)) > 1.0e-11_wp) then
+            call test_failed(error, "1D wrap_to_central_cell failed to preserve nonperiodic components")
+            return
+         end if
+
+         ! Arbitrary nonperiodic columns must have zero effect
+         do j = 1, 3
+            if (j /= imask) lat(:, j) = [42.0_wp * j, -19.0_wp, 73.0_wp]
+         end do
+         xyz_dummy(:, 1) = xyz_ref(:, 1) + 4.0_wp * a1
+         xyz_dummy(:, 2) = xyz_ref(:, 2) - 2.0_wp * a1
+         xyz_dummy(:, 3) = xyz_ref(:, 3) - 1.0_wp * a1
+         call wrap_to_central_cell(xyz_dummy, lat, masks1d(:, imask))
+         if (maxval(abs(xyz_dummy - xyz_ref)) > 1.0e-11_wp) then
+            call test_failed(error, "1D wrap_to_central_cell depends on nonperiodic lattice vectors")
+            return
+         end if
+      end do
+
+      ! 2D skewed rotated periodic subspace: a1 = [4, 3, 0], a2 = [-3, 4, 5], normal = [15, -20, 25]
+      a1 = [4.0_wp, 3.0_wp, 0.0_wp]
+      a2 = [-3.0_wp, 4.0_wp, 5.0_wp]
+      r_perp1 = [3.0_wp, -4.0_wp, 5.0_wp] ! orthogonal to both a1 and a2
+      xyz_ref(:, 1) = 0.20_wp * a1 + 0.35_wp * a2 + 2.5_wp * r_perp1
+      xyz_ref(:, 2) = 0.75_wp * a1 + 0.60_wp * a2 - 4.1_wp * r_perp1
+      xyz_ref(:, 3) = 0.10_wp * a1 + 0.90_wp * a2 + 0.0_wp * r_perp1
+
+      do imask = 1, 3
+         select case (imask)
+         case (1); p1 = 1; p2 = 2; np = 3
+         case (2); p1 = 1; p2 = 3; np = 2
+         case default; p1 = 2; p2 = 3; np = 1
+         end select
+         lat = 0.0_wp
+         lat(:, p1) = a1
+         lat(:, p2) = a2
+         xyz_test(:, 1) = xyz_ref(:, 1) + 3.0_wp * a1 - 2.0_wp * a2
+         xyz_test(:, 2) = xyz_ref(:, 2) - 4.0_wp * a1 + 5.0_wp * a2
+         xyz_test(:, 3) = xyz_ref(:, 3) + 1.0_wp * a1 + 1.0_wp * a2
+         call wrap_to_central_cell(xyz_test, lat, masks2d(:, imask))
+         if (maxval(abs(xyz_test - xyz_ref)) > 1.0e-11_wp) then
+            call test_failed(error, "2D wrap_to_central_cell failed on skewed rotated subspace")
+            return
+         end if
+
+         lat(:, np) = [99.0_wp, -77.0_wp, 123.0_wp]
+         xyz_dummy(:, 1) = xyz_ref(:, 1) - 2.0_wp * a1 + 4.0_wp * a2
+         xyz_dummy(:, 2) = xyz_ref(:, 2) + 1.0_wp * a1 - 3.0_wp * a2
+         xyz_dummy(:, 3) = xyz_ref(:, 3) - 5.0_wp * a1 - 2.0_wp * a2
+         call wrap_to_central_cell(xyz_dummy, lat, masks2d(:, imask))
+         if (maxval(abs(xyz_dummy - xyz_ref)) > 1.0e-11_wp) then
+            call test_failed(error, "2D wrap_to_central_cell depends on nonperiodic lattice vector")
+            return
+         end if
+      end do
+
+   end subroutine test_wrap_partial_pbc
 
 end module test_cutoff

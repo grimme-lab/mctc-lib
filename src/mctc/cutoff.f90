@@ -220,21 +220,77 @@ pure function is_finite_vec(vec) result(finite)
 end function is_finite_vec
 
 
-subroutine wrap_to_central_cell(xyz, lattice, periodic)
+pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
    real(wp), intent(inout) :: xyz(:, :)
    real(wp), intent(in) :: lattice(:, :)
    logical, intent(in) :: periodic(:)
-   real(wp) :: invlat(3, 3), vec(3)
-   integer :: iat
+   real(wp) :: invlat(3, 3), vec(3), a1(3), a2(3), a3(3)
+   real(wp) :: g11, g12, g22, det2, b1, b2, s1, s2, s1_wrap, s2_wrap
+   real(wp) :: len1, len2, len3, vol
+   integer :: i, iat, ndim, p_axes(3)
 
    if (.not.any(periodic)) return
+   if (size(lattice, 1) < 3 .or. size(lattice, 2) < 3) return
 
-   invlat = matinv_3x3(lattice)
-   do iat = 1, size(xyz, 2)
-      vec(:) = matmul(invlat, xyz(:, iat))
-      vec(:) = shift_back_abc(vec)
-      xyz(:, iat) = matmul(lattice, vec)
+   ndim = 0
+   p_axes(:) = 0
+   do i = 1, min(3, size(periodic))
+      if (periodic(i)) then
+         if (.not. is_finite_vec(lattice(:, i))) return
+         ndim = ndim + 1
+         p_axes(ndim) = i
+      end if
    end do
+
+   select case (ndim)
+   case (1)
+      a1 = lattice(:, p_axes(1))
+      g11 = dot_product(a1, a1)
+      if (sqrt(g11) <= tol_deg) return
+      do iat = 1, size(xyz, 2)
+         s1 = dot_product(xyz(:, iat), a1) / g11
+         s1_wrap = shift_back_abc(s1)
+         xyz(:, iat) = xyz(:, iat) + (s1_wrap - s1) * a1
+      end do
+
+   case (2)
+      a1 = lattice(:, p_axes(1))
+      a2 = lattice(:, p_axes(2))
+      g11 = dot_product(a1, a1)
+      g12 = dot_product(a1, a2)
+      g22 = dot_product(a2, a2)
+      if (sqrt(g11) <= tol_deg .or. sqrt(g22) <= tol_deg) return
+      det2 = g11 * g22 - g12 * g12
+      if (det2 <= (tol_deg**2) * g11 * g22) return
+      do iat = 1, size(xyz, 2)
+         b1 = dot_product(xyz(:, iat), a1)
+         b2 = dot_product(xyz(:, iat), a2)
+         s1 = (g22 * b1 - g12 * b2) / det2
+         s2 = (-g12 * b1 + g11 * b2) / det2
+         s1_wrap = shift_back_abc(s1)
+         s2_wrap = shift_back_abc(s2)
+         xyz(:, iat) = xyz(:, iat) + (s1_wrap - s1) * a1 + (s2_wrap - s2) * a2
+      end do
+
+   case (3)
+      a1 = lattice(:, 1)
+      a2 = lattice(:, 2)
+      a3 = lattice(:, 3)
+      len1 = norm2(a1)
+      len2 = norm2(a2)
+      len3 = norm2(a3)
+      if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg) return
+      vol = abs(dot_product(a1, crossprod(a2, a3)))
+      if (vol <= tol_deg * len1 * len2 * len3) return
+      invlat = matinv_3x3(lattice)
+      do iat = 1, size(xyz, 2)
+         vec(:) = matmul(invlat, xyz(:, iat))
+         vec(:) = shift_back_abc(vec)
+         xyz(:, iat) = matmul(lattice, vec)
+      end do
+   case default
+      continue
+   end select
 
 end subroutine wrap_to_central_cell
 
@@ -252,8 +308,8 @@ elemental function shift_back_abc(in) result(out)
    if(in > (1.0_wp + p_pbc_eps)) then
      out = in - real(floor  ( in),wp)
    end if
-   if (abs(in - 1.0_wp) < p_pbc_eps) then
-     out = in - 1.0_wp
+   if (abs(out - 1.0_wp) < p_pbc_eps) then
+     out = out - 1.0_wp
    end if
 end function shift_back_abc
 
