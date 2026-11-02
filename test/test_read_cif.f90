@@ -47,6 +47,8 @@ subroutine collect_read_cif(testsuite)
       & new_unittest("valid8-cif", test_valid8_cif), &
       & new_unittest("valid9-cif", test_valid9_cif), &
       & new_unittest("valid10-cif", test_valid10_cif), &
+      & new_unittest("valid11-cif", test_valid11_cif), &
+      & new_unittest("valid12-cif", test_valid12_cif), &
       & new_unittest("invalid1-cif", test_invalid1_cif, should_fail=.true.), &
       & new_unittest("invalid2-cif", test_invalid2_cif, should_fail=.true.), &
       & new_unittest("invalid3-cif", test_invalid3_cif, should_fail=.true.), &
@@ -73,7 +75,13 @@ subroutine collect_read_cif(testsuite)
       & new_unittest("invalid24-cif", test_invalid24_cif, should_fail=.true.), &
       & new_unittest("invalid25-cif", test_invalid25_cif, should_fail=.true.), &
       & new_unittest("invalid26-cif", test_invalid26_cif, should_fail=.true.), &
-      & new_unittest("invalid27-cif", test_invalid27_cif, should_fail=.true.) &
+      & new_unittest("invalid27-cif", test_invalid27_cif, should_fail=.true.), &
+      & new_unittest("invalid28-cif", test_invalid28_cif, should_fail=.true.), &
+      & new_unittest("invalid29-cif", test_invalid29_cif, should_fail=.true.), &
+      & new_unittest("invalid30-cif", test_invalid30_cif, should_fail=.true.), &
+      & new_unittest("invalid31-cif", test_invalid31_cif, should_fail=.true.), &
+      & new_unittest("invalid32-cif", test_invalid32_cif, should_fail=.true.), &
+      & new_unittest("invalid33-cif", test_invalid33_cif, should_fail=.true.) &
       & ]
 
 end subroutine collect_read_cif
@@ -1319,6 +1327,273 @@ subroutine test_invalid27_cif(error)
    close(unit)
 
 end subroutine test_invalid27_cif
+
+
+subroutine test_valid11_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_disorder_group_zero", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "_atom_site_occupancy", &
+      "_atom_site_disorder_group", &
+      "Na 0.0 0.0 0.0 1.0 0", &
+      "Cl 0.5 0.5 0.5 1.0 ."
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 2, "Number of atoms does not match")
+   if (allocated(error)) return
+
+end subroutine test_valid11_cif
+
+
+subroutine test_valid12_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_magnetic", &
+      "_space_group_magn.name_BNS 'P_I-1'", &
+      "_cell_length_a 4.0", &
+      "_cell_length_b 4.0", &
+      "_cell_length_c 4.0", &
+      "loop_", &
+      "_space_group_symop_magn_operation.id", &
+      "_space_group_symop_magn_operation.xyz", &
+      "1 x,y,z,+1", &
+      "2 -x,-y,-z,+1", &
+      "loop_", &
+      "_space_group_symop_magn_centering.id", &
+      "_space_group_symop_magn_centering.xyz", &
+      "1 x,y,z,+1", &
+      "2 x+1/2,y+1/2,z+1/2,-1", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Fe1 0.1 0.2 0.3", &
+      "loop_", &
+      "_atom_site_moment.label", &
+      "_atom_site_moment.crystalaxis_x", &
+      "_atom_site_moment.crystalaxis_y", &
+      "_atom_site_moment.crystalaxis_z", &
+      "Fe1 0.0 0.0 4.5"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 4, "Number of atoms does not match")
+   if (allocated(error)) return
+   call check(error, struc%info%magnetic, "Magnetic information should be flagged")
+   if (allocated(error)) return
+   call check(error, struc%xyz(1, 4), 0.4_wp*4.0_wp*aatoau, thr=thr)
+   if (allocated(error)) return
+   call check(error, struc%xyz(3, 4), 0.2_wp*4.0_wp*aatoau, thr=thr)
+   if (allocated(error)) return
+
+end subroutine test_valid12_cif
+
+
+subroutine test_invalid28_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_reflex_angle", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "_cell_angle_alpha 270.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid28_cif
+
+
+subroutine test_invalid29_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_nan_coordinate", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 NaN 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid29_cif
+
+
+subroutine test_invalid30_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_nan_occupancy", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "_atom_site_occupancy", &
+      "Na 0 0 0 NaN"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid30_cif
+
+
+subroutine test_invalid31_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_symop_zero_denominator", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_symmetry_equiv_pos_as_xyz", &
+      "'x+1/0, y, z'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid31_cif
+
+
+subroutine test_invalid32_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_magnetic_symop_without_time_reversal", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_space_group_symop_magn_operation.xyz", &
+      "'x, y, z'", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid32_cif
+
+
+subroutine test_invalid33_cif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+
+   open(status="scratch", newunit=unit)
+   write(unit, "(a)") &
+      "data_magnetic_group_without_symops", &
+      "_space_group_magn.name_BNS ""Pn'ma'""", &
+      "_cell_length_a 5.0", &
+      "_cell_length_b 5.0", &
+      "_cell_length_c 5.0", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Na 0 0 0"
+   rewind(unit)
+
+   call read_cif(struc, unit, error)
+   close(unit)
+
+end subroutine test_invalid33_cif
 
 
 end module test_read_cif

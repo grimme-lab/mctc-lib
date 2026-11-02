@@ -14,6 +14,7 @@
 
 !> Reader for crystallographic information files (CIF)
 module mctc_io_read_cif
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
    use mctc_env_accuracy, only : wp
    use mctc_env_error, only : error_type, fatal_error
    use mctc_io_constants, only : pi
@@ -36,7 +37,8 @@ module mctc_io_read_cif
       & cif_value = 4, cif_text = 5
 
    !> Kinds of CIF loops
-   integer, parameter :: loop_ignore = 0, loop_atom = 1, loop_symop = 2
+   integer, parameter :: loop_ignore = 0, loop_atom = 1, loop_symop = 2, loop_magn_symop = 3, &
+      & loop_magn_centering = 4
 
    !> Tolerance for identifying symmetry equivalent images in fractional coordinates
    real(wp), parameter :: symprec = 1.0e-3_wp
@@ -54,8 +56,17 @@ module mctc_io_read_cif
    character(len=*), parameter :: symop_tags(2) = [character(len=32) :: &
       & "_space_group_symop_operation_xyz", "_symmetry_equiv_pos_as_xyz"]
 
-   character(len=*), parameter :: hm_tags(2) = [character(len=30) :: &
-      & "_symmetry_space_group_name_h-m", "_space_group_name_h-m_alt"]
+   !> Magnetic symmetry operations and centerings, with a trailing time reversal component
+   character(len=*), parameter :: magn_symop_tag = "_space_group_symop_magn_operation.xyz"
+   character(len=*), parameter :: magn_centering_tag = "_space_group_symop_magn_centering.xyz"
+
+   !> Prefixes of data names carrying magnetic information
+   character(len=*), parameter :: magn_prefixes(3) = [character(len=23) :: &
+      & "_atom_site_moment", "_space_group_magn", "_space_group_symop_magn"]
+
+   character(len=*), parameter :: hm_tags(4) = [character(len=30) :: &
+      & "_symmetry_space_group_name_h-m", "_space_group_name_h-m_alt", &
+      & "_space_group_magn.name_bns", "_space_group_magn.ssg_name"]
 
    character(len=*), parameter :: itn_tags(2) = [character(len=27) :: &
       & "_space_group_it_number", "_symmetry_int_tables_number"]
@@ -82,10 +93,11 @@ subroutine read_cif(self, unit, error)
    type(token_type) :: token, elem_token
    integer :: kind, pos, lnum, i, isite, iop, nat, first
    integer :: ncol, icol, loop_kind, ilab, ityp, ix, iy, iz, iocc, idis, isym
-   integer :: nop, nsite, elem_num, elem_lnum
-   logical :: in_header, in_body, has_atoms, has_cell(6), elem_set, elem_from_type
-   real(wp) :: cellpar(6), row(3), lattice(3, 3), g(3), d(3)
-   real(wp), allocatable :: rot(:, :), trans(:, :), frac(:, :), fimg(:, :), xyz(:, :)
+   integer :: nop, ncen, icen, nsite, elem_num, elem_lnum
+   logical :: in_header, in_body, has_atoms, has_cell(6), elem_set, elem_from_type, magnetic
+   real(wp) :: cellpar(6), row(3), lattice(3, 3), g(3), d(3), rcen(3, 3)
+   real(wp), allocatable :: rot(:, :), trans(:, :), crot(:, :), ctrans(:, :), rc(:, :), tc(:, :)
+   real(wp), allocatable :: frac(:, :), fimg(:, :), xyz(:, :)
    integer, allocatable :: num(:)
 
    in_body = .false.
@@ -116,14 +128,17 @@ subroutine read_cif(self, unit, error)
          tag = ""
          in_header = .true.
       case(cif_tag)
+         str = to_lower(line(token%first:token%last))
+         magnetic = magnetic .or. &
+            & any([(index(str, trim(magn_prefixes(i))) == 1, i = 1, size(magn_prefixes))])
          if (in_header) then
             ncol = ncol + 1
             if (ncol > size(header)) call resize(header)
-            header(ncol) = to_lower(line(token%first:token%last))
+            header(ncol) = str
          else
             call end_loop
             if (allocated(error)) return
-            tag = to_lower(line(token%first:token%last))
+            tag = str
          end if
       case(cif_value, cif_text)
          if (kind == cif_text) then
@@ -177,13 +192,29 @@ subroutine read_cif(self, unit, error)
       trans(:, 1) = 0.0_wp
    end if
 
+   ! magnetic space groups list their centering translations separately
+   if (ncen > 0) then
+      allocate(rc(9, nop*ncen), tc(3, nop*ncen))
+      do icen = 1, ncen
+         rcen = reshape(crot(:, icen), [3, 3])
+         do iop = 1, nop
+            i = (icen - 1)*nop + iop
+            rc(:, i) = reshape(matmul(rcen, reshape(rot(:, iop), [3, 3])), [9])
+            tc(:, i) = matmul(rcen, trans(:, iop)) + ctrans(:, icen)
+         end do
+      end do
+      nop = nop*ncen
+      call move_alloc(rc, rot)
+      call move_alloc(tc, trans)
+   end if
+
    cellpar(1:3) = cellpar(1:3) * aatoau
    cellpar(4:6) = cellpar(4:6) * pi / 180.0_wp
    call cell_to_dlat(cellpar, lattice)
 
    ! the negated comparison also rejects NaN entries
-   if (.not.(all(cellpar(1:3) > 0.0_wp) .and. &
-      & matdet_3x3(lattice) > sqrt(epsilon(1.0_wp)) * product(cellpar(1:3)))) then
+   if (.not.(all(cellpar(1:3) > 0.0_wp) .and. all(cellpar(4:6) > 0.0_wp .and. cellpar(4:6) < pi) &
+      & .and. matdet_3x3(lattice) > sqrt(epsilon(1.0_wp)) * product(cellpar(1:3)))) then
       call fatal_error(error, "Cell parameters in CIF data block '"//block//&
          & "' do not describe a valid unit cell")
       return
@@ -209,6 +240,7 @@ subroutine read_cif(self, unit, error)
 
    call new(self, sym(:nat), xyz(:, :nat), lattice=lattice)
    if (len(block) > 0) self%comment = block
+   self%info%magnetic = magnetic
 
 contains
 
@@ -221,9 +253,12 @@ contains
       hm = ""
       itn = ""
       nop = 0
+      ncen = 0
       nsite = 0
       has_atoms = .false.
+      magnetic = .false.
       if (.not.allocated(rot)) allocate(rot(9, 8), trans(3, 8), frac(3, 64), num(64))
+      if (.not.allocated(crot)) allocate(crot(9, 2), ctrans(3, 2))
    end subroutine reset_block
 
    !> Close the current loop and check for incomplete atom site rows
@@ -280,6 +315,14 @@ contains
          isym = max(findloc(header(:ncol), symop_tags(1), 1), &
             & findloc(header(:ncol), symop_tags(2), 1))
          if (isym > 0) loop_kind = loop_symop
+         if (isym == 0) then
+            isym = findloc(header(:ncol), magn_symop_tag, 1)
+            if (isym > 0) loop_kind = loop_magn_symop
+         end if
+         if (isym == 0) then
+            isym = findloc(header(:ncol), magn_centering_tag, 1)
+            if (isym > 0) loop_kind = loop_magn_centering
+         end if
       end if
    end subroutine start_loop
 
@@ -316,9 +359,9 @@ contains
                return
             end if
          end if
-         if (icol == idis .and. .not.unknown) then
+         if (icol == idis .and. .not.unknown .and. str /= "0") then
             call io_error(error, "Disordered atom sites are not supported in CIF input", &
-               & line, token, filename(unit), lnum, "disorder group must be '.' or '?'")
+               & line, token, filename(unit), lnum, "disorder group must be '.', '?' or '0'")
             return
          end if
          if (icol == ityp .and. .not.unknown) then
@@ -348,14 +391,15 @@ contains
             elem_from_type = .false.
          end if
       case(loop_symop)
-         if (icol == isym) then
-            call add_symop
-            if (allocated(error)) return
-         end if
-         if (icol == ncol) icol = 0
+         if (icol == isym) call add_symop(rot, trans, nop, .false.)
+      case(loop_magn_symop)
+         if (icol == isym) call add_symop(rot, trans, nop, .true.)
+      case(loop_magn_centering)
+         if (icol == isym) call add_symop(crot, ctrans, ncen, .true.)
       case default
-         if (icol == ncol) icol = 0
+         continue
       end select
+      if (icol == ncol) icol = 0
    end subroutine loop_value
 
    !> Record the element of the current atom site from the current value
@@ -382,7 +426,11 @@ contains
          cellpar(i) = val
          has_cell(i) = .true.
       else if (any(symop_tags == tag)) then
-         call add_symop
+         call add_symop(rot, trans, nop, .false.)
+      else if (tag == magn_symop_tag) then
+         call add_symop(rot, trans, nop, .true.)
+      else if (tag == magn_centering_tag) then
+         call add_symop(crot, ctrans, ncen, .true.)
       else if (any(hm_tags == tag)) then
          if (str /= "?" .and. str /= ".") hm = str
       else if (any(itn_tags == tag)) then
@@ -390,27 +438,40 @@ contains
       end if
    end subroutine item_value
 
-   !> Parse the current value as symmetry operation and append it
-   subroutine add_symop
+   !> Parse the current value as symmetry operation and append it to a list of operations,
+   !> magnetic operations carry a trailing time reversal component (+1 or -1)
+   subroutine add_symop(r_op, t_op, n, time_reversal)
+      real(wp), allocatable, intent(inout) :: r_op(:, :), t_op(:, :)
+      integer, intent(inout) :: n
+      logical, intent(in) :: time_reversal
       real(wp) :: r(3, 3), t(3)
-      integer :: stat
-      if (kind == cif_text) then
-         stat = 1
-      else
-         call parse_symop(str, r, t, stat)
+      integer :: stat, k
+      character(len=:), allocatable :: op, hint
+      op = str
+      stat = merge(1, 0, kind == cif_text)
+      if (time_reversal .and. stat == 0) then
+         k = index(op, ",", back=.true.)
+         stat = merge(0, 1, any(adjustl(op(k+1:)) == ["+1", "-1"]))
+         op = op(:k-1)
       end if
+      if (stat == 0) call parse_symop(op, r, t, stat)
       if (stat /= 0) then
+         if (time_reversal) then
+            hint = "expected magnetic symmetry operation like 'x, y, z, +1'"
+         else
+            hint = "expected symmetry operation like 'x, y, z'"
+         end if
          call io_error(error, "Cannot read symmetry operation", line, token, &
-            & filename(unit), lnum, "expected symmetry operation like 'x, y, z'")
+            & filename(unit), lnum, hint)
          return
       end if
-      nop = nop + 1
-      if (nop > size(rot, 2)) then
-         call resize(rot)
-         call resize(trans)
+      n = n + 1
+      if (n > size(r_op, 2)) then
+         call resize(r_op)
+         call resize(t_op)
       end if
-      rot(:, nop) = reshape(r, [9])
-      trans(:, nop) = t
+      r_op(:, n) = reshape(r, [9])
+      t_op(:, n) = t
    end subroutine add_symop
 
 end subroutine read_cif
@@ -551,6 +612,7 @@ subroutine read_cif_real(line, token, val, stat)
    k = index(line(tok%first:tok%last), "(")
    if (k > 1) tok%last = tok%first + k - 2
    call read_token(line, tok, val, stat)
+   if (stat == 0 .and. .not.ieee_is_finite(val)) stat = 1
 
 end subroutine read_cif_real
 
@@ -638,6 +700,10 @@ pure subroutine parse_symop(str, rot, trans, stat)
                end if
                read(str(i+2:j), *, iostat=stat) den
                if (stat /= 0) return
+               if (.not.den > 0.0_wp) then
+                  stat = 1
+                  return
+               end if
                num = num / den
                i = j
             end if

@@ -46,7 +46,8 @@ subroutine collect_read(testsuite)
       & new_unittest("valid-coord", test_coord), &
       & new_unittest("valid-xyz", test_xyz), &
       & new_unittest("valid-extxyz", test_extxyz), &
-      & new_unittest("valid-cif", test_cif) &
+      & new_unittest("valid-cif", test_cif), &
+      & new_unittest("valid-mcif", test_mcif) &
       & ]
 
 end subroutine collect_read
@@ -441,6 +442,47 @@ subroutine test_cif(error)
    call check(error, struc%nat, 8, "Number of atoms does not match")
 
 end subroutine test_cif
+
+
+subroutine test_mcif(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   character(len=:), allocatable :: name
+   integer :: unit
+
+   name = get_name() // ".mcif"
+
+   open(file=name, newunit=unit)
+   write(unit, "(a)") &
+      "data_magnetic", &
+      "_cell_length_a 4.0", &
+      "_cell_length_b 4.0", &
+      "_cell_length_c 4.0", &
+      "loop_", &
+      "_space_group_symop_magn_operation.id", &
+      "_space_group_symop_magn_operation.xyz", &
+      "1 x,y,z,+1", &
+      "2 -x,-y,-z,+1", &
+      "loop_", &
+      "_atom_site_label", &
+      "_atom_site_fract_x", &
+      "_atom_site_fract_y", &
+      "_atom_site_fract_z", &
+      "Fe1 0.1 0.2 0.3"
+   close(unit)
+
+   call read_structure(struc, name, error)
+
+   open(file=name, newunit=unit)
+   close(unit, status="delete")
+   if (allocated(error)) return
+
+   call check(error, struc%nat, 2, "Number of atoms does not match")
+
+end subroutine test_mcif
 
 
 

@@ -148,7 +148,7 @@ elemental function get_filetype(file) result(ftype)
          ftype = filetype%qchem
       case("pmgjson")
          ftype = filetype%pymatgen
-      case("cif")
+      case("cif", "mcif")
          ftype = filetype%cif
       case("json")
          ftype = filetype%json
