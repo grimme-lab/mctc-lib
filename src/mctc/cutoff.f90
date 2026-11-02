@@ -17,7 +17,7 @@
 
 !> Realspace cutoff and lattice point generator utilities
 module mctc_cutoff
-   use mctc_env, only : wp
+   use mctc_env, only : wp, i8
    use mctc_io_math, only : crossprod, matinv_3x3
    implicit none
    private
@@ -32,6 +32,9 @@ module mctc_cutoff
 
    !> Tolerance for detecting degenerate lattice vectors, areas, and volumes
    real(wp), parameter :: tol_deg = 1.0e-12_wp
+
+   !> Maximum safe integer conversion bound for repetition counts
+   real(wp), parameter :: max_rep_real = 1.0e7_wp
 
 
 contains
@@ -163,6 +166,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep)
       a1 = lat(:, p_axes(1))
       len1 = norm2(a1)
       if (len1 <= tol_deg) return
+      if (rthr / len1 > max_rep_real) return
       rep(p_axes(1)) = ceiling(rthr / len1)
 
    case (2)
@@ -173,6 +177,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep)
       if (len1 <= tol_deg .or. len2 <= tol_deg) return
       area = norm2(crossprod(a1, a2))
       if (area <= tol_deg * len1 * len2) return
+      if (rthr * len2 / area > max_rep_real .or. rthr * len1 / area > max_rep_real) return
       rep(p_axes(1)) = ceiling(rthr * len2 / area)
       rep(p_axes(2)) = ceiling(rthr * len1 / area)
 
@@ -192,6 +197,8 @@ pure subroutine get_translations(periodic, lat, rthr, rep)
       cos10 = vol / norm2(normx)
       cos21 = vol / norm2(normy)
       cos32 = vol / norm2(normz)
+      if (rthr / cos10 > max_rep_real .or. rthr / cos21 > max_rep_real &
+         & .or. rthr / cos32 > max_rep_real) return
       rep(1) = ceiling(rthr / cos10)
       rep(2) = ceiling(rthr / cos21)
       rep(3) = ceiling(rthr / cos32)
@@ -248,6 +255,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       g11 = dot_product(a1, a1)
       if (sqrt(g11) <= tol_deg) return
       do iat = 1, size(xyz, 2)
+         if (.not. is_finite_vec(xyz(:, iat))) cycle
          s1 = dot_product(xyz(:, iat), a1) / g11
          s1_wrap = shift_back_abc(s1)
          xyz(:, iat) = xyz(:, iat) + (s1_wrap - s1) * a1
@@ -263,6 +271,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       det2 = g11 * g22 - g12 * g12
       if (det2 <= (tol_deg**2) * g11 * g22) return
       do iat = 1, size(xyz, 2)
+         if (.not. is_finite_vec(xyz(:, iat))) cycle
          b1 = dot_product(xyz(:, iat), a1)
          b2 = dot_product(xyz(:, iat), a2)
          s1 = (g22 * b1 - g12 * b2) / det2
@@ -284,6 +293,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       if (vol <= tol_deg * len1 * len2 * len3) return
       invlat = matinv_3x3(lattice)
       do iat = 1, size(xyz, 2)
+         if (.not. is_finite_vec(xyz(:, iat))) cycle
          vec(:) = matmul(invlat, xyz(:, iat))
          vec(:) = shift_back_abc(vec)
          xyz(:, iat) = matmul(lattice, vec)
@@ -302,11 +312,13 @@ elemental function shift_back_abc(in) result(out)
    real(wp) :: out
    real(wp),parameter :: p_pbc_eps = 1.0e-14_wp
    out = in
+   if (.not. is_finite_scalar(in)) return
+   if (abs(in) > real(huge(1_i8) / 2_i8, wp)) return
    if(in < (0.0_wp - p_pbc_eps)) then
-     out = in + real(ceiling(-in),wp)
+     out = in + real(ceiling(-in, i8),wp)
    end if
    if(in > (1.0_wp + p_pbc_eps)) then
-     out = in - real(floor  ( in),wp)
+     out = in - real(floor  ( in, i8),wp)
    end if
    if (abs(out - 1.0_wp) < p_pbc_eps) then
      out = out - 1.0_wp

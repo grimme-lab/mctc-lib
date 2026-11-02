@@ -58,6 +58,9 @@ module mctc_wignerseitz
    !> Tolerance for detecting degenerate lattice vectors, areas, and volumes
    real(wp), parameter :: tol_deg = 1.0e-12_wp
 
+   !> Maximum candidate translation vectors before refusing allocation
+   integer(i8), parameter :: max_wsc_trans = 100000_i8
+
 
 contains
 
@@ -116,6 +119,25 @@ subroutine new_wignerseitz_cell(self, mol)
 end subroutine new_wignerseitz_cell
 
 
+!> Check whether a 1D array contains only finite IEEE values
+pure function is_finite_vec(vec) result(finite)
+   !> Vector to inspect
+   real(wp), intent(in) :: vec(:)
+   !> True if all entries are finite
+   logical :: finite
+
+   integer :: i
+
+   finite = .true.
+   do i = 1, size(vec)
+      if (.not. (abs(vec(i)) <= huge(1.0_wp))) then
+         finite = .false.
+         return
+      end if
+   end do
+end function is_finite_vec
+
+
 !> Determine lattice repetition bounds needed to cover all Wigner-Seitz nearest
 !> images, accounting for unwrapped coordinates and skewed periodic subspaces.
 pure subroutine get_wsc_rep(mol, rep)
@@ -126,19 +148,21 @@ pure subroutine get_wsc_rep(mol, rep)
    !> Repetition bounds along each lattice vector
    integer, intent(out) :: rep(3)
 
-   integer :: i, iat, jat, iter, ndim, p_axes(3), mu
-   integer :: u_mat(2, 2), tmp_u(2), n_shift(2), m_red(2)
-   real(wp) :: a1(3), a2(3), a3(3), b1(3), b2(3), tmp_v(3)
-   real(wp) :: len1, len2, len3, area, vol
-   real(wp) :: g11, g12, g22, det2, proj1, proj2, h1, h2, rcov
-   real(wp) :: s_span, s_span1, s_span2
-   real(wp), allocatable :: s1d(:), s2d(:, :)
+   integer :: i, iat, ndim, p_axes(3)
+   integer(i8) :: rep_i8(3), ntr_i8
+   real(wp) :: a1(3), a2(3), a3(3)
 
    rep(:) = 0
    if (mol%nat <= 0) return
-   if (.not. allocated(mol%periodic) .or. .not. allocated(mol%lattice)) return
+   if (.not. allocated(mol%periodic) .or. .not. allocated(mol%lattice) &
+      & .or. .not. allocated(mol%xyz)) return
    if (.not. any(mol%periodic)) return
    if (size(mol%lattice, 1) < 3 .or. size(mol%lattice, 2) < 3) return
+   if (size(mol%xyz, 1) < 3 .or. size(mol%xyz, 2) < mol%nat) return
+
+   do iat = 1, mol%nat
+      if (.not. is_finite_vec(mol%xyz(1:3, iat))) return
+   end do
 
    ndim = 0
    p_axes(:) = 0
@@ -149,106 +173,263 @@ pure subroutine get_wsc_rep(mol, rep)
       end if
    end do
 
+   rep_i8(:) = 0_i8
    select case (ndim)
    case (1)
       a1 = mol%lattice(:, p_axes(1))
-      len1 = norm2(a1)
-      if (len1 <= tol_deg) return
-      allocate(s1d(mol%nat))
-      do iat = 1, mol%nat
-         s1d(iat) = dot_product(mol%xyz(:, iat), a1) / (len1 * len1)
-      end do
-      s_span = maxval(s1d) - minval(s1d)
-      if (s_span <= 1.4_wp) then
-         rep(p_axes(1)) = 1
-      else
-         rep(p_axes(1)) = max(1, ceiling(s_span - 0.5_wp + sqrt(tol) / len1))
-      end if
+      if (.not. is_finite_vec(a1)) return
+      call get_wsc_rep_1d(mol%xyz(:, :mol%nat), a1, rep_i8(p_axes(1)))
 
    case (2)
       a1 = mol%lattice(:, p_axes(1))
       a2 = mol%lattice(:, p_axes(2))
-      len1 = norm2(a1)
-      len2 = norm2(a2)
-      if (len1 <= tol_deg .or. len2 <= tol_deg) return
-      area = norm2(crossprod(a1, a2))
-      if (area <= tol_deg * len1 * len2) return
-
-      ! 2D Gauss/Lagrange basis reduction: [b1, b2] = [a1, a2] * U
-      b1 = a1
-      b2 = a2
-      u_mat = reshape([1, 0, 0, 1], [2, 2])
-      do iter = 1, 100
-         if (dot_product(b1, b1) > dot_product(b2, b2)) then
-            tmp_v = b1; b1 = b2; b2 = tmp_v
-            tmp_u = u_mat(:, 1); u_mat(:, 1) = u_mat(:, 2); u_mat(:, 2) = tmp_u
-         end if
-         g11 = dot_product(b1, b1)
-         if (g11 <= tol_deg**2) exit
-         mu = nint(dot_product(b1, b2) / g11)
-         if (mu == 0) exit
-         b2 = b2 - real(mu, wp) * b1
-         u_mat(:, 2) = u_mat(:, 2) - mu * u_mat(:, 1)
-      end do
-
-      g11 = dot_product(b1, b1)
-      g12 = dot_product(b1, b2)
-      g22 = dot_product(b2, b2)
-      det2 = g11 * g22 - g12 * g12
-      if (det2 <= (tol_deg**2) * g11 * g22) return
-
-      allocate(s2d(2, mol%nat))
-      do iat = 1, mol%nat
-         proj1 = dot_product(mol%xyz(:, iat), b1)
-         proj2 = dot_product(mol%xyz(:, iat), b2)
-         s2d(1, iat) = (g22 * proj1 - g12 * proj2) / det2
-         s2d(2, iat) = (-g12 * proj1 + g11 * proj2) / det2
-      end do
-      s_span1 = maxval(s2d(1, :)) - minval(s2d(1, :))
-      s_span2 = maxval(s2d(2, :)) - minval(s2d(2, :))
-
-      if (abs(u_mat(1, 1)) + abs(u_mat(1, 2)) == 1 &
-         & .and. abs(u_mat(2, 1)) + abs(u_mat(2, 2)) == 1 &
-         & .and. s_span1 <= 1.4_wp .and. s_span2 <= 1.4_wp) then
-         rep(p_axes(1)) = 1
-         rep(p_axes(2)) = 1
-      else
-         h1 = sqrt(det2 / g22)
-         h2 = sqrt(det2 / g11)
-         rcov = 0.5_wp * (sqrt(g11) + sqrt(g22)) + sqrt(tol)
-         m_red(1) = max(1, ceiling(rcov / h1))
-         m_red(2) = max(1, ceiling(rcov / h2))
-         rep(p_axes(1)) = 1
-         rep(p_axes(2)) = 1
-         do iat = 1, mol%nat
-            do jat = 1, mol%nat
-               n_shift(1) = nint(s2d(1, jat) - s2d(1, iat))
-               n_shift(2) = nint(s2d(2, jat) - s2d(2, iat))
-               do i = 1, 2
-                  rep(p_axes(i)) = max(rep(p_axes(i)), &
-                     & abs(u_mat(i, 1) * n_shift(1) + u_mat(i, 2) * n_shift(2)) &
-                     & + abs(u_mat(i, 1)) * m_red(1) + abs(u_mat(i, 2)) * m_red(2))
-               end do
-            end do
-         end do
-      end if
+      if (.not. is_finite_vec(a1) .or. .not. is_finite_vec(a2)) return
+      call get_wsc_rep_2d(mol%xyz(:, :mol%nat), a1, a2, &
+         & rep_i8(p_axes(1)), rep_i8(p_axes(2)))
 
    case (3)
       a1 = mol%lattice(:, 1)
       a2 = mol%lattice(:, 2)
       a3 = mol%lattice(:, 3)
-      len1 = norm2(a1)
-      len2 = norm2(a2)
-      len3 = norm2(a3)
-      if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg) return
-      vol = abs(dot_product(a1, crossprod(a2, a3)))
-      if (vol <= tol_deg * len1 * len2 * len3) return
-      rep(:) = 1
+      if (.not. is_finite_vec(a1) .or. .not. is_finite_vec(a2) &
+         & .or. .not. is_finite_vec(a3)) return
+      call get_wsc_rep_3d(a1, a2, a3, rep_i8)
+
    case default
       continue
    end select
 
+   if (any(rep_i8 < 0_i8) .or. any(rep_i8 > max_wsc_trans)) return
+   ntr_i8 = (2_i8 * rep_i8(1) + 1_i8) * (2_i8 * rep_i8(2) + 1_i8) &
+      & * (2_i8 * rep_i8(3) + 1_i8)
+   if (ntr_i8 > max_wsc_trans) return
+   rep(:) = int(rep_i8)
+
 end subroutine get_wsc_rep
+
+
+!> Exact 1D Wigner-Seitz repetition bound for arbitrary coordinates
+pure subroutine get_wsc_rep_1d(xyz, a1, rep1)
+   !> Cartesian atomic coordinates (3, nat)
+   real(wp), intent(in) :: xyz(:, :)
+   !> Active 1D lattice vector
+   real(wp), intent(in) :: a1(3)
+   !> Repetition count along a1
+   integer(i8), intent(out) :: rep1
+
+   integer :: nat, iat, jat
+   integer(i8) :: n0, n_lo, n_hi, k_min
+   real(wp) :: len1, g11, rij(3), ds, d_perp2, xi, d0_par2, r_comp2, delta_s
+
+   rep1 = 0_i8
+   len1 = norm2(a1)
+   if (len1 <= tol_deg) return
+   g11 = len1 * len1
+   nat = size(xyz, 2)
+
+   rep1 = 1_i8
+   do iat = 1, nat
+      do jat = 1, iat
+         rij = xyz(:, iat) - xyz(:, jat)
+         ds = dot_product(rij, a1) / g11
+         if (.not. (abs(ds) <= 1.0e6_wp)) then
+            rep1 = -1_i8
+            return
+         end if
+         d_perp2 = sum((rij - ds * a1)**2)
+         n0 = nint(ds, i8)
+         xi = ds - real(n0, wp)
+         d0_par2 = xi * xi * g11
+         if (d_perp2 + d0_par2 < thr) then
+            if (sqrt(max(0.0_wp, thr - d_perp2) / g11) > real(max_wsc_trans, wp)) then
+               rep1 = -1_i8
+               return
+            end if
+            k_min = max(1_i8, ceiling(sqrt(max(0.0_wp, thr - d_perp2) / g11) - abs(xi), i8))
+            d0_par2 = (real(k_min, wp) - abs(xi))**2 * g11
+         end if
+         r_comp2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
+         delta_s = sqrt(r_comp2 / g11)
+         if (delta_s > real(max_wsc_trans, wp)) then
+            rep1 = -1_i8
+            return
+         end if
+         n_lo = ceiling(ds - delta_s, i8)
+         n_hi = floor(ds + delta_s, i8)
+         rep1 = max(rep1, abs(n_lo), abs(n_hi))
+      end do
+   end do
+
+end subroutine get_wsc_rep_1d
+
+
+!> Exact 2D Wigner-Seitz repetition bounds via Lagrange-Gauss reduction and Cholesky search
+pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2)
+   !> Cartesian atomic coordinates (3, nat)
+   real(wp), intent(in) :: xyz(:, :)
+   !> First active 2D lattice vector
+   real(wp), intent(in) :: a1(3)
+   !> Second active 2D lattice vector
+   real(wp), intent(in) :: a2(3)
+   !> Repetition count along a1
+   integer(i8), intent(out) :: rep1
+   !> Repetition count along a2
+   integer(i8), intent(out) :: rep2
+
+   integer :: nat, iat, jat, iter
+   integer(i8) :: u_mat(2, 2), tmp_u(2), mu
+   integer(i8) :: n1_0, n2_0, n1, n2, n1_lo, n1_hi, n2_lo, n2_hi, k_min
+   integer(i8) :: m1_orig, m2_orig
+   real(wp) :: len1, len2, area, b1(3), b2(3), tmp_v(3)
+   real(wp) :: g11, g12, g22, det2, h2_sq
+   real(wp) :: rij(3), proj1, proj2, ds1, ds2, d_perp2
+   real(wp) :: c1_0, c1, d0_par2, dmin_par2, r_max2, r_comp2, d2_sq, d_par2
+   real(wp) :: delta1, delta2
+
+   rep1 = 0_i8
+   rep2 = 0_i8
+   len1 = norm2(a1)
+   len2 = norm2(a2)
+   if (len1 <= tol_deg .or. len2 <= tol_deg) return
+   area = norm2(crossprod(a1, a2))
+   if (area <= tol_deg * len1 * len2) return
+
+   ! 2D Lagrange-Gauss basis reduction: [b1, b2] = [a1, a2] * U
+   b1 = a1
+   b2 = a2
+   u_mat = reshape([1_i8, 0_i8, 0_i8, 1_i8], [2, 2])
+   do iter = 1, 100
+      if (dot_product(b1, b1) > dot_product(b2, b2)) then
+         tmp_v = b1; b1 = b2; b2 = tmp_v
+         tmp_u = u_mat(:, 1); u_mat(:, 1) = u_mat(:, 2); u_mat(:, 2) = tmp_u
+      end if
+      g11 = dot_product(b1, b1)
+      if (g11 <= tol_deg**2) return
+      if (.not. (abs(dot_product(b1, b2) / g11) <= 1.0e8_wp)) return
+      mu = nint(dot_product(b1, b2) / g11, i8)
+      if (mu == 0_i8) exit
+      if (maxval(abs(u_mat)) > 100000000_i8) return
+      b2 = b2 - real(mu, wp) * b1
+      u_mat(:, 2) = u_mat(:, 2) - mu * u_mat(:, 1)
+   end do
+
+   g11 = dot_product(b1, b1)
+   g12 = dot_product(b1, b2)
+   g22 = dot_product(b2, b2)
+   det2 = g11 * g22 - g12 * g12
+   if (det2 <= (tol_deg**2) * g11 * g22) return
+   h2_sq = det2 / g11
+   if (sqrt(tol / g11) > real(max_wsc_trans, wp) .or. sqrt(tol / h2_sq) > real(max_wsc_trans, wp)) return
+
+   nat = size(xyz, 2)
+   rep1 = 1_i8
+   rep2 = 1_i8
+
+   do iat = 1, nat
+      do jat = 1, iat
+         rij = xyz(:, iat) - xyz(:, jat)
+         proj1 = dot_product(rij, b1)
+         proj2 = dot_product(rij, b2)
+         ds1 = (g22 * proj1 - g12 * proj2) / det2
+         ds2 = (-g12 * proj1 + g11 * proj2) / det2
+         if (.not. (abs(ds1) <= 1.0e6_wp .and. abs(ds2) <= 1.0e6_wp)) then
+            rep1 = -1_i8
+            rep2 = -1_i8
+            return
+         end if
+         d_perp2 = sum((rij - ds1 * b1 - ds2 * b2)**2)
+
+         ! Babai nearest-plane point for initial upper bound d0_par2
+         n2_0 = nint(ds2, i8)
+         c1_0 = ds1 - (g12 / g11) * (real(n2_0, wp) - ds2)
+         n1_0 = nint(c1_0, i8)
+         d0_par2 = g11 * (real(n1_0, wp) - c1_0)**2 + h2_sq * (real(n2_0, wp) - ds2)**2
+         if (d_perp2 + d0_par2 < thr) then
+            k_min = max(1_i8, ceiling(sqrt(max(0.0_wp, thr - d_perp2) / g11) &
+               & - abs(real(n1_0, wp) - c1_0), i8))
+            d0_par2 = g11 * (abs(real(n1_0, wp) - c1_0) + real(k_min, wp))**2 &
+               & + h2_sq * (real(n2_0, wp) - ds2)**2
+         end if
+
+         ! Pass 1: exact minimum periodic distance squared dmin_par2
+         r_max2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
+         delta2 = sqrt(r_max2 / h2_sq)
+         if (delta2 > 1000.0_wp .or. sqrt(r_max2 / g11) > 1000.0_wp) then
+            rep1 = -1_i8
+            rep2 = -1_i8
+            return
+         end if
+         n2_lo = ceiling(ds2 - delta2, i8)
+         n2_hi = floor(ds2 + delta2, i8)
+         dmin_par2 = d0_par2
+
+         do n2 = n2_lo, n2_hi
+            d2_sq = h2_sq * (real(n2, wp) - ds2)**2
+            if (d2_sq > r_max2) cycle
+            c1 = ds1 - (g12 / g11) * (real(n2, wp) - ds2)
+            delta1 = sqrt((r_max2 - d2_sq) / g11)
+            n1_lo = ceiling(c1 - delta1, i8)
+            n1_hi = floor(c1 + delta1, i8)
+            do n1 = n1_lo, n1_hi
+               d_par2 = g11 * (real(n1, wp) - c1)**2 + d2_sq
+               if (d_perp2 + d_par2 < thr) cycle
+               dmin_par2 = min(dmin_par2, d_par2)
+            end do
+         end do
+
+         ! Pass 2: collect all competing images within tol of dmin_par2
+         r_comp2 = (dmin_par2 + tol) * (1.0_wp + 1.0e-12_wp)
+         delta2 = sqrt(r_comp2 / h2_sq)
+         n2_lo = ceiling(ds2 - delta2, i8)
+         n2_hi = floor(ds2 + delta2, i8)
+
+         do n2 = n2_lo, n2_hi
+            d2_sq = h2_sq * (real(n2, wp) - ds2)**2
+            if (d2_sq > r_comp2) cycle
+            c1 = ds1 - (g12 / g11) * (real(n2, wp) - ds2)
+            delta1 = sqrt((r_comp2 - d2_sq) / g11)
+            n1_lo = ceiling(c1 - delta1, i8)
+            n1_hi = floor(c1 + delta1, i8)
+            do n1 = n1_lo, n1_hi
+               d_par2 = g11 * (real(n1, wp) - c1)**2 + d2_sq
+               if (d_perp2 + d_par2 < thr) cycle
+               if (d_par2 > r_comp2) cycle
+               m1_orig = u_mat(1, 1) * n1 + u_mat(1, 2) * n2
+               m2_orig = u_mat(2, 1) * n1 + u_mat(2, 2) * n2
+               rep1 = max(rep1, abs(m1_orig))
+               rep2 = max(rep2, abs(m2_orig))
+            end do
+         end do
+      end do
+   end do
+
+end subroutine get_wsc_rep_2d
+
+
+!> Check whether a 3D lattice is finite and non-degenerate
+pure subroutine get_wsc_rep_3d(a1, a2, a3, rep)
+   !> First 3D lattice vector
+   real(wp), intent(in) :: a1(3)
+   !> Second 3D lattice vector
+   real(wp), intent(in) :: a2(3)
+   !> Third 3D lattice vector
+   real(wp), intent(in) :: a3(3)
+   !> Repetition counts along (a1, a2, a3)
+   integer(i8), intent(out) :: rep(3)
+
+   real(wp) :: len1, len2, len3, vol
+
+   rep(:) = 0_i8
+   len1 = norm2(a1)
+   len2 = norm2(a2)
+   len3 = norm2(a3)
+   if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg) return
+   vol = abs(dot_product(a1, crossprod(a2, a3)))
+   if (vol <= tol_deg * len1 * len2 * len3) return
+
+   rep(:) = 1_i8
+
+end subroutine get_wsc_rep_3d
 
 !> Find the nearest translation images for an interatomic vector
 subroutine get_pairs(iws, trans, rij, list)

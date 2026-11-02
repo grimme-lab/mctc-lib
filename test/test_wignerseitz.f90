@@ -47,7 +47,9 @@ subroutine collect_wignerseitz(testsuite)
       & new_unittest("wignerseitz-cell-1d", test_wsc_1d), &
       & new_unittest("wignerseitz-cell-2d", test_wsc_2d), &
       & new_unittest("wignerseitz-cell-3d", test_wsc_3d), &
-      & new_unittest("wignerseitz-robustness", test_wsc_robustness) &
+      & new_unittest("wignerseitz-robustness", test_wsc_robustness), &
+      & new_unittest("wignerseitz-65deg-counterexample", test_wsc_65deg_counterexample), &
+      & new_unittest("wignerseitz-exhaustive-reference", test_wsc_exhaustive_reference) &
       & ]
 
 end subroutine collect_wignerseitz
@@ -418,5 +420,210 @@ subroutine test_wsc_robustness(error)
    end if
 
 end subroutine test_wsc_robustness
+
+
+subroutine test_wsc_65deg_counterexample(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: pi = 4.0_wp * atan(1.0_wp)
+   real(wp), parameter :: angle = 65.0_wp * pi / 180.0_wp
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   real(wp) :: lattice(3, 3), xyz(3, 2), rij(3), vec1(3), vec2(3)
+   real(wp) :: d2_found1, d2_found2, d2_expect, weights(16)
+
+   lattice = 0.0_wp
+   lattice(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   lattice(:, 2) = [5.0_wp * cos(angle), 5.0_wp * sin(angle), 0.0_wp]
+
+   xyz(:, 1) = 0.0_wp
+   xyz(:, 2) = 1.39_wp * (lattice(:, 1) + lattice(:, 2))
+
+   call new(mol, [6, 8], xyz, lattice=lattice, periodic=[.true., .true., .false.])
+   call new_wignerseitz_cell(wsc, mol)
+
+   ! True minimum-distance images for rij = xyz(:, 2) - xyz(:, 1) are (2, 1) and (1, 2)
+   ! with squared distance 8.0781427585 bohr^2 (whereas (1, 1) has 10.8185950039 bohr^2)
+   call check(error, wsc%nimg(1, 2), 2)
+   if (allocated(error)) return
+   call check(error, wsc%nimg(2, 1), 2)
+   if (allocated(error)) return
+
+   rij = mol%xyz(:, 2) - mol%xyz(:, 1)
+   d2_expect = sum((rij - 2.0_wp * lattice(:, 1) - lattice(:, 2))**2)
+   vec1 = rij - wsc%trans(:, wsc%tridx(1, 1, 2))
+   vec2 = rij - wsc%trans(:, wsc%tridx(2, 1, 2))
+   d2_found1 = sum(vec1**2)
+   d2_found2 = sum(vec2**2)
+
+   if (abs(d2_found1 - d2_expect) > 1.0e-12_wp .or. abs(d2_found2 - d2_expect) > 1.0e-12_wp) then
+      call test_failed(error, "65-degree 2D counterexample failed to find (2,1) and (1,2) images")
+      return
+   end if
+
+   call get_wignerseitz_weights(wsc, 1, 2, rij, weights)
+   if (maxval(abs(weights(1:2) - 0.5_wp)) > 1.0e-12_wp) then
+      call test_failed(error, "65-degree 2D counterexample weights are not [0.5, 0.5]")
+      return
+   end if
+
+end subroutine test_wsc_65deg_counterexample
+
+
+subroutine test_wsc_exhaustive_reference(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: pi = 4.0_wp * atan(1.0_wp)
+   real(wp), parameter :: angles_deg(4) = [60.0_wp, 65.0_wp, 90.0_wp, 120.0_wp]
+   real(wp), parameter :: ratios(2) = [1.0_wp, 3.5_wp]
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   real(wp) :: lat(3, 3), xyz(3, 3), a1(3), a2(3)
+   real(wp) :: ang, ratio
+   integer :: iang, irat, imask, ishift
+   logical :: masks_1d(3, 3), masks_2d(3, 3)
+
+   masks_1d = reshape([ &
+      & .true., .false., .false., &
+      & .false., .true., .false., &
+      & .false., .false., .true.], [3, 3])
+   masks_2d = reshape([ &
+      & .true., .true., .false., &
+      & .true., .false., .true., &
+      & .false., .true., .true.], [3, 3])
+
+   ! 1. Exhaustive 1D comparison across all periodic masks, rotated axes, and multi-cell shifts
+   do imask = 1, 3
+      do ishift = 1, 3
+         lat = 0.0_wp
+         a1 = [3.2_wp + 0.5_wp * real(ishift, wp), -2.4_wp, 4.1_wp]
+         lat(:, imask) = a1
+         xyz(:, 1) = [0.2_wp, -0.1_wp, 0.3_wp]
+         xyz(:, 2) = xyz(:, 1) + (0.49_wp + real(2 * ishift, wp)) * a1 + [0.3_wp, 0.4_wp, -0.2_wp]
+         xyz(:, 3) = xyz(:, 1) - (1.51_wp + real(ishift, wp)) * a1 + [-0.2_wp, 0.5_wp, 0.1_wp]
+         call new(mol, [6, 8, 1], xyz, lattice=lat, periodic=masks_1d(:, imask))
+         call new_wignerseitz_cell(wsc, mol)
+         call verify_wsc_against_ref(mol, wsc, 16, error)
+         if (allocated(error)) return
+      end do
+   end do
+
+   ! 2. Exhaustive 2D comparison across angles (60, 65, 90, 120 deg), aspect ratios,
+   !    periodic masks, unimodular shear, and unwrapped coordinates up to several cells
+   do iang = 1, size(angles_deg)
+      ang = angles_deg(iang) * pi / 180.0_wp
+      do irat = 1, size(ratios)
+         ratio = ratios(irat)
+         a1 = [4.8_wp, 0.3_wp, -0.2_wp]
+         a2 = ratio * [4.8_wp * cos(ang), 4.8_wp * sin(ang), 0.4_wp]
+         do imask = 1, 3
+            lat = 0.0_wp
+            select case (imask)
+            case (1)
+               lat(:, 1) = a1
+               lat(:, 2) = a2
+            case (2)
+               lat(:, 1) = a1
+               lat(:, 3) = a2 + 2.0_wp * a1
+            case (3)
+               lat(:, 2) = a1 - a2
+               lat(:, 3) = a2
+            case default
+               continue
+            end select
+            xyz(:, 1) = [0.1_wp, -0.2_wp, 0.3_wp]
+            xyz(:, 2) = xyz(:, 1) + 1.39_wp * a1 + 1.39_wp * a2 + [0.0_wp, 0.0_wp, 0.5_wp]
+            xyz(:, 3) = xyz(:, 1) - 2.45_wp * a1 + 3.48_wp * a2 + [0.0_wp, 0.0_wp, -0.4_wp]
+
+            call new(mol, [6, 8, 1], xyz, lattice=lat, periodic=masks_2d(:, imask))
+            call new_wignerseitz_cell(wsc, mol)
+            call verify_wsc_against_ref(mol, wsc, 16, error)
+            if (allocated(error)) return
+         end do
+      end do
+   end do
+
+   ! 3. Degenerate (collinear 2D) lattice fails closed with 1 translation (origin)
+   lat = 0.0_wp
+   lat(:, 1) = [4.0_wp, 0.0_wp, 0.0_wp]
+   lat(:, 2) = [8.0_wp, 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz(:, 1:2), lattice=lat, periodic=[.true., .true., .false.])
+   call new_wignerseitz_cell(wsc, mol)
+   call check(error, size(wsc%trans, 2), 1)
+   if (allocated(error)) return
+
+end subroutine test_wsc_exhaustive_reference
+
+
+subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
+   type(structure_type), intent(in) :: mol
+   type(wignerseitz_cell), intent(in) :: wsc
+   integer, intent(in) :: n_ref
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: thr_self = sqrt(epsilon(0.0_wp))
+   real(wp), parameter :: tol_wsc = 0.3_wp
+   integer :: iat, jat, r1, r2, r3, n1, n2, n3, nimg_ref, img
+   real(wp) :: rij(3), tvec(3), d2, dmin2_ref, dmin2_wsc
+
+   r1 = merge(n_ref, 0, mol%periodic(1))
+   r2 = merge(n_ref, 0, mol%periodic(2))
+   r3 = merge(n_ref, 0, mol%periodic(3))
+
+   do iat = 1, mol%nat
+      do jat = 1, mol%nat
+         rij = mol%xyz(:, iat) - mol%xyz(:, jat)
+         dmin2_ref = huge(1.0_wp)
+         do n1 = -r1, r1
+            do n2 = -r2, r2
+               do n3 = -r3, r3
+                  tvec = real(n1, wp) * mol%lattice(:, 1) &
+                     & + real(n2, wp) * mol%lattice(:, 2) &
+                     & + real(n3, wp) * mol%lattice(:, 3)
+                  d2 = sum((rij - tvec)**2)
+                  if (d2 < thr_self) cycle
+                  dmin2_ref = min(dmin2_ref, d2)
+               end do
+            end do
+         end do
+
+         nimg_ref = 0
+         do n1 = -r1, r1
+            do n2 = -r2, r2
+               do n3 = -r3, r3
+                  tvec = real(n1, wp) * mol%lattice(:, 1) &
+                     & + real(n2, wp) * mol%lattice(:, 2) &
+                     & + real(n3, wp) * mol%lattice(:, 3)
+                  d2 = sum((rij - tvec)**2)
+                  if (d2 < thr_self) cycle
+                  if (d2 - dmin2_ref <= tol_wsc) nimg_ref = nimg_ref + 1
+               end do
+            end do
+         end do
+
+         call check(error, wsc%nimg(jat, iat), nimg_ref)
+         if (allocated(error)) return
+
+         dmin2_wsc = sum((rij - wsc%trans(:, wsc%tridx(1, jat, iat)))**2)
+         if (abs(dmin2_wsc - dmin2_ref) > 1.0e-11_wp) then
+            call test_failed(error, "WSC minimum squared distance disagrees with exhaustive reference")
+            return
+         end if
+
+         do img = 1, wsc%nimg(jat, iat)
+            d2 = sum((rij - wsc%trans(:, wsc%tridx(img, jat, iat)))**2)
+            if (d2 - dmin2_ref > tol_wsc + 1.0e-11_wp) then
+               call test_failed(error, "WSC included image outside tol window")
+               return
+            end if
+         end do
+      end do
+   end do
+
+end subroutine verify_wsc_against_ref
 
 end module test_wignerseitz
