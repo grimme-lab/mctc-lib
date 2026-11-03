@@ -51,6 +51,7 @@ subroutine collect_wignerseitz(testsuite)
       & new_unittest("wignerseitz-cell-3d", test_wsc_3d), &
       & new_unittest("wignerseitz-robustness", test_wsc_robustness), &
       & new_unittest("wignerseitz-65deg-counterexample", test_wsc_65deg_counterexample), &
+      & new_unittest("wignerseitz-3d-skewed-counterexample", test_wsc_3d_skewed_counterexample), &
       & new_unittest("wignerseitz-exhaustive-reference", test_wsc_exhaustive_reference), &
       & new_unittest("wignerseitz-error-and-resource-limits", test_wsc_error_and_resource_limits) &
       & ]
@@ -225,7 +226,12 @@ subroutine test_wsc_3d(error)
    call check(error, size(wsc%trans, 1), 3)
    if (allocated(error)) return
 
-   call check(error, size(wsc%trans, 2), 27)
+   ! pyrazole has unwrapped coordinates spanning 1.5*a1 along x and 2.994*a3 along z,
+   ! requiring rep = [2, 1, 3] -> (2*2+1)*(2*1+1)*(2*3+1) = 105 translations
+   call check(error, size(wsc%trans, 2), 105)
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol, wsc, 4, error)
    if (allocated(error)) return
 
 end subroutine test_wsc_3d
@@ -475,6 +481,73 @@ subroutine test_wsc_65deg_counterexample(error)
 end subroutine test_wsc_65deg_counterexample
 
 
+!> Deterministic 3D counterexample where rep = [1, 1, 1] gives d^2 = 56.5 bohr^2
+!> while the four true minimum-distance images (2,0,0), (3,0,0), (-2,1,0), (-3,1,0)
+!> have d^2 = 6.5 bohr^2.
+subroutine test_wsc_3d_skewed_counterexample(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   type(error_type), allocatable :: wsc_err
+   real(wp) :: lattice(3, 3), xyz(3, 2), rij(3), vec(3), weights(16), d2
+   integer :: img, stat
+   logical :: found(4)
+
+   lattice(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   lattice(:, 2) = [25.0_wp, 1.0_wp, 0.0_wp]
+   lattice(:, 3) = [0.0_wp, 0.0_wp, 5.0_wp]
+
+   xyz(:, 1) = 0.0_wp
+   xyz(:, 2) = 0.5_wp * lattice(:, 2)
+
+   call new(mol, [6, 8], xyz, lattice=lattice, periodic=[.true., .true., .true.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, .not. allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, stat, wsc_stat%valid_pbc)
+   if (allocated(error)) return
+
+   ! Atom 1 and Atom 2 must have 4 equidistant minimum images at d^2 = 6.5 bohr^2
+   call check(error, wsc%nimg(1, 2), 4)
+   if (allocated(error)) return
+
+   call check(error, wsc%nimg(2, 1), 4)
+   if (allocated(error)) return
+
+   rij = mol%xyz(:, 2) - mol%xyz(:, 1)
+   found(:) = .false.
+   do img = 1, wsc%nimg(1, 2)
+      vec = wsc%trans(:, wsc%tridx(img, 1, 2))
+      d2 = sum((rij - vec)**2)
+      if (abs(d2 - 6.5_wp) > 1.0e-12_wp) then
+         call test_failed(error, "3D skewed counterexample selected image with wrong squared distance")
+         return
+      end if
+      if (maxval(abs(vec - [10.0_wp, 0.0_wp, 0.0_wp])) < 1.0e-12_wp) found(1) = .true.
+      if (maxval(abs(vec - [15.0_wp, 0.0_wp, 0.0_wp])) < 1.0e-12_wp) found(2) = .true.
+      if (maxval(abs(vec - [15.0_wp, 1.0_wp, 0.0_wp])) < 1.0e-12_wp) found(3) = .true.
+      if (maxval(abs(vec - [10.0_wp, 1.0_wp, 0.0_wp])) < 1.0e-12_wp) found(4) = .true.
+   end do
+
+   if (.not. all(found)) then
+      call test_failed(error, &
+         & "3D skewed counterexample did not recover all four images (2,0,0), (3,0,0), (-2,1,0), (-3,1,0)")
+      return
+   end if
+
+   call get_wignerseitz_weights(wsc, 1, 2, rij, weights)
+   if (maxval(abs(weights(1:4) - 0.25_wp)) > 1.0e-12_wp) then
+      call test_failed(error, "3D skewed counterexample weights are not [0.25, 0.25, 0.25, 0.25]")
+      return
+   end if
+
+end subroutine test_wsc_3d_skewed_counterexample
+
+
 subroutine test_wsc_exhaustive_reference(error)
 
    !> Error handling
@@ -483,11 +556,12 @@ subroutine test_wsc_exhaustive_reference(error)
    real(wp), parameter :: pi = 4.0_wp * atan(1.0_wp)
    real(wp), parameter :: angles_deg(4) = [60.0_wp, 65.0_wp, 90.0_wp, 120.0_wp]
    real(wp), parameter :: ratios(2) = [1.0_wp, 3.5_wp]
-   type(structure_type) :: mol
-   type(wignerseitz_cell) :: wsc
-   real(wp) :: lat(3, 3), xyz(3, 3), a1(3), a2(3)
+   type(structure_type) :: mol, mol_unimod
+   type(wignerseitz_cell) :: wsc, wsc_unimod
+   real(wp) :: lat(3, 3), lat_unimod(3, 3), xyz(3, 3), xyz_unimod(3, 3)
+   real(wp) :: a1(3), a2(3), a3(3), v_ref(3), v_test(3), weights(16)
    real(wp) :: ang, ratio
-   integer :: iang, irat, imask, ishift
+   integer :: iang, irat, imask, ishift, iat, jat
    logical :: masks_1d(3, 3), masks_2d(3, 3)
 
    masks_1d = reshape([ &
@@ -550,7 +624,94 @@ subroutine test_wsc_exhaustive_reference(error)
       end do
    end do
 
-   ! 3. Degenerate (collinear 2D) lattice fails closed without allocating fake origin-only trans
+   ! 3. Exhaustive 3D validation: triclinic lattices, strongly skewed cells,
+   !    unwrapped coordinates, unimodular basis transformations, and multi-period shifts
+   do ishift = 1, 3
+      a1 = [4.5_wp, 0.4_wp, -0.2_wp]
+      a2 = [1.8_wp, 4.9_wp, 0.5_wp] + real(ishift - 1, wp) * a1
+      a3 = [-1.1_wp, 1.5_wp, 5.2_wp] + real(ishift - 1, wp) * (a1 - a2)
+      lat(:, 1) = a1
+      lat(:, 2) = a2
+      lat(:, 3) = a3
+
+      xyz(:, 1) = [0.15_wp, -0.25_wp, 0.10_wp]
+      xyz(:, 2) = xyz(:, 1) + 1.38_wp * a1 + 1.41_wp * a2 - 0.49_wp * a3
+      xyz(:, 3) = xyz(:, 1) - 2.47_wp * a1 + 0.51_wp * a2 + 2.35_wp * a3
+
+      call new(mol, [6, 8, 1], xyz, lattice=lat, periodic=[.true., .true., .true.])
+      call new_wignerseitz_cell(wsc, mol)
+      call verify_wsc_against_ref(mol, wsc, 7, error)
+      if (allocated(error)) return
+
+      ! Unimodular 3D basis transformation: a2' = a2 + 2*a1, a3' = a3 - a1 + a2
+      ! combined with multi-period integer lattice shifts of atoms 2 and 3
+      lat_unimod(:, 1) = a1
+      lat_unimod(:, 2) = a2 + 2.0_wp * a1
+      lat_unimod(:, 3) = a3 - a1 + a2
+      xyz_unimod = xyz
+      xyz_unimod(:, 2) = xyz_unimod(:, 2) + 2.0_wp * a1 - 3.0_wp * a2 + a3
+      xyz_unimod(:, 3) = xyz_unimod(:, 3) - 3.0_wp * a1 + 2.0_wp * a2 - 2.0_wp * a3
+
+      call new(mol_unimod, [6, 8, 1], xyz_unimod, lattice=lat_unimod, &
+         & periodic=[.true., .true., .true.])
+      call new_wignerseitz_cell(wsc_unimod, mol_unimod)
+
+      do iat = 1, 3
+         do jat = 1, 3
+            call check(error, wsc_unimod%nimg(jat, iat), wsc%nimg(jat, iat))
+            if (allocated(error)) return
+
+            if (iat /= jat) then
+               v_ref = mol%xyz(:, jat) - mol%xyz(:, iat) &
+                  & + wsc%trans(:, wsc%tridx(1, jat, iat))
+               v_test = mol_unimod%xyz(:, jat) - mol_unimod%xyz(:, iat) &
+                  & + wsc_unimod%trans(:, wsc_unimod%tridx(1, jat, iat))
+               if (maxval(abs(v_test - v_ref)) > 1.0e-11_wp) then
+                  call test_failed(error, &
+                     & "3D WSC minimum-image vector changed under unimodular transformation and shift")
+                  return
+               end if
+            end if
+         end do
+      end do
+   end do
+
+   ! 4. 3D Wigner-Seitz boundary degeneracies: exact body-center (8 images) and
+   !    near-boundary perturbation within tol = 0.3_wp
+   lat = 0.0_wp
+   lat(:, 1) = [6.0_wp, 0.0_wp, 0.0_wp]
+   lat(:, 2) = [0.0_wp, 6.0_wp, 0.0_wp]
+   lat(:, 3) = [0.0_wp, 0.0_wp, 6.0_wp]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [3.0_wp, 3.0_wp, 3.0_wp]
+   xyz(:, 3) = [3.0_wp, 3.005_wp, 0.0_wp]
+
+   call new(mol, [6, 8, 1], xyz, lattice=lat, periodic=[.true., .true., .true.])
+   call new_wignerseitz_cell(wsc, mol)
+   call verify_wsc_against_ref(mol, wsc, 4, error)
+   if (allocated(error)) return
+
+   ! Atom 2 at exact body center of 6x6x6 cube has 8 equidistant nearest images
+   call check(error, wsc%nimg(1, 2), 8)
+   if (allocated(error)) return
+
+   call get_wignerseitz_weights(wsc, 1, 2, mol%xyz(:, 2) - mol%xyz(:, 1), weights)
+   if (maxval(abs(weights(1:8) - 0.125_wp)) > 1.0e-12_wp) then
+      call test_failed(error, "3D body-center 8-fold degenerate weights are not 1/8")
+      return
+   end if
+
+   ! Atom 3 near face/edge boundary (3.0, 3.005, 0.0) has 4 competing images within tol = 0.3
+   call check(error, wsc%nimg(1, 3), 4)
+   if (allocated(error)) return
+
+   call get_wignerseitz_weights(wsc, 1, 3, mol%xyz(:, 3) - mol%xyz(:, 1), weights)
+   if (abs(sum(weights(1:4)) - 1.0_wp) > 1.0e-12_wp) then
+      call test_failed(error, "3D near-boundary smooth weights do not sum to 1")
+      return
+   end if
+
+   ! 5. Degenerate (collinear 2D) lattice fails closed without allocating fake origin-only trans
    lat = 0.0_wp
    lat(:, 1) = [4.0_wp, 0.0_wp, 0.0_wp]
    lat(:, 2) = [8.0_wp, 0.0_wp, 0.0_wp]

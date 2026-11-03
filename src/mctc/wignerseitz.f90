@@ -348,7 +348,8 @@ pure subroutine get_wsc_rep(mol, rep, stat, max_trans)
          if (present(stat)) stat = wsc_stat%nonfinite_input
          return
       end if
-      call get_wsc_rep_3d(a1, a2, a3, rep_i8, local_stat)
+      call get_wsc_rep_3d(mol%xyz(:, :mol%nat), a1, a2, a3, rep_i8, &
+         & local_stat, limit_i8)
 
    case default
       local_stat = wsc_stat%invalid_structure
@@ -672,8 +673,48 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
 end subroutine get_wsc_rep_2d
 
 
-!> Check whether a 3D lattice is finite and non-degenerate
-pure subroutine get_wsc_rep_3d(a1, a2, a3, rep, stat)
+!> Compute Gram-Schmidt orthogonalization of a 3D lattice basis B = [b1, b2, b3]
+pure subroutine gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
+   !> Reduced lattice basis vectors (3, 3)
+   real(wp), intent(in) :: bmat(3, 3)
+   !> Mutually orthogonal Gram-Schmidt vectors (3, 3)
+   real(wp), intent(out) :: bstar(3, 3)
+   !> Squared norms of Gram-Schmidt vectors
+   real(wp), intent(out) :: bnorm2(3)
+   !> Gram-Schmidt projection coefficients
+   real(wp), intent(out) :: mu21, mu31, mu32
+   !> True if all Gram-Schmidt vectors are non-degenerate and finite
+   logical, intent(out) :: valid
+
+   valid = .false.
+   mu21 = 0.0_wp
+   mu31 = 0.0_wp
+   mu32 = 0.0_wp
+   bnorm2(:) = 0.0_wp
+
+   bstar(:, 1) = bmat(:, 1)
+   bnorm2(1) = dot_product(bstar(:, 1), bstar(:, 1))
+   if (.not. (bnorm2(1) > tol_deg**2 .and. bnorm2(1) <= huge(1.0_wp))) return
+
+   mu21 = dot_product(bmat(:, 2), bstar(:, 1)) / bnorm2(1)
+   bstar(:, 2) = bmat(:, 2) - mu21 * bstar(:, 1)
+   bnorm2(2) = dot_product(bstar(:, 2), bstar(:, 2))
+   if (.not. (bnorm2(2) > tol_deg**2 .and. bnorm2(2) <= huge(1.0_wp))) return
+
+   mu31 = dot_product(bmat(:, 3), bstar(:, 1)) / bnorm2(1)
+   mu32 = dot_product(bmat(:, 3), bstar(:, 2)) / bnorm2(2)
+   bstar(:, 3) = bmat(:, 3) - mu32 * bstar(:, 2) - mu31 * bstar(:, 1)
+   bnorm2(3) = dot_product(bstar(:, 3), bstar(:, 3))
+   if (.not. (bnorm2(3) > tol_deg**2 .and. bnorm2(3) <= huge(1.0_wp))) return
+
+   valid = .true.
+end subroutine gs_ortho_3d
+
+
+!> Exact 3D Wigner-Seitz repetition bounds via LLL basis reduction and Cholesky sphere search
+pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
+   !> Cartesian atomic coordinates (3, nat)
+   real(wp), intent(in) :: xyz(:, :)
    !> First 3D lattice vector
    real(wp), intent(in) :: a1(3)
    !> Second 3D lattice vector
@@ -684,8 +725,20 @@ pure subroutine get_wsc_rep_3d(a1, a2, a3, rep, stat)
    integer(i8), intent(out) :: rep(3)
    !> Status code
    integer, intent(out) :: stat
+   !> Maximum candidate translation count
+   integer(i8), intent(in) :: max_trans
 
+   integer :: nat, iat, jat, iter, k
+   integer(i8) :: u_mat(3, 3), tmp_u(3), q_red, u_max
+   integer(i8) :: n1_0, n2_0, n3_0, n1, n2, n3, k_min
+   integer(i8) :: n1_lo, n1_hi, n2_lo, n2_hi, n3_lo, n3_hi, m_orig(3)
    real(wp) :: len1, len2, len3, vol
+   real(wp) :: bmat(3, 3), bstar(3, 3), bnorm2(3), tmp_v(3)
+   real(wp) :: mu21, mu31, mu32
+   real(wp) :: rij(3), alpha1, alpha2, alpha3, c2_0, c1_0, c2, c1
+   real(wp) :: d0_sq, dmin_sq, r_max2, r_comp2, d3_sq, d23_sq, d_sq
+   real(wp) :: delta3, delta2, delta1
+   logical :: valid
 
    rep(:) = 0_i8
    len1 = norm2(a1)
@@ -701,7 +754,262 @@ pure subroutine get_wsc_rep_3d(a1, a2, a3, rep, stat)
       return
    end if
 
+   ! 3D LLL / Lagrange-Gauss basis reduction: B = A * U with U in GL(3, Z)
+   bmat(:, 1) = a1
+   bmat(:, 2) = a2
+   bmat(:, 3) = a3
+   u_mat = reshape([ &
+      & 1_i8, 0_i8, 0_i8, &
+      & 0_i8, 1_i8, 0_i8, &
+      & 0_i8, 0_i8, 1_i8], [3, 3])
+
+   do iter = 1, 100
+      call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
+      if (.not. valid) then
+         stat = wsc_stat%degenerate_lattice
+         return
+      end if
+
+      ! Size-reduce b2 against b1
+      if (.not. (abs(mu21) <= max_rep_real)) then
+         stat = wsc_stat%integer_overflow
+         return
+      end if
+      q_red = nint(mu21, i8)
+      if (q_red /= 0_i8) then
+         if (maxval(abs(u_mat)) > int(huge(0) / 4, i8) / max(1_i8, abs(q_red))) then
+            stat = wsc_stat%integer_overflow
+            return
+         end if
+         bmat(:, 2) = bmat(:, 2) - real(q_red, wp) * bmat(:, 1)
+         u_mat(:, 2) = u_mat(:, 2) - q_red * u_mat(:, 1)
+         call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
+         if (.not. valid) then
+            stat = wsc_stat%degenerate_lattice
+            return
+         end if
+      end if
+
+      ! Size-reduce b3 against b2
+      if (.not. (abs(mu32) <= max_rep_real)) then
+         stat = wsc_stat%integer_overflow
+         return
+      end if
+      q_red = nint(mu32, i8)
+      if (q_red /= 0_i8) then
+         if (maxval(abs(u_mat)) > int(huge(0) / 4, i8) / max(1_i8, abs(q_red))) then
+            stat = wsc_stat%integer_overflow
+            return
+         end if
+         bmat(:, 3) = bmat(:, 3) - real(q_red, wp) * bmat(:, 2)
+         u_mat(:, 3) = u_mat(:, 3) - q_red * u_mat(:, 2)
+         call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
+         if (.not. valid) then
+            stat = wsc_stat%degenerate_lattice
+            return
+         end if
+      end if
+
+      ! Size-reduce b3 against b1
+      if (.not. (abs(mu31) <= max_rep_real)) then
+         stat = wsc_stat%integer_overflow
+         return
+      end if
+      q_red = nint(mu31, i8)
+      if (q_red /= 0_i8) then
+         if (maxval(abs(u_mat)) > int(huge(0) / 4, i8) / max(1_i8, abs(q_red))) then
+            stat = wsc_stat%integer_overflow
+            return
+         end if
+         bmat(:, 3) = bmat(:, 3) - real(q_red, wp) * bmat(:, 1)
+         u_mat(:, 3) = u_mat(:, 3) - q_red * u_mat(:, 1)
+         call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
+         if (.not. valid) then
+            stat = wsc_stat%degenerate_lattice
+            return
+         end if
+      end if
+
+      ! Lovasz condition between columns 1 and 2
+      if (dot_product(bmat(:, 2), bmat(:, 2)) < dot_product(bmat(:, 1), bmat(:, 1)) &
+         & .or. bnorm2(2) < (0.99_wp - mu21 * mu21) * bnorm2(1)) then
+         tmp_v = bmat(:, 1); bmat(:, 1) = bmat(:, 2); bmat(:, 2) = tmp_v
+         tmp_u = u_mat(:, 1); u_mat(:, 1) = u_mat(:, 2); u_mat(:, 2) = tmp_u
+         cycle
+      end if
+
+      ! Lovasz condition between columns 2 and 3
+      if (dot_product(bmat(:, 3), bmat(:, 3)) < dot_product(bmat(:, 2), bmat(:, 2)) &
+         & .or. bnorm2(3) < (0.99_wp - mu32 * mu32) * bnorm2(2)) then
+         tmp_v = bmat(:, 2); bmat(:, 2) = bmat(:, 3); bmat(:, 3) = tmp_v
+         tmp_u = u_mat(:, 2); u_mat(:, 2) = u_mat(:, 3); u_mat(:, 3) = tmp_u
+         cycle
+      end if
+
+      exit
+   end do
+
+   call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
+   if (.not. valid) then
+      stat = wsc_stat%degenerate_lattice
+      return
+   end if
+
+   do k = 1, 3
+      if (sqrt(tol / bnorm2(k)) > max_rep_real) then
+         stat = wsc_stat%integer_overflow
+         return
+      end if
+      if (sqrt(tol / bnorm2(k)) > real(max_trans, wp)) then
+         stat = wsc_stat%resource_exhausted
+         return
+      end if
+   end do
+
+   u_max = max(1_i8, maxval(abs(u_mat)))
+   nat = size(xyz, 2)
    rep(:) = 1_i8
+
+   ! Enumerate exact nearest and competing images in the orthogonalized reduced basis
+   do iat = 1, nat
+      do jat = 1, iat
+         rij = xyz(:, iat) - xyz(:, jat)
+         alpha1 = dot_product(rij, bstar(:, 1)) / bnorm2(1)
+         alpha2 = dot_product(rij, bstar(:, 2)) / bnorm2(2)
+         alpha3 = dot_product(rij, bstar(:, 3)) / bnorm2(3)
+         if (.not. (abs(alpha1) <= max_rep_real .and. abs(alpha2) <= max_rep_real &
+            & .and. abs(alpha3) <= max_rep_real)) then
+            rep(:) = 0_i8
+            stat = wsc_stat%integer_overflow
+            return
+         end if
+
+         ! Babai nearest-plane integer point for initial distance upper bound d0_sq
+         n3_0 = nint(alpha3, i8)
+         c2_0 = alpha2 - mu32 * real(n3_0, wp)
+         if (.not. (abs(c2_0) <= max_rep_real)) then
+            rep(:) = 0_i8
+            stat = wsc_stat%integer_overflow
+            return
+         end if
+         n2_0 = nint(c2_0, i8)
+         c1_0 = alpha1 - mu21 * real(n2_0, wp) - mu31 * real(n3_0, wp)
+         if (.not. (abs(c1_0) <= max_rep_real)) then
+            rep(:) = 0_i8
+            stat = wsc_stat%integer_overflow
+            return
+         end if
+         n1_0 = nint(c1_0, i8)
+
+         d0_sq = bnorm2(1) * (real(n1_0, wp) - c1_0)**2 &
+            & + bnorm2(2) * (real(n2_0, wp) - c2_0)**2 &
+            & + bnorm2(3) * (real(n3_0, wp) - alpha3)**2
+
+         if (d0_sq < thr) then
+            if (.not. (sqrt(thr / bnorm2(1)) <= max_rep_real)) then
+               rep(:) = 0_i8
+               stat = wsc_stat%integer_overflow
+               return
+            end if
+            k_min = max(1_i8, ceiling(sqrt(thr / bnorm2(1)) - abs(real(n1_0, wp) - c1_0), i8))
+            d0_sq = bnorm2(1) * (abs(real(n1_0, wp) - c1_0) + real(k_min, wp))**2 &
+               & + bnorm2(2) * (real(n2_0, wp) - c2_0)**2 &
+               & + bnorm2(3) * (real(n3_0, wp) - alpha3)**2
+         end if
+
+         ! Pass 1: find exact minimum squared distance dmin_sq in the reduced sphere
+         r_max2 = (d0_sq + tol) * (1.0_wp + 1.0e-12_wp)
+         delta3 = sqrt(r_max2 / bnorm2(3))
+         if (.not. (abs(alpha3) + delta3 <= max_rep_real &
+            & .and. sqrt(r_max2 / bnorm2(2)) <= max_rep_real &
+            & .and. sqrt(r_max2 / bnorm2(1)) <= max_rep_real)) then
+            rep(:) = 0_i8
+            stat = wsc_stat%integer_overflow
+            return
+         end if
+         if (2.0_wp * delta3 + 1.0_wp > real(max_trans, wp) &
+            & .or. 2.0_wp * sqrt(r_max2 / bnorm2(2)) + 1.0_wp > real(max_trans, wp) &
+            & .or. 2.0_wp * sqrt(r_max2 / bnorm2(1)) + 1.0_wp > real(max_trans, wp)) then
+            rep(:) = 0_i8
+            stat = wsc_stat%resource_exhausted
+            return
+         end if
+
+         n3_lo = ceiling(alpha3 - delta3, i8)
+         n3_hi = floor(alpha3 + delta3, i8)
+         dmin_sq = d0_sq
+
+         do n3 = n3_lo, n3_hi
+            d3_sq = bnorm2(3) * (real(n3, wp) - alpha3)**2
+            if (d3_sq > r_max2) cycle
+            c2 = alpha2 - mu32 * real(n3, wp)
+            delta2 = sqrt((r_max2 - d3_sq) / bnorm2(2))
+            if (.not. (abs(c2) + delta2 <= max_rep_real)) then
+               rep(:) = 0_i8
+               stat = wsc_stat%integer_overflow
+               return
+            end if
+            n2_lo = ceiling(c2 - delta2, i8)
+            n2_hi = floor(c2 + delta2, i8)
+            do n2 = n2_lo, n2_hi
+               d23_sq = d3_sq + bnorm2(2) * (real(n2, wp) - c2)**2
+               if (d23_sq > r_max2) cycle
+               c1 = alpha1 - mu21 * real(n2, wp) - mu31 * real(n3, wp)
+               delta1 = sqrt((r_max2 - d23_sq) / bnorm2(1))
+               if (.not. (abs(c1) + delta1 <= max_rep_real)) then
+                  rep(:) = 0_i8
+                  stat = wsc_stat%integer_overflow
+                  return
+               end if
+               n1_lo = ceiling(c1 - delta1, i8)
+               n1_hi = floor(c1 + delta1, i8)
+               do n1 = n1_lo, n1_hi
+                  d_sq = d23_sq + bnorm2(1) * (real(n1, wp) - c1)**2
+                  if (d_sq < thr) cycle
+                  dmin_sq = min(dmin_sq, d_sq)
+               end do
+            end do
+         end do
+
+         ! Pass 2: collect all competing images within tol of dmin_sq and map via U
+         r_comp2 = (dmin_sq + tol) * (1.0_wp + 1.0e-12_wp)
+         delta3 = sqrt(r_comp2 / bnorm2(3))
+         n3_lo = ceiling(alpha3 - delta3, i8)
+         n3_hi = floor(alpha3 + delta3, i8)
+
+         do n3 = n3_lo, n3_hi
+            d3_sq = bnorm2(3) * (real(n3, wp) - alpha3)**2
+            if (d3_sq > r_comp2) cycle
+            c2 = alpha2 - mu32 * real(n3, wp)
+            delta2 = sqrt((r_comp2 - d3_sq) / bnorm2(2))
+            n2_lo = ceiling(c2 - delta2, i8)
+            n2_hi = floor(c2 + delta2, i8)
+            do n2 = n2_lo, n2_hi
+               d23_sq = d3_sq + bnorm2(2) * (real(n2, wp) - c2)**2
+               if (d23_sq > r_comp2) cycle
+               c1 = alpha1 - mu21 * real(n2, wp) - mu31 * real(n3, wp)
+               delta1 = sqrt((r_comp2 - d23_sq) / bnorm2(1))
+               n1_lo = ceiling(c1 - delta1, i8)
+               n1_hi = floor(c1 + delta1, i8)
+               do n1 = n1_lo, n1_hi
+                  d_sq = d23_sq + bnorm2(1) * (real(n1, wp) - c1)**2
+                  if (d_sq < thr) cycle
+                  if (d_sq > r_comp2) cycle
+                  if (max(abs(n1), abs(n2), abs(n3)) > (huge(1_i8) / 4_i8) / u_max) then
+                     rep(:) = 0_i8
+                     stat = wsc_stat%integer_overflow
+                     return
+                  end if
+                  do k = 1, 3
+                     m_orig(k) = u_mat(k, 1) * n1 + u_mat(k, 2) * n2 + u_mat(k, 3) * n3
+                     rep(k) = max(rep(k), abs(m_orig(k)))
+                  end do
+               end do
+            end do
+         end do
+      end do
+   end do
+
    stat = wsc_stat%valid_pbc
 
 end subroutine get_wsc_rep_3d
