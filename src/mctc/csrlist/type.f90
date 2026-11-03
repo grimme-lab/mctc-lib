@@ -180,6 +180,8 @@ subroutine new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
    !> Flag for complete neighborlist generation
    logical, intent(in), optional :: complete
 
+   type(error_type), allocatable :: local_error
+
    allocate(self%cutoff)
    self%cutoff = cutoff_def
    if (present(cutoff)) self%cutoff = cutoff
@@ -191,10 +193,14 @@ subroutine new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
 
    if (any(mol%periodic) .and. present(wsc)) then
       ! Generate the neighborlist and wsc type objects simultaneously
-      call build_list(self, mol, error, wsc)
+      call build_list(self, mol, local_error, wsc)
    else
       ! Generate the CSR neighbor list for molecular or periodic systems
-      call build_list(self, mol, error)
+      call build_list(self, mol, local_error)
+   end if
+
+   if (allocated(local_error) .and. present(error)) then
+      call move_alloc(local_error, error)
    end if
 
 end subroutine new_csr_list
@@ -293,6 +299,7 @@ subroutine build_list(self, mol, error, wsc)
    if (use_wsc) allocate(tridx(nat + 1), source=1_i8)
    call neighbor_pass(self, grid, .false., tridx, cnt, icnt, nself, self_tridx, &
       & nimg_max, wsc, error)
+   if (allocated(error)) return
 
    ! 6. CSR pointer array filling
    nimgs = 0_i8

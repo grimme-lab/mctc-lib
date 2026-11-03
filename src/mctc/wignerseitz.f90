@@ -14,6 +14,10 @@
 
 !> @file mctc/wignerseitz.f90
 !> Declaration of the cyclic cluster Wigner-Seitz type, generation, and weight evaluation
+!>
+!> Periodic Wigner-Seitz cell construction for DFT-D4 and related models following:
+!> E. Caldeweyher, J.-M. Mewes, S. Ehlert and S. Grimme, *Phys. Chem. Chem. Phys.*,
+!> **2020**, 22, 8499-8512. DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 module mctc_wignerseitz
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp, i8, error_type, fatal_error
@@ -23,28 +27,7 @@ module mctc_wignerseitz
    private
 
    public :: new_wignerseitz_cell, get_wignerseitz_weights, wignerseitz_cell, &
-      & get_pairs, get_wsc_rep, wsc_stat, max_wsc_trans
-
-   !> Status codes for Wigner-Seitz cell construction and bound estimation
-   type :: enum_wsc_stat
-      !> Valid zero-dimensional (non-periodic) geometry
-      integer :: valid_0d = 0
-      !> Valid periodic geometry
-      integer :: valid_pbc = 1
-      !> Invalid or degenerate active periodic lattice
-      integer :: degenerate_lattice = 2
-      !> Nonfinite coordinates or lattice vectors
-      integer :: nonfinite_input = 3
-      !> Integer overflow during bound or image-count calculation
-      integer :: integer_overflow = 4
-      !> Candidate translation count or allocation exceeds resource limit
-      integer :: resource_exhausted = 5
-      !> Invalid molecular structure (e.g., nat <= 0 or unallocated xyz)
-      integer :: invalid_structure = 6
-   end type enum_wsc_stat
-
-   !> Instance of Wigner-Seitz status enumerator
-   type(enum_wsc_stat), parameter :: wsc_stat = enum_wsc_stat()
+      & get_pairs
 
    !> Wigner-Seitz cell and its nearest image translations.
    !>
@@ -86,24 +69,18 @@ module mctc_wignerseitz
    !> Maximum candidate translation vectors before refusing allocation
    integer(i8), parameter :: max_wsc_trans = 100000_i8
 
-   !> Maximum 32-bit repetition bound such that 2*rep + 1 fits in default integer
-   integer(i8), parameter :: max_rep_i8 = int((huge(0) - 1) / 2 - 1, i8)
-
-   !> Safe 64-bit upper bound for unimodular matrix entries during basis reduction
+   !> Safe 64-bit upper bound for unimodular matrix entries and reduced coordinates
    integer(i8), parameter :: max_u_step_i8 = int((huge(0) - 3) / 4, i8)
 
-   !> Safe 64-bit upper bound before multiplying by unimodular matrix entries
-   integer(i8), parameter :: max_unimod_i8 = (huge(1_i8) - 3_i8) / 4_i8
-
-   !> Maximum real value convertible to a signed 32-bit repetition bound without overflow
-   real(wp), parameter :: max_rep_real = real((huge(0) - 1) / 2 - 4, wp)
+   !> Maximum real coordinate projection before rounding in reduced basis
+   real(wp), parameter :: max_rep_real = real(max_u_step_i8, wp)
 
 
 contains
 
 
 !> Construct a Wigner-Seitz cell for a molecular structure
-subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
+subroutine new_wignerseitz_cell(self, mol, error)
 
    !> Wigner-Seitz cell instance
    type(wignerseitz_cell), intent(out) :: self
@@ -114,38 +91,32 @@ subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
    !> Error handling
    type(error_type), allocatable, intent(out), optional :: error
 
-   !> Status code from Wigner-Seitz bound and cell construction
-   integer, intent(out), optional :: stat
-
-   !> Optional override for maximum candidate translation count
-   integer(i8), intent(in), optional :: max_trans
-
    integer, parameter :: init_tridx_cap = 8
-   integer :: iat, jat, nimg, nkeep, nimg_alloc, rep(3), local_stat
+   type(error_type), allocatable :: local_error
+   integer :: iat, jat, nimg, nkeep, nimg_alloc, rep(3)
    integer :: tridx_buf(init_tridx_cap)
    integer, allocatable :: tridx_init(:, :, :)
    real(wp) :: vec(3), min_r2
    real(wp), allocatable :: trans(:, :)
 
    ! Determine required lattice repetition bounds and validate periodic geometry
-   call get_wsc_rep(mol, rep, local_stat, max_trans)
-   if (present(stat)) stat = local_stat
-
-   if (local_stat /= wsc_stat%valid_0d .and. local_stat /= wsc_stat%valid_pbc) then
-      if (present(error)) call report_wsc_error(local_stat, error)
+   call get_wsc_rep(mol, rep, local_error)
+   if (allocated(local_error)) then
+      if (present(error)) call move_alloc(local_error, error)
       return
    end if
 
    ! Generate candidate lattice translations covering all nearest and competing images
-   if (local_stat == wsc_stat%valid_0d) then
+   if (.not. allocated(mol%periodic)) then
+      allocate(trans(3, 1))
+      trans(:, :) = 0.0_wp
+   else if (.not. any(mol%periodic)) then
       allocate(trans(3, 1))
       trans(:, :) = 0.0_wp
    else
-      call get_lattice_points(mol%lattice, rep, .true., trans, max_trans=max_trans)
-      if (.not. allocated(trans)) then
-         local_stat = wsc_stat%resource_exhausted
-         if (present(stat)) stat = local_stat
-         if (present(error)) call report_wsc_error(local_stat, error)
+      call get_lattice_points(mol%lattice, rep, .true., trans, local_error)
+      if (allocated(local_error)) then
+         if (present(error)) call move_alloc(local_error, error)
          return
       end if
    end if
@@ -199,38 +170,6 @@ subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
 end subroutine new_wignerseitz_cell
 
 
-!> Convert a Wigner-Seitz status code into a descriptive fatal_error
-pure subroutine report_wsc_error(stat, error)
-   !> Status code from Wigner-Seitz validation
-   integer, intent(in) :: stat
-   !> Allocated error instance
-   type(error_type), allocatable, intent(out) :: error
-
-   select case (stat)
-   case (wsc_stat%degenerate_lattice)
-      call fatal_error(error, &
-         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction", &
-         & stat=stat)
-   case (wsc_stat%nonfinite_input)
-      call fatal_error(error, &
-         & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction", &
-         & stat=stat)
-   case (wsc_stat%integer_overflow)
-      call fatal_error(error, &
-         & "Integer overflow in Wigner-Seitz lattice repetition bound calculation", &
-         & stat=stat)
-   case (wsc_stat%resource_exhausted)
-      call fatal_error(error, &
-         & "Wigner-Seitz candidate translation count exceeds maximum resource limit", &
-         & stat=stat)
-   case default
-      call fatal_error(error, &
-         & "Invalid molecular structure in Wigner-Seitz construction", &
-         & stat=stat)
-   end select
-end subroutine report_wsc_error
-
-
 !> Check whether a 1D array contains only finite IEEE values
 pure function is_finite_vec(vec) result(finite)
    !> Vector to inspect
@@ -252,7 +191,7 @@ end function is_finite_vec
 
 !> Determine lattice repetition bounds needed to cover all Wigner-Seitz nearest
 !> images, accounting for unwrapped coordinates and skewed periodic subspaces.
-pure subroutine get_wsc_rep(mol, rep, stat, max_trans)
+pure subroutine get_wsc_rep(mol, rep, error)
 
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
@@ -260,66 +199,58 @@ pure subroutine get_wsc_rep(mol, rep, stat, max_trans)
    !> Repetition bounds along each lattice vector
    integer, intent(out) :: rep(3)
 
-   !> Optional status code distinguishing valid 0D/PBC from error conditions
-   integer, intent(out), optional :: stat
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
-   !> Optional override for maximum candidate translation count
-   integer(i8), intent(in), optional :: max_trans
-
-   integer :: i, iat, ndim, p_axes(3), local_stat
-   integer(i8) :: rep_i8(3), ntr_i8, factor_i8, limit_i8
+   integer :: i, iat, ndim, p_axes(3)
+   integer(i8) :: rep_i8(3), ntr_i8
 
    rep(:) = 0
-   limit_i8 = max_wsc_trans
-   if (present(max_trans)) limit_i8 = max_trans
 
    ! Validate basic molecular structure allocation and extents
    if (mol%nat <= 0) then
-      if (present(stat)) stat = wsc_stat%invalid_structure
+      call fatal_error(error, &
+         & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
    if (.not. allocated(mol%xyz)) then
-      if (present(stat)) stat = wsc_stat%invalid_structure
+      call fatal_error(error, &
+         & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
    if (size(mol%xyz, 1) < 3 .or. size(mol%xyz, 2) < mol%nat) then
-      if (present(stat)) stat = wsc_stat%invalid_structure
+      call fatal_error(error, &
+         & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
 
    ! Validate finiteness of atomic coordinates
    do iat = 1, mol%nat
       if (.not. is_finite_vec(mol%xyz(1:3, iat))) then
-         if (present(stat)) stat = wsc_stat%nonfinite_input
+         call fatal_error(error, &
+            & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
          return
       end if
    end do
 
-   ! Handle non-periodic (0D) structures explicitly
-   if (.not. allocated(mol%periodic)) then
-      if (present(stat)) stat = wsc_stat%valid_0d
-      return
-   end if
-   if (.not. any(mol%periodic)) then
-      if (present(stat)) stat = wsc_stat%valid_0d
-      return
-   end if
+   ! Handle non-periodic (0D) structures
+   if (.not. allocated(mol%periodic)) return
+   if (.not. any(mol%periodic)) return
    if (size(mol%periodic) < 3) then
-      if (present(stat)) stat = wsc_stat%invalid_structure
+      call fatal_error(error, &
+         & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
 
-   ! Periodic structure requires an allocated 3x3 lattice and positive translation limit
+   ! Periodic structure requires an allocated 3x3 lattice
    if (.not. allocated(mol%lattice)) then
-      if (present(stat)) stat = wsc_stat%invalid_structure
+      call fatal_error(error, &
+         & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
    if (size(mol%lattice, 1) < 3 .or. size(mol%lattice, 2) < 3) then
-      if (present(stat)) stat = wsc_stat%invalid_structure
-      return
-   end if
-   if (limit_i8 <= 0_i8) then
-      if (present(stat)) stat = wsc_stat%resource_exhausted
+      call fatal_error(error, &
+         & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
 
@@ -329,7 +260,8 @@ pure subroutine get_wsc_rep(mol, rep, stat, max_trans)
    do i = 1, 3
       if (mol%periodic(i)) then
          if (.not. is_finite_vec(mol%lattice(:, i))) then
-            if (present(stat)) stat = wsc_stat%nonfinite_input
+            call fatal_error(error, &
+               & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
             return
          end if
          ndim = ndim + 1
@@ -338,69 +270,59 @@ pure subroutine get_wsc_rep(mol, rep, stat, max_trans)
    end do
 
    rep_i8(:) = 0_i8
-   local_stat = wsc_stat%valid_pbc
 
    select case (ndim)
    case (1)
       call get_wsc_rep_1d(mol%xyz(:, :mol%nat), mol%lattice(:, p_axes(1)), &
-         & rep_i8(p_axes(1)), local_stat, limit_i8)
+         & rep_i8(p_axes(1)), error)
 
    case (2)
       call get_wsc_rep_2d(mol%xyz(:, :mol%nat), mol%lattice(:, p_axes(1)), &
-         & mol%lattice(:, p_axes(2)), rep_i8(p_axes(1)), rep_i8(p_axes(2)), &
-         & local_stat, limit_i8)
+         & mol%lattice(:, p_axes(2)), rep_i8(p_axes(1)), rep_i8(p_axes(2)), error)
 
    case (3)
       call get_wsc_rep_3d(mol%xyz(:, :mol%nat), mol%lattice(:, 1), &
-         & mol%lattice(:, 2), mol%lattice(:, 3), rep_i8, local_stat, limit_i8)
+         & mol%lattice(:, 2), mol%lattice(:, 3), rep_i8, error)
 
    case default
-      local_stat = wsc_stat%invalid_structure
+      call fatal_error(error, &
+         & "Invalid molecular structure in Wigner-Seitz construction")
    end select
 
-   if (local_stat /= wsc_stat%valid_pbc) then
-      if (present(stat)) stat = local_stat
-      return
-   end if
+   if (allocated(error)) return
 
-   ! Verify 32-bit integer representability and 64-bit total translation count bounds
+   ! Bound each repetition count and accumulated product by max_wsc_trans in 64-bit
+   ! integer arithmetic so intermediate products and 32-bit conversion cannot overflow.
    ntr_i8 = 1_i8
    do i = 1, 3
-      if (rep_i8(i) < 0_i8 .or. rep_i8(i) > max_rep_i8) then
-         if (present(stat)) stat = wsc_stat%integer_overflow
+      if (rep_i8(i) > max_wsc_trans) then
+         call fatal_error(error, &
+            & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
          return
       end if
-      factor_i8 = 2_i8 * rep_i8(i) + 1_i8
-      if (ntr_i8 > huge(1_i8) / factor_i8) then
-         if (present(stat)) stat = wsc_stat%integer_overflow
+      ntr_i8 = ntr_i8 * (2_i8 * rep_i8(i) + 1_i8)
+      if (ntr_i8 > max_wsc_trans) then
+         call fatal_error(error, &
+            & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
          return
       end if
-      ntr_i8 = ntr_i8 * factor_i8
    end do
 
-   if (ntr_i8 > limit_i8) then
-      if (present(stat)) stat = wsc_stat%resource_exhausted
-      return
-   end if
-
    rep(:) = int(rep_i8)
-   if (present(stat)) stat = wsc_stat%valid_pbc
 
 end subroutine get_wsc_rep
 
 
 !> Exact 1D Wigner-Seitz repetition bound for arbitrary coordinates
-pure subroutine get_wsc_rep_1d(xyz, a1, rep1, stat, max_trans)
+pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
    !> Cartesian atomic coordinates (3, nat)
    real(wp), intent(in) :: xyz(:, :)
    !> Active 1D lattice vector
    real(wp), intent(in) :: a1(3)
    !> Repetition count along a1
    integer(i8), intent(out) :: rep1
-   !> Status code
-   integer, intent(out) :: stat
-   !> Maximum candidate translation count
-   integer(i8), intent(in) :: max_trans
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
    integer :: nat, iat, jat
    integer(i8) :: n0, n_lo, n_hi, k_min, rep_max
@@ -409,10 +331,17 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, stat, max_trans)
    rep1 = 0_i8
    len1 = norm2(a1)
    if (len1 <= tol_deg) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
    g11 = len1 * len1
+   if (sqrt(tol / g11) > real(max_wsc_trans, wp)) then
+      call fatal_error(error, &
+         & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
+      return
+   end if
+
    nat = size(xyz, 2)
    rep_max = 1_i8
 
@@ -424,7 +353,8 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, stat, max_trans)
          rij = xyz(:, iat) - xyz(:, jat)
          ds = dot_product(rij, a1) / g11
          if (.not. (abs(ds) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
+            call fatal_error(error, &
+               & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
             return
          end if
          d_perp2 = sum((rij - ds * a1)**2)
@@ -436,10 +366,6 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, stat, max_trans)
          d0_par2 = xi * xi * g11
          if (d_perp2 + d0_par2 < thr) then
             min_step = sqrt(max(0.0_wp, thr - d_perp2) / g11)
-            if (.not. (min_step <= max_rep_real)) then
-               stat = wsc_stat%integer_overflow
-               return
-            end if
             k_min = max(1_i8, ceiling(min_step - abs(xi), i8))
             d0_par2 = (real(k_min, wp) - abs(xi))**2 * g11
          end if
@@ -447,28 +373,24 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, stat, max_trans)
          ! Competing images: find all integer shifts n with (n - ds)^2 |a1|^2 <= d0_par2 + tol
          r_comp2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta_s = sqrt(r_comp2 / g11)
-         if (.not. (abs(ds) + delta_s <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
          n_lo = ceiling(ds - delta_s, i8)
          n_hi = floor(ds + delta_s, i8)
          rep_max = max(rep_max, abs(n_lo), abs(n_hi))
-         if (2_i8 * rep_max + 1_i8 > max_trans) then
-            stat = wsc_stat%resource_exhausted
+         if (2_i8 * rep_max + 1_i8 > max_wsc_trans) then
+            call fatal_error(error, &
+               & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
             return
          end if
       end do
    end do
 
    rep1 = rep_max
-   stat = wsc_stat%valid_pbc
 
 end subroutine get_wsc_rep_1d
 
 
 !> Exact 2D Wigner-Seitz repetition bounds via Lagrange-Gauss reduction and Cholesky search
-pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
+pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
    !> Cartesian atomic coordinates (3, nat)
    real(wp), intent(in) :: xyz(:, :)
    !> First active 2D lattice vector
@@ -479,16 +401,14 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
    integer(i8), intent(out) :: rep1
    !> Repetition count along a2
    integer(i8), intent(out) :: rep2
-   !> Status code
-   integer, intent(out) :: stat
-   !> Maximum candidate translation count
-   integer(i8), intent(in) :: max_trans
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
    real(wp), parameter :: tol_mu = 0.5_wp * (1.0_wp + 1.0e-12_wp)
    integer :: nat, iat, jat, iter
    integer(i8) :: u_mat(2, 2), tmp_u(2), mu
    integer(i8) :: n1_0, n2_0, n1, n2, n1_lo, n1_hi, n2_lo, n2_hi, k_min
-   integer(i8) :: m1_orig, m2_orig, u_max, rep1_max, rep2_max
+   integer(i8) :: m1_orig, m2_orig, rep1_max, rep2_max
    real(wp) :: len1, len2, area, b1(3), b2(3), tmp_v(3)
    real(wp) :: g11, g12, g22, det2, h2_sq
    real(wp) :: rij(3), proj1, proj2, ds1, ds2, d_perp2
@@ -501,12 +421,14 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
    len1 = norm2(a1)
    len2 = norm2(a2)
    if (len1 <= tol_deg .or. len2 <= tol_deg) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
    area = norm2(crossprod(a1, a2))
    if (area <= tol_deg * len1 * len2) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
 
@@ -525,12 +447,14 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
       end if
       g11 = dot_product(b1, b1)
       if (g11 <= tol_deg**2) then
-         stat = wsc_stat%degenerate_lattice
+         call fatal_error(error, &
+            & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
          return
       end if
       mu_real = dot_product(b1, b2) / g11
       if (.not. (abs(mu_real) <= max_rep_real)) then
-         stat = wsc_stat%integer_overflow
+         call fatal_error(error, &
+            & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
          return
       end if
       if (abs(mu_real) <= tol_mu) then
@@ -539,14 +463,16 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
       end if
       mu = nint(mu_real, i8)
       if (maxval(abs(u_mat)) > max_u_step_i8 / max(1_i8, abs(mu))) then
-         stat = wsc_stat%integer_overflow
+         call fatal_error(error, &
+            & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
          return
       end if
       b2 = b2 - real(mu, wp) * b1
       u_mat(:, 2) = u_mat(:, 2) - mu * u_mat(:, 1)
    end do
    if (.not. reduced) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
 
@@ -556,20 +482,17 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
    g22 = dot_product(b2, b2)
    det2 = g11 * g22 - g12 * g12
    if (det2 <= (tol_deg**2) * g11 * g22) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
    h2_sq = det2 / g11
-   if (sqrt(tol / g11) > max_rep_real .or. sqrt(tol / h2_sq) > max_rep_real) then
-      stat = wsc_stat%integer_overflow
-      return
-   end if
-   if (sqrt(tol / g11) > real(max_trans, wp) .or. sqrt(tol / h2_sq) > real(max_trans, wp)) then
-      stat = wsc_stat%resource_exhausted
+   if (sqrt(tol / g11) > real(max_wsc_trans, wp) .or. sqrt(tol / h2_sq) > real(max_wsc_trans, wp)) then
+      call fatal_error(error, &
+         & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
       return
    end if
 
-   u_max = max(1_i8, maxval(abs(u_mat)))
    nat = size(xyz, 2)
    rep1_max = 1_i8
    rep2_max = 1_i8
@@ -586,7 +509,8 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
          ds1 = (g22 * proj1 - g12 * proj2) / det2
          ds2 = (-g12 * proj1 + g11 * proj2) / det2
          if (.not. (abs(ds1) <= max_rep_real .and. abs(ds2) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
+            call fatal_error(error, &
+               & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
             return
          end if
          d_perp2 = sum((rij - ds1 * b1 - ds2 * b2)**2)
@@ -596,17 +520,9 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
          ! if this point is a self-image (< thr), step along b1 to a valid upper bound d0_par2
          n2_0 = nint(ds2, i8)
          c1_0 = ds1 - (g12 / g11) * (real(n2_0, wp) - ds2)
-         if (.not. (abs(c1_0) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
          n1_0 = nint(c1_0, i8)
          d0_par2 = g11 * (real(n1_0, wp) - c1_0)**2 + h2_sq * (real(n2_0, wp) - ds2)**2
          if (d_perp2 + d0_par2 < thr) then
-            if (.not. (sqrt(max(0.0_wp, thr - d_perp2) / g11) <= max_rep_real)) then
-               stat = wsc_stat%integer_overflow
-               return
-            end if
             k_min = max(1_i8, ceiling(sqrt(max(0.0_wp, thr - d_perp2) / g11) &
                & - abs(real(n1_0, wp) - c1_0), i8))
             d0_par2 = g11 * (abs(real(n1_0, wp) - c1_0) + real(k_min, wp))**2 &
@@ -617,14 +533,10 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
          ! Cholesky ellipse d_par^2 <= d0_par2 + tol to find the exact minimum dmin_par2
          r_max2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta2 = sqrt(r_max2 / h2_sq)
-         if (.not. (abs(ds2) + delta2 <= max_rep_real &
-            & .and. sqrt(r_max2 / g11) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
-         if (2.0_wp * delta2 + 1.0_wp > real(max_trans, wp) &
-            & .or. 2.0_wp * sqrt(r_max2 / g11) + 1.0_wp > real(max_trans, wp)) then
-            stat = wsc_stat%resource_exhausted
+         if (2.0_wp * delta2 + 1.0_wp > real(max_wsc_trans, wp) &
+            & .or. 2.0_wp * sqrt(r_max2 / g11) + 1.0_wp > real(max_wsc_trans, wp)) then
+            call fatal_error(error, &
+               & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
             return
          end if
          n2_lo = ceiling(ds2 - delta2, i8)
@@ -636,10 +548,6 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
             if (d2_sq > r_max2) cycle
             c1 = ds1 - (g12 / g11) * (real(n2, wp) - ds2)
             delta1 = sqrt((r_max2 - d2_sq) / g11)
-            if (.not. (abs(c1) + delta1 <= max_rep_real)) then
-               stat = wsc_stat%integer_overflow
-               return
-            end if
             n1_lo = ceiling(c1 - delta1, i8)
             n1_hi = floor(c1 + delta1, i8)
             do n1 = n1_lo, n1_hi
@@ -667,10 +575,6 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
                d_par2 = g11 * (real(n1, wp) - c1)**2 + d2_sq
                if (d_perp2 + d_par2 < thr) cycle
                if (d_par2 > r_comp2) cycle
-               if (max(abs(n1), abs(n2)) > max_unimod_i8 / u_max) then
-                  stat = wsc_stat%integer_overflow
-                  return
-               end if
 
                ! Return to the original basis: map reduced integer coordinates
                ! (n1, n2) back to unreduced lattice indices m = U * n
@@ -685,7 +589,6 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, stat, max_trans)
 
    rep1 = rep1_max
    rep2 = rep2_max
-   stat = wsc_stat%valid_pbc
 
 end subroutine get_wsc_rep_2d
 
@@ -728,8 +631,57 @@ pure subroutine gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
 end subroutine gs_ortho_3d
 
 
+!> Size-reduce column i against column j in 3D LLL reduction and refresh Gram-Schmidt data
+pure subroutine size_reduce_pair_3d(i, j, mu_ij, bmat, u_mat, bstar, bnorm2, &
+      & mu21, mu31, mu32, error)
+   !> Target column index (2 or 3)
+   integer, intent(in) :: i
+   !> Reference column index (< i)
+   integer, intent(in) :: j
+   !> Current Gram-Schmidt coefficient mu_{i,j}
+   real(wp), intent(in) :: mu_ij
+   !> Working lattice basis (3, 3)
+   real(wp), intent(inout) :: bmat(3, 3)
+   !> Unimodular transformation matrix (3, 3)
+   integer(i8), intent(inout) :: u_mat(3, 3)
+   !> Gram-Schmidt orthogonal vectors (3, 3)
+   real(wp), intent(inout) :: bstar(3, 3)
+   !> Squared Gram-Schmidt norms (3)
+   real(wp), intent(inout) :: bnorm2(3)
+   !> Gram-Schmidt projection coefficients
+   real(wp), intent(inout) :: mu21, mu31, mu32
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: tol_mu = 0.5_wp * (1.0_wp + 1.0e-12_wp)
+   integer(i8) :: q_red
+   logical :: valid
+
+   if (.not. (abs(mu_ij) <= max_rep_real)) then
+      call fatal_error(error, &
+         & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
+      return
+   end if
+   if (abs(mu_ij) <= tol_mu) return
+
+   q_red = nint(mu_ij, i8)
+   if (maxval(abs(u_mat)) > max_u_step_i8 / max(1_i8, abs(q_red))) then
+      call fatal_error(error, &
+         & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
+      return
+   end if
+   bmat(:, i) = bmat(:, i) - real(q_red, wp) * bmat(:, j)
+   u_mat(:, i) = u_mat(:, i) - q_red * u_mat(:, j)
+   call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
+   if (.not. valid) then
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
+   end if
+end subroutine size_reduce_pair_3d
+
+
 !> Exact 3D Wigner-Seitz repetition bounds via LLL basis reduction and Cholesky sphere search
-pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
+pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
    !> Cartesian atomic coordinates (3, nat)
    real(wp), intent(in) :: xyz(:, :)
    !> First 3D lattice vector
@@ -740,15 +692,12 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
    real(wp), intent(in) :: a3(3)
    !> Repetition counts along (a1, a2, a3)
    integer(i8), intent(out) :: rep(3)
-   !> Status code
-   integer, intent(out) :: stat
-   !> Maximum candidate translation count
-   integer(i8), intent(in) :: max_trans
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
-   real(wp), parameter :: tol_mu = 0.5_wp * (1.0_wp + 1.0e-12_wp)
    real(wp), parameter :: delta_lll = 0.99_wp
    integer :: nat, iat, jat, iter, k
-   integer(i8) :: u_mat(3, 3), tmp_u(3), q_red, u_max
+   integer(i8) :: u_mat(3, 3), tmp_u(3)
    integer(i8) :: n1_0, n2_0, n3_0, n1, n2, n3, k_min
    integer(i8) :: n1_lo, n1_hi, n2_lo, n2_hi, n3_lo, n3_hi, m_orig(3), rep_max(3)
    real(wp) :: len1, len2, len3, vol
@@ -764,12 +713,14 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
    len2 = norm2(a2)
    len3 = norm2(a3)
    if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
    vol = abs(dot_product(a1, crossprod(a2, a3)))
    if (vol <= tol_deg * len1 * len2 * len3) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
 
@@ -791,69 +742,22 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
    do iter = 1, 100
       call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
       if (.not. valid) then
-         stat = wsc_stat%degenerate_lattice
+         call fatal_error(error, &
+            & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
          return
       end if
 
-      ! Size-reduce b2 against b1 when |mu21| > 1/2
-      if (.not. (abs(mu21) <= max_rep_real)) then
-         stat = wsc_stat%integer_overflow
-         return
-      end if
-      if (abs(mu21) > tol_mu) then
-         q_red = nint(mu21, i8)
-         if (maxval(abs(u_mat)) > max_u_step_i8 / max(1_i8, abs(q_red))) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
-         bmat(:, 2) = bmat(:, 2) - real(q_red, wp) * bmat(:, 1)
-         u_mat(:, 2) = u_mat(:, 2) - q_red * u_mat(:, 1)
-         call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
-         if (.not. valid) then
-            stat = wsc_stat%degenerate_lattice
-            return
-         end if
-      end if
+      call size_reduce_pair_3d(2, 1, mu21, bmat, u_mat, bstar, bnorm2, &
+         & mu21, mu31, mu32, error)
+      if (allocated(error)) return
 
-      ! Size-reduce b3 against b2 when |mu32| > 1/2
-      if (.not. (abs(mu32) <= max_rep_real)) then
-         stat = wsc_stat%integer_overflow
-         return
-      end if
-      if (abs(mu32) > tol_mu) then
-         q_red = nint(mu32, i8)
-         if (maxval(abs(u_mat)) > max_u_step_i8 / max(1_i8, abs(q_red))) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
-         bmat(:, 3) = bmat(:, 3) - real(q_red, wp) * bmat(:, 2)
-         u_mat(:, 3) = u_mat(:, 3) - q_red * u_mat(:, 2)
-         call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
-         if (.not. valid) then
-            stat = wsc_stat%degenerate_lattice
-            return
-         end if
-      end if
+      call size_reduce_pair_3d(3, 2, mu32, bmat, u_mat, bstar, bnorm2, &
+         & mu21, mu31, mu32, error)
+      if (allocated(error)) return
 
-      ! Size-reduce b3 against b1 when |mu31| > 1/2
-      if (.not. (abs(mu31) <= max_rep_real)) then
-         stat = wsc_stat%integer_overflow
-         return
-      end if
-      if (abs(mu31) > tol_mu) then
-         q_red = nint(mu31, i8)
-         if (maxval(abs(u_mat)) > max_u_step_i8 / max(1_i8, abs(q_red))) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
-         bmat(:, 3) = bmat(:, 3) - real(q_red, wp) * bmat(:, 1)
-         u_mat(:, 3) = u_mat(:, 3) - q_red * u_mat(:, 1)
-         call gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
-         if (.not. valid) then
-            stat = wsc_stat%degenerate_lattice
-            return
-         end if
-      end if
+      call size_reduce_pair_3d(3, 1, mu31, bmat, u_mat, bstar, bnorm2, &
+         & mu21, mu31, mu32, error)
+      if (allocated(error)) return
 
       ! Lovasz condition between columns 1 and 2
       if (bnorm2(2) < (delta_lll - mu21 * mu21) * bnorm2(1)) then
@@ -873,22 +777,17 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
       exit
    end do
    if (.not. reduced) then
-      stat = wsc_stat%degenerate_lattice
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
 
-   do k = 1, 3
-      if (sqrt(tol / bnorm2(k)) > max_rep_real) then
-         stat = wsc_stat%integer_overflow
-         return
-      end if
-      if (sqrt(tol / bnorm2(k)) > real(max_trans, wp)) then
-         stat = wsc_stat%resource_exhausted
-         return
-      end if
-   end do
+   if (any(sqrt(tol / bnorm2) > real(max_wsc_trans, wp))) then
+      call fatal_error(error, &
+         & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
+      return
+   end if
 
-   u_max = max(1_i8, maxval(abs(u_mat)))
    nat = size(xyz, 2)
    rep_max(:) = 1_i8
 
@@ -904,7 +803,8 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
          alpha3 = dot_product(rij, bstar(:, 3)) / bnorm2(3)
          if (.not. (abs(alpha1) <= max_rep_real .and. abs(alpha2) <= max_rep_real &
             & .and. abs(alpha3) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
+            call fatal_error(error, &
+               & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
             return
          end if
 
@@ -913,16 +813,8 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
          ! along b1 to obtain a guaranteed positive distance bound d0_sq
          n3_0 = nint(alpha3, i8)
          c2_0 = alpha2 - mu32 * real(n3_0, wp)
-         if (.not. (abs(c2_0) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
          n2_0 = nint(c2_0, i8)
          c1_0 = alpha1 - mu21 * real(n2_0, wp) - mu31 * real(n3_0, wp)
-         if (.not. (abs(c1_0) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
          n1_0 = nint(c1_0, i8)
 
          d0_sq = bnorm2(1) * (real(n1_0, wp) - c1_0)**2 &
@@ -930,10 +822,6 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
             & + bnorm2(3) * (real(n3_0, wp) - alpha3)**2
 
          if (d0_sq < thr) then
-            if (.not. (sqrt(thr / bnorm2(1)) <= max_rep_real)) then
-               stat = wsc_stat%integer_overflow
-               return
-            end if
             k_min = max(1_i8, ceiling(sqrt(thr / bnorm2(1)) - abs(real(n1_0, wp) - c1_0), i8))
             d0_sq = bnorm2(1) * (abs(real(n1_0, wp) - c1_0) + real(k_min, wp))**2 &
                & + bnorm2(2) * (real(n2_0, wp) - c2_0)**2 &
@@ -943,20 +831,13 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
          ! Nearest-image search: enumerate all integer points (n1, n2, n3) inside the
          ! Cholesky ellipsoid ||B*n - rij||^2 <= d0_sq + tol to find the exact minimum dmin_sq
          r_max2 = (d0_sq + tol) * (1.0_wp + 1.0e-12_wp)
-         delta3 = sqrt(r_max2 / bnorm2(3))
-         if (.not. (abs(alpha3) + delta3 <= max_rep_real &
-            & .and. sqrt(r_max2 / bnorm2(2)) <= max_rep_real &
-            & .and. sqrt(r_max2 / bnorm2(1)) <= max_rep_real)) then
-            stat = wsc_stat%integer_overflow
-            return
-         end if
-         if (2.0_wp * delta3 + 1.0_wp > real(max_trans, wp) &
-            & .or. 2.0_wp * sqrt(r_max2 / bnorm2(2)) + 1.0_wp > real(max_trans, wp) &
-            & .or. 2.0_wp * sqrt(r_max2 / bnorm2(1)) + 1.0_wp > real(max_trans, wp)) then
-            stat = wsc_stat%resource_exhausted
+         if (any(2.0_wp * sqrt(r_max2 / bnorm2) + 1.0_wp > real(max_wsc_trans, wp))) then
+            call fatal_error(error, &
+               & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
             return
          end if
 
+         delta3 = sqrt(r_max2 / bnorm2(3))
          n3_lo = ceiling(alpha3 - delta3, i8)
          n3_hi = floor(alpha3 + delta3, i8)
          dmin_sq = d0_sq
@@ -966,10 +847,6 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
             if (d3_sq > r_max2) cycle
             c2 = alpha2 - mu32 * real(n3, wp)
             delta2 = sqrt((r_max2 - d3_sq) / bnorm2(2))
-            if (.not. (abs(c2) + delta2 <= max_rep_real)) then
-               stat = wsc_stat%integer_overflow
-               return
-            end if
             n2_lo = ceiling(c2 - delta2, i8)
             n2_hi = floor(c2 + delta2, i8)
             do n2 = n2_lo, n2_hi
@@ -977,10 +854,6 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
                if (d23_sq > r_max2) cycle
                c1 = alpha1 - mu21 * real(n2, wp) - mu31 * real(n3, wp)
                delta1 = sqrt((r_max2 - d23_sq) / bnorm2(1))
-               if (.not. (abs(c1) + delta1 <= max_rep_real)) then
-                  stat = wsc_stat%integer_overflow
-                  return
-               end if
                n1_lo = ceiling(c1 - delta1, i8)
                n1_hi = floor(c1 + delta1, i8)
                do n1 = n1_lo, n1_hi
@@ -1016,10 +889,6 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
                   d_sq = d23_sq + bnorm2(1) * (real(n1, wp) - c1)**2
                   if (d_sq < thr) cycle
                   if (d_sq > r_comp2) cycle
-                  if (max(abs(n1), abs(n2), abs(n3)) > max_unimod_i8 / u_max) then
-                     stat = wsc_stat%integer_overflow
-                     return
-                  end if
 
                   ! Return to the original basis: map reduced integer coordinates
                   ! (n1, n2, n3) back to unreduced lattice indices m = U * n
@@ -1034,7 +903,6 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
    end do
 
    rep(:) = rep_max(:)
-   stat = wsc_stat%valid_pbc
 
 end subroutine get_wsc_rep_3d
 

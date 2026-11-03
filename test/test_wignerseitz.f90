@@ -21,7 +21,7 @@ module test_wignerseitz
    use mctc_io_structure, only: structure_type, new
    use mctc_wignerseitz, only : get_pairs
    use mctc_wignerseitz, only : wignerseitz_cell, new_wignerseitz_cell, &
-      & get_wignerseitz_weights, get_wsc_rep, get_pairs, wsc_stat
+      & get_wignerseitz_weights, get_pairs
    use testsuite_structure, only : get_structure
    implicit none
    private
@@ -497,7 +497,7 @@ subroutine test_wsc_3d_skewed_counterexample(error)
    type(wignerseitz_cell) :: wsc
    type(error_type), allocatable :: wsc_err
    real(wp) :: lattice(3, 3), xyz(3, 2), rij(3), vec(3), weights(16), d2
-   integer :: img, stat
+   integer :: img
    logical :: found(4)
 
    lattice(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
@@ -508,11 +508,8 @@ subroutine test_wsc_3d_skewed_counterexample(error)
    xyz(:, 2) = 0.5_wp * lattice(:, 2)
 
    call new(mol, [6, 8], xyz, lattice=lattice, periodic=[.true., .true., .true.])
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, .not. allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, stat, wsc_stat%valid_pbc)
    if (allocated(error)) return
 
    ! Atom 1 and Atom 2 must have 4 equidistant minimum images at d^2 = 6.5 bohr^2
@@ -727,7 +724,7 @@ subroutine test_wsc_exhaustive_reference(error)
 end subroutine test_wsc_exhaustive_reference
 
 
-!> Verify explicit status and error reporting across 0D, valid periodic, degenerate,
+!> Verify error reporting across 0D, valid periodic, degenerate,
 !> nonfinite, integer-overflow, and 1D/2D resource-exhaustion geometries.
 subroutine test_wsc_error_and_resource_limits(error)
 
@@ -738,19 +735,11 @@ subroutine test_wsc_error_and_resource_limits(error)
    type(wignerseitz_cell) :: wsc
    type(error_type), allocatable :: wsc_err
    real(wp) :: lat(3, 3), xyz(3, 2)
-   integer :: rep(3), stat
 
    ! 1. Valid 0D geometry
    call get_structure(mol, "mindless02")
-   call get_wsc_rep(mol, rep, stat)
-   call check(error, stat, wsc_stat%valid_0d)
-   if (allocated(error)) return
-
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, .not. allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, stat, wsc_stat%valid_0d)
    if (allocated(error)) return
 
    call check(error, allocated(wsc%trans))
@@ -765,11 +754,8 @@ subroutine test_wsc_error_and_resource_limits(error)
    xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
    xyz(:, 2) = [2.0_wp, 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, .not. allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, stat, wsc_stat%valid_pbc)
    if (allocated(error)) return
 
    call check(error, allocated(wsc%trans))
@@ -786,10 +772,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    xyz(:, 1) = 0.0_wp
    xyz(:, 2) = 19999.0_wp * lat(:, 1) + [1.2_wp, 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%valid_pbc)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, .not. allocated(wsc_err))
    if (allocated(error)) return
 
@@ -807,10 +790,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    lat = 0.0_wp
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
    if (allocated(wsc_err)) deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%degenerate_lattice)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
@@ -823,10 +803,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    lat(:, 2) = [10.0_wp, 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .false.])
    deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%degenerate_lattice)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
@@ -837,10 +814,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    lat(:, 3) = [3.0_wp, 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .true.])
    deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%degenerate_lattice)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
@@ -854,10 +828,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    xyz(:, 2) = [ieee_value(1.0_wp, ieee_quiet_nan), 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
    deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%nonfinite_input)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
@@ -868,27 +839,21 @@ subroutine test_wsc_error_and_resource_limits(error)
    lat(1, 1) = ieee_value(1.0_wp, ieee_positive_inf)
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
    deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%nonfinite_input)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
    call check(error, .not. allocated(wsc%trans))
    if (allocated(error)) return
 
-   ! 7. Integer overflow (fractional span exceeds 32-bit repetition bound)
+   ! 7. Integer overflow (fractional span exceeds repetition bound)
    lat = 0.0_wp
    lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
    xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
    xyz(:, 2) = [1.0e12_wp, 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
    deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%integer_overflow)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
@@ -903,10 +868,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    xyz(:, 2) = [600000.0_wp, 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
    deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%resource_exhausted)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
@@ -922,10 +884,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    xyz(:, 2) = [1001.0_wp, 1001.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .false.])
    deallocate(wsc_err)
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%resource_exhausted)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
@@ -946,7 +905,7 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
    type(wignerseitz_cell) :: wsc
    type(error_type), allocatable :: wsc_err
    real(wp) :: lat(3, 3), xyz(3, 2), weights(16)
-   integer :: stat, iws_small, iws_full, list_small(8), list_full(27)
+   integer :: iws_small, iws_full, list_small(8), list_full(27)
 
    ! 1. 2D 60-degree hexagonal lattice where mu = (a1 . a2) / |a1|^2 = 0.5 exactly:
    !    verifies Lagrange-Gauss size reduction terminates immediately without oscillating
@@ -956,10 +915,7 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
    xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
    xyz(:, 2) = [2.0_wp, 1.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .false.])
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%valid_pbc)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, .not. allocated(wsc_err))
    if (allocated(error)) return
 
@@ -977,10 +933,7 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
    xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
    xyz(:, 2) = 0.48_wp * lat(:, 1) - 0.51_wp * lat(:, 2) + 0.49_wp * lat(:, 3)
    call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .true.])
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%valid_pbc)
-   if (allocated(error)) return
-
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, .not. allocated(wsc_err))
    if (allocated(error)) return
 
@@ -995,8 +948,8 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
    lat(:, 3) = [4.0_wp, 4.0_wp, 0.0_wp]
    call new(mol, [6], reshape([0.0_wp, 0.0_wp, 0.0_wp], [3, 1]), &
       & lattice=lat, periodic=[.true., .true., .true.])
-   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
-   call check(error, stat, wsc_stat%valid_pbc)
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
+   call check(error, .not. allocated(wsc_err))
    if (allocated(error)) return
 
    call check(error, wsc%nimg(1, 1), 12)
