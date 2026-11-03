@@ -144,6 +144,14 @@ contains
       real(wp), allocatable :: lattr(:, :)
 
       call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, lattr)
+      if (.not. allocated(lattr)) then
+         cn(:) = 0.0_wp
+         if (present(dcndr)) dcndr(:, :, :) = 0.0_wp
+         if (present(dcndL)) dcndL(:, :, :) = 0.0_wp
+         if (present(dcndrlist)) dcndrlist(:, :) = 0.0_wp
+         return
+      end if
+
       call get_coordination_number(self, mol, lattr, cn, dcndr, dcndL, list, &
          & dcndrlist)
    end subroutine get_cn

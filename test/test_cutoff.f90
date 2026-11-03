@@ -13,8 +13,9 @@
 ! limitations under the License.
 
 module test_cutoff
-   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
-   use mctc_env, only : wp
+   use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan, ieee_positive_inf
+   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell, cutoff_stat, max_cutoff_trans
+   use mctc_env, only : wp, i8
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
    & check, test_failed
    use mctc_io_structure, only : structure_type
@@ -40,6 +41,7 @@ contains
       & new_unittest("lattice-points-cutoff", test_lattice_points_cutoff), &
       & new_unittest("lattice-points-rep", test_lattice_points_rep), &
       & new_unittest("lattice-points-partial-pbc", test_lattice_points_partial_pbc), &
+      & new_unittest("lattice-points-overflow-and-errors", test_lattice_points_overflow_and_errors), &
       & new_unittest("wrap", test_wrap), &
       & new_unittest("wrap-partial-pbc", test_wrap_partial_pbc) &
       & ]
@@ -400,23 +402,220 @@ contains
          end if
       end do
 
-      ! Degenerate active periodic subspaces and negative cutoffs must return origin safely
+      ! Degenerate active periodic subspaces and negative cutoffs must fail explicitly
+      ! and leave trans unallocated (never silently returning an origin-only translation set)
       lat = 0.0_wp
       call get_lattice_points([.true., .false., .false.], lat, 10.0_wp, trans1)
-      call check(error, size(trans1, 2), 1)
+      call check(error, .not. allocated(trans1), .true.)
       if (allocated(error)) return
 
       lat(:, 1) = a1
       lat(:, 2) = 2.0_wp * a1
       call get_lattice_points([.true., .true., .false.], lat, 10.0_wp, trans1)
-      call check(error, size(trans1, 2), 1)
+      call check(error, .not. allocated(trans1), .true.)
       if (allocated(error)) return
 
       call get_lattice_points([.true., .false., .false.], lat, -1.0_wp, trans1)
-      call check(error, size(trans1, 2), 1)
+      call check(error, .not. allocated(trans1), .true.)
       if (allocated(error)) return
 
    end subroutine test_lattice_points_partial_pbc
+
+
+   subroutine test_lattice_points_overflow_and_errors(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(error_type), allocatable :: call_err
+      real(wp) :: lat(3, 3)
+      real(wp), allocatable :: trans(:, :)
+      integer :: stat
+
+      ! 0D valid case returns origin only and valid_0d status
+      lat = 0.0_wp
+      call get_lattice_points([.false., .false., .false.], lat, 10.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%valid_0d)
+      if (allocated(error)) return
+      call check(error, .not. allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, allocated(trans), .true.)
+      if (allocated(error)) return
+      call check(error, size(trans, 2), 1)
+      if (allocated(error)) return
+
+      ! Large valid 1D repetition count (rep = [20000, 0, 0] -> 40001 points)
+      ! with zero inactive lattice columns
+      lat = 0.0_wp
+      lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+      call get_lattice_points(lat, [20000, 0, 0], .true., trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%valid_pbc)
+      if (allocated(error)) return
+      call check(error, .not. allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, size(trans, 2), 40001)
+      if (allocated(error)) return
+
+      ! Large valid 1D cutoff (rthr = 100000.0, len1 = 5.0 -> rep(1) = 20000 -> 40001 points)
+      call get_lattice_points([.true., .false., .false.], lat, 100000.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%valid_pbc)
+      if (allocated(error)) return
+      call check(error, .not. allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, size(trans, 2), 40001)
+      if (allocated(error)) return
+
+      ! 2D with zero inactive lattice column
+      lat = 0.0_wp
+      lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+      lat(:, 2) = [0.0_wp, 5.0_wp, 0.0_wp]
+      call get_lattice_points([.true., .true., .false.], lat, 10.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%valid_pbc)
+      if (allocated(error)) return
+      call check(error, size(trans, 2), 25)
+      if (allocated(error)) return
+
+      ! Excessive 2D repetition product exceeding default resource limit (10001^2 = 100,020,001 > 10^6)
+      deallocate(call_err, stat=stat)
+      call get_lattice_points(lat, [5000, 5000, 0], .true., trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%resource_exhausted)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      ! Excessive 3D repetition product exceeding 32-bit signed integer:
+      ! rep = [650, 650, 650] -> (2*650 + 1)^3 = 2,202,075,301 > huge(0)
+      lat(:, 3) = [0.0_wp, 0.0_wp, 5.0_wp]
+      deallocate(call_err, stat=stat)
+      call get_lattice_points(lat, [650, 650, 650], .true., trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%integer_overflow)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      ! Extreme 3D repetition bounds near huge(0) must be caught by 64-bit pre-multiplication guard
+      deallocate(call_err, stat=stat)
+      call get_lattice_points(lat, [huge(0), huge(0), huge(0)], .true., trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%integer_overflow)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      ! Values near real-to-integer conversion limits (rthr / len1 > max_rep_real)
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .false., .false.], lat, 1.0e12_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%integer_overflow)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      ! Negative and nonfinite cutoffs
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .false., .false.], lat, -1.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%invalid_cutoff)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .false., .false.], lat, &
+         & ieee_value(0.0_wp, ieee_quiet_nan), trans, error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%invalid_cutoff)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .false., .false.], lat, &
+         & ieee_value(0.0_wp, ieee_positive_inf), trans, error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%invalid_cutoff)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      ! Negative explicit repetition count
+      deallocate(call_err, stat=stat)
+      call get_lattice_points(lat, [-1, 0, 0], .true., trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%invalid_cutoff)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      ! Degenerate active lattice vectors (1D zero, 2D collinear, 3D coplanar)
+      lat = 0.0_wp
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .false., .false.], lat, 10.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%invalid_lattice)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+      lat(:, 2) = [10.0_wp, 0.0_wp, 0.0_wp]
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .true., .false.], lat, 10.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%invalid_lattice)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      lat(:, 2) = [0.0_wp, 5.0_wp, 0.0_wp]
+      lat(:, 3) = [5.0_wp, 5.0_wp, 0.0_wp]
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .true., .true.], lat, 10.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%invalid_lattice)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+      ! Nonfinite active lattice vector
+      lat(:, 1) = [ieee_value(0.0_wp, ieee_quiet_nan), 0.0_wp, 0.0_wp]
+      deallocate(call_err, stat=stat)
+      call get_lattice_points([.true., .false., .false.], lat, 10.0_wp, trans, &
+         & error=call_err, stat=stat)
+      call check(error, stat, cutoff_stat%nonfinite_input)
+      if (allocated(error)) return
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
+   end subroutine test_lattice_points_overflow_and_errors
 
 
    subroutine test_wrap_partial_pbc(error)

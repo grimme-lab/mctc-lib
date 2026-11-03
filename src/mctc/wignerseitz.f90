@@ -128,7 +128,7 @@ subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
       allocate(trans(3, 1))
       trans(:, :) = 0.0_wp
    else
-      call get_lattice_points(mol%lattice, rep, .true., trans)
+      call get_lattice_points(mol%lattice, rep, .true., trans, max_trans=max_trans)
       if (.not. allocated(trans)) then
          local_stat = wsc_stat%resource_exhausted
          if (present(stat)) stat = local_stat

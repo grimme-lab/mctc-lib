@@ -236,13 +236,19 @@ subroutine build_list(self, mol, error, wsc)
 
    ! 1. Generate lattice translations
    if (use_wsc) then
-      call get_lattice_points(mol%periodic, mol%lattice, sqrt(epsilon(0.0_wp)), trans)
+      call get_lattice_points(mol%periodic, mol%lattice, sqrt(epsilon(0.0_wp)), trans, &
+         & error=error)
+      if (allocated(error)) return
+
       self%trans = trans
       wsc%trans = trans
       wsc%nimg_max = 0
    else if (.not. allocated(self%trans)) then
       if (periodic) then
-         call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, trans)
+         call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, trans, &
+            & error=error)
+         if (allocated(error)) return
+
          call move_alloc(trans, self%trans)
       else
          self%trans = trans_def
