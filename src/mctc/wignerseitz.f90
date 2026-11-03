@@ -89,10 +89,9 @@ subroutine new_wignerseitz_cell(self, mol, error)
    type(structure_type), intent(in) :: mol
 
    !> Error handling
-   type(error_type), allocatable, intent(out), optional :: error
+   type(error_type), allocatable, intent(out) :: error
 
    integer, parameter :: init_tridx_cap = 8
-   type(error_type), allocatable :: local_error
    integer :: iat, jat, nimg, nkeep, nimg_alloc, rep(3)
    integer :: tridx_buf(init_tridx_cap)
    integer, allocatable :: tridx_init(:, :, :)
@@ -100,11 +99,8 @@ subroutine new_wignerseitz_cell(self, mol, error)
    real(wp), allocatable :: trans(:, :)
 
    ! Determine required lattice repetition bounds and validate periodic geometry
-   call get_wsc_rep(mol, rep, local_error)
-   if (allocated(local_error)) then
-      if (present(error)) call move_alloc(local_error, error)
-      return
-   end if
+   call get_wsc_rep(mol, rep, error)
+   if (allocated(error)) return
 
    ! Generate candidate lattice translations covering all nearest and competing images
    if (.not. allocated(mol%periodic)) then
@@ -114,11 +110,8 @@ subroutine new_wignerseitz_cell(self, mol, error)
       allocate(trans(3, 1))
       trans(:, :) = 0.0_wp
    else
-      call get_lattice_points(mol%lattice, rep, .true., trans, local_error)
-      if (allocated(local_error)) then
-         if (present(error)) call move_alloc(local_error, error)
-         return
-      end if
+      call get_lattice_points(mol%lattice, rep, .true., trans, error)
+      if (allocated(error)) return
    end if
 
    ! First pass over atom pairs: record exact competing-image counts in self%nimg

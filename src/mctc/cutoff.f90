@@ -22,18 +22,13 @@ module mctc_cutoff
    implicit none
    private
 
-   public :: get_lattice_points, get_translations, wrap_to_central_cell
+   public :: get_lattice_points, wrap_to_central_cell
 
 
    interface get_lattice_points
       module procedure :: get_lattice_points_cutoff
       module procedure :: get_lattice_points_rep_3d
    end interface get_lattice_points
-
-   interface get_translations
-      module procedure :: get_translations_3d
-      module procedure :: get_translations_pbc
-   end interface get_translations
 
    !> Tolerance for detecting degenerate lattice vectors, areas, and volumes
    real(wp), parameter :: tol_deg = 1.0e-12_wp
@@ -60,35 +55,29 @@ pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans, error)
    !> Generated lattice points
    real(wp), allocatable, intent(out) :: trans(:, :)
 
-   !> Optional error handling
-   type(error_type), allocatable, intent(out), optional :: error
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
    integer :: i, itr, ix, iy, iz, jx, jy, jz, ntr
    integer(i8) :: ntot_i8
    real(wp) :: vec(3)
 
    if (size(lat, 1) < 3 .or. size(lat, 2) < 3 .or. size(rep) < 3) then
-      if (present(error)) then
-         call fatal_error(error, &
-            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-      end if
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in cutoff enumeration")
       return
    end if
 
    do i = 1, 3
       if (rep(i) < 0) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
-         end if
+         call fatal_error(error, &
+            & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
          return
       end if
       if (rep(i) > 0) then
          if (.not. is_finite_vec(lat(1:3, i))) then
-            if (present(error)) then
-               call fatal_error(error, &
-                  & "Nonfinite lattice vectors in cutoff enumeration")
-            end if
+            call fatal_error(error, &
+               & "Nonfinite lattice vectors in cutoff enumeration")
             return
          end if
       end if
@@ -99,28 +88,22 @@ pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans, error)
    ntot_i8 = 1_i8
    do i = 1, 3
       if (int(rep(i), i8) > max_cutoff_trans) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Lattice translation count exceeds maximum resource limit")
-         end if
+         call fatal_error(error, &
+            & "Lattice translation count exceeds maximum resource limit")
          return
       end if
       ntot_i8 = ntot_i8 * (2_i8 * int(rep(i), i8) + 1_i8)
       if (ntot_i8 - 1_i8 > max_cutoff_trans) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Lattice translation count exceeds maximum resource limit")
-         end if
+         call fatal_error(error, &
+            & "Lattice translation count exceeds maximum resource limit")
          return
       end if
    end do
 
    if (.not. origin) ntot_i8 = ntot_i8 - 1_i8
    if (ntot_i8 > max_cutoff_trans) then
-      if (present(error)) then
-         call fatal_error(error, &
-            & "Lattice translation count exceeds maximum resource limit")
-      end if
+      call fatal_error(error, &
+         & "Lattice translation count exceeds maximum resource limit")
       return
    end if
 
@@ -187,17 +170,14 @@ pure subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans, error)
    !> Generated lattice points
    real(wp), allocatable, intent(out) :: trans(:, :)
 
-   !> Optional error handling
-   type(error_type), allocatable, intent(out), optional :: error
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
-   type(error_type), allocatable :: local_error
    integer :: rep(3)
 
    if (rthr < 0.0_wp .or. .not. is_finite_scalar(rthr)) then
-      if (present(error)) then
-         call fatal_error(error, &
-            & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
-      end if
+      call fatal_error(error, &
+         & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
       return
    end if
 
@@ -205,36 +185,18 @@ pure subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans, error)
       allocate(trans(3, 1))
       trans(:, :) = 0.0_wp
    else
-      call get_translations_pbc(periodic, lat, rthr, rep, local_error)
-      if (allocated(local_error)) then
-         if (present(error)) call move_alloc(local_error, error)
-         return
-      end if
+      call get_translations(periodic, lat, rthr, rep, error)
+      if (allocated(error)) return
+
       call get_lattice_points_rep_3d(lat, rep, .true., trans, error)
    end if
 
 end subroutine get_lattice_points_cutoff
 
 
-!> Generate supercell repetition counts for a 3D periodic lattice based on a realspace cutoff
-pure subroutine get_translations_3d(lat, rthr, rep, error)
-   !> Lattice parameters
-   real(wp), intent(in) :: lat(:, :)
-   !> Real space cutoff
-   real(wp), intent(in) :: rthr
-   !> Supercell repetition bounds along each lattice vector
-   integer, intent(out) :: rep(3)
-   !> Optional error handling
-   type(error_type), allocatable, intent(out), optional :: error
-
-   call get_translations_pbc([.true., .true., .true.], lat, rthr, rep, error)
-
-end subroutine get_translations_3d
-
-
 !> Generate supercell repetition counts for active periodic directions based on a
 !> realspace cutoff using the metric of the active periodic subspace.
-pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
+pure subroutine get_translations(periodic, lat, rthr, rep, error)
    !> Periodic dimensions
    logical, intent(in) :: periodic(:)
    !> Lattice parameters
@@ -243,8 +205,8 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
    real(wp), intent(in) :: rthr
    !> Supercell repetition bounds along each lattice vector
    integer, intent(out) :: rep(3)
-   !> Optional error handling
-   type(error_type), allocatable, intent(out), optional :: error
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
    integer :: i, ndim, p_axes(3)
    integer(i8) :: rep_i8(3), ntot_i8
@@ -256,18 +218,14 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
    rep(:) = 0
 
    if (rthr < 0.0_wp .or. .not. is_finite_scalar(rthr)) then
-      if (present(error)) then
-         call fatal_error(error, &
-            & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
-      end if
+      call fatal_error(error, &
+         & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
       return
    end if
    if (.not. any(periodic)) return
    if (size(lat, 1) < 3 .or. size(lat, 2) < 3 .or. size(periodic) < 3) then
-      if (present(error)) then
-         call fatal_error(error, &
-            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-      end if
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in cutoff enumeration")
       return
    end if
 
@@ -276,10 +234,8 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
    do i = 1, 3
       if (periodic(i)) then
          if (.not. is_finite_vec(lat(1:3, i))) then
-            if (present(error)) then
-               call fatal_error(error, &
-                  & "Nonfinite lattice vectors in cutoff enumeration")
-            end if
+            call fatal_error(error, &
+               & "Nonfinite lattice vectors in cutoff enumeration")
             return
          end if
          ndim = ndim + 1
@@ -295,18 +251,14 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
       a1 = lat(:, p_axes(1))
       len1 = norm2(a1)
       if (len1 <= tol_deg) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-         end if
+         call fatal_error(error, &
+            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
          return
       end if
       ratio1 = rthr / len1
       if (.not. (ratio1 <= real(max_cutoff_trans, wp))) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Lattice translation count exceeds maximum resource limit")
-         end if
+         call fatal_error(error, &
+            & "Lattice translation count exceeds maximum resource limit")
          return
       end if
       rep_i8(p_axes(1)) = ceiling(ratio1, i8)
@@ -319,28 +271,22 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
       len1 = norm2(a1)
       len2 = norm2(a2)
       if (len1 <= tol_deg .or. len2 <= tol_deg) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-         end if
+         call fatal_error(error, &
+            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
          return
       end if
       area = norm2(crossprod(a1, a2))
       if (area <= tol_deg * len1 * len2) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-         end if
+         call fatal_error(error, &
+            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
          return
       end if
       ratio1 = rthr * len2 / area
       ratio2 = rthr * len1 / area
       if (.not. (ratio1 <= real(max_cutoff_trans, wp) &
          & .and. ratio2 <= real(max_cutoff_trans, wp))) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Lattice translation count exceeds maximum resource limit")
-         end if
+         call fatal_error(error, &
+            & "Lattice translation count exceeds maximum resource limit")
          return
       end if
       rep_i8(p_axes(1)) = ceiling(ratio1, i8)
@@ -356,10 +302,8 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
       len2 = norm2(a2)
       len3 = norm2(a3)
       if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-         end if
+         call fatal_error(error, &
+            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
          return
       end if
       normx = crossprod(a2, a3)
@@ -367,10 +311,8 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
       normz = crossprod(a1, a2)
       vol = abs(dot_product(a1, normx))
       if (vol <= tol_deg * len1 * len2 * len3) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-         end if
+         call fatal_error(error, &
+            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
          return
       end if
       cos10 = vol / norm2(normx)
@@ -382,10 +324,8 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
       if (.not. (ratio1 <= real(max_cutoff_trans, wp) &
          & .and. ratio2 <= real(max_cutoff_trans, wp) &
          & .and. ratio3 <= real(max_cutoff_trans, wp))) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Lattice translation count exceeds maximum resource limit")
-         end if
+         call fatal_error(error, &
+            & "Lattice translation count exceeds maximum resource limit")
          return
       end if
       rep_i8(1) = ceiling(ratio1, i8)
@@ -393,10 +333,8 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
       rep_i8(3) = ceiling(ratio3, i8)
 
    case default
-      if (present(error)) then
-         call fatal_error(error, &
-            & "Invalid or degenerate active periodic lattice in cutoff enumeration")
-      end if
+      call fatal_error(error, &
+         & "Invalid or degenerate active periodic lattice in cutoff enumeration")
       return
    end select
 
@@ -405,17 +343,15 @@ pure subroutine get_translations_pbc(periodic, lat, rthr, rep, error)
    do i = 1, 3
       ntot_i8 = ntot_i8 * (2_i8 * rep_i8(i) + 1_i8)
       if (ntot_i8 > max_cutoff_trans) then
-         if (present(error)) then
-            call fatal_error(error, &
-               & "Lattice translation count exceeds maximum resource limit")
-         end if
+         call fatal_error(error, &
+            & "Lattice translation count exceeds maximum resource limit")
          return
       end if
    end do
 
    rep(:) = int(rep_i8)
 
-end subroutine get_translations_pbc
+end subroutine get_translations
 
 
 !> Check whether a scalar real value is finite (neither NaN nor Inf)

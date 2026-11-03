@@ -16,7 +16,7 @@
 module mctc_ncoord_type
    use mctc_csrlist, only : csr_list
    use mctc_cutoff, only : get_lattice_points
-   use mctc_env, only : wp, i8
+   use mctc_env, only : error_type, wp, i8
    use mctc_io, only : structure_type
    use mctc_io_math, only : outerprod
 
@@ -141,10 +141,11 @@ contains
       !> in the sparsity pattern of the CSR list
       real(wp), intent(out), optional :: dcndrlist(:, :)
 
+      type(error_type), allocatable :: error
       real(wp), allocatable :: lattr(:, :)
 
-      call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, lattr)
-      if (.not. allocated(lattr)) then
+      call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, lattr, error)
+      if (allocated(error)) then
          cn(:) = 0.0_wp
          if (present(dcndr)) dcndr(:, :, :) = 0.0_wp
          if (present(dcndL)) dcndL(:, :, :) = 0.0_wp

@@ -251,6 +251,7 @@ subroutine test_distance(error, mol, cutoff, trans, cmp)
 
    allocate(list)
    call new_csr_list(list, mol, error, cutoff=cutoff, trans=trans, complete=cmp)
+   if (allocated(error)) return
 
    do iat = 1, mol%nat
       do kat = list%inl(iat) + 1, list%inl(iat+1) - 1
@@ -297,6 +298,7 @@ subroutine test_mol_list_gen(error, mol, cutoff, trans, cmp)
 
    allocate(list)
    call new_csr_list(list, mol, error, cutoff=cutoff, trans=trans, complete=cmp)
+   if (allocated(error)) return
 
    allocate(ref_ptr(mol%nat + 1))
    call gen_verlet(mol, trans, cutoff, ref_ptr, ref_list, ref_nltr, cmp)
@@ -355,6 +357,7 @@ subroutine test_pbc_list_gen(error, mol, cutoff, trans, cmp)
 
    allocate(list)
    call new_csr_list(list, mol, error, cutoff=cutoff, trans=trans, complete=cmp)
+   if (allocated(error)) return
 
    allocate(ref_ptr(mol%nat + 1))
    call gen_verlet(mol, trans, cutoff, ref_ptr, ref_list, ref_nltr, cmp)
@@ -419,6 +422,7 @@ subroutine test_wsc(error, mol, cutoff, cmp, ref_list, ref_nimg)
 
    allocate(list)
    call new_csr_list(list, mol, error, wsc, cutoff=cutoff, complete=cmp)
+   if (allocated(error)) return
 
    do iat = 1, mol%nat
       do kat = list%inl(iat), list%inl(iat+1) - 1
@@ -553,7 +557,8 @@ subroutine test_grid_nacl(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "nacl")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_grid_gen(error, mol, cutoff, ref_nxyz)
 
@@ -572,7 +577,8 @@ subroutine test_grid_feo2(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_grid_gen(error, mol, cutoff, ref_nxyz)
 
@@ -593,7 +599,8 @@ subroutine test_grid_x02_114(error)
 
    call get_structure(mol, "x02")
    call make_supercell(mol, supercell)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_grid_gen(error, mol, cutoff, ref_nxyz)
 
@@ -627,7 +634,8 @@ subroutine test_distance_feo2_cut_5(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_distance(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -716,7 +724,8 @@ subroutine test_list_nacl(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "nacl")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -732,7 +741,8 @@ subroutine test_list_feo2(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -748,7 +758,8 @@ subroutine test_list_x01(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x01")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -765,7 +776,8 @@ subroutine test_list_x02(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x02")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -784,7 +796,8 @@ subroutine test_list_x02_114(error)
 
    call get_structure(mol, "x02")
    call make_supercell(mol, supercell)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -926,7 +939,8 @@ subroutine test_list_nacl_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "nacl")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
@@ -942,7 +956,8 @@ subroutine test_list_feo2_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
@@ -958,7 +973,8 @@ subroutine test_list_x04_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x04")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
@@ -974,7 +990,8 @@ subroutine test_list_x05_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x05")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 

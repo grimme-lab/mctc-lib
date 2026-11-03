@@ -166,7 +166,7 @@ subroutine new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
    type(structure_type), intent(in) :: mol
 
    !> Error status, zero on success
-   type(error_type), allocatable, intent(out), optional :: error
+   type(error_type), allocatable, intent(out) :: error
 
    !> Wigner-Seitz cell type, enables the Wigner-Seitz image search
    type(wignerseitz_cell), intent(inout), optional :: wsc
@@ -180,8 +180,6 @@ subroutine new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
    !> Flag for complete neighborlist generation
    logical, intent(in), optional :: complete
 
-   type(error_type), allocatable :: local_error
-
    allocate(self%cutoff)
    self%cutoff = cutoff_def
    if (present(cutoff)) self%cutoff = cutoff
@@ -193,14 +191,10 @@ subroutine new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
 
    if (any(mol%periodic) .and. present(wsc)) then
       ! Generate the neighborlist and wsc type objects simultaneously
-      call build_list(self, mol, local_error, wsc)
+      call build_list(self, mol, error, wsc)
    else
       ! Generate the CSR neighbor list for molecular or periodic systems
-      call build_list(self, mol, local_error)
-   end if
-
-   if (allocated(local_error) .and. present(error)) then
-      call move_alloc(local_error, error)
+      call build_list(self, mol, error)
    end if
 
 end subroutine new_csr_list
@@ -243,7 +237,7 @@ subroutine build_list(self, mol, error, wsc)
    ! 1. Generate lattice translations
    if (use_wsc) then
       call get_lattice_points(mol%periodic, mol%lattice, sqrt(epsilon(0.0_wp)), trans, &
-         & error=error)
+         & error)
       if (allocated(error)) return
 
       self%trans = trans
@@ -251,8 +245,7 @@ subroutine build_list(self, mol, error, wsc)
       wsc%nimg_max = 0
    else if (.not. allocated(self%trans)) then
       if (periodic) then
-         call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, trans, &
-            & error=error)
+         call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, trans, error)
          if (allocated(error)) return
 
          call move_alloc(trans, self%trans)
@@ -297,8 +290,8 @@ subroutine build_list(self, mol, error, wsc)
    allocate(cnt(nat), source=0)
    allocate(icnt(nat), source=0)
    if (use_wsc) allocate(tridx(nat + 1), source=1_i8)
-   call neighbor_pass(self, grid, .false., tridx, cnt, icnt, nself, self_tridx, &
-      & nimg_max, wsc, error)
+   call neighbor_pass(self, grid, .false., cnt, icnt, nself, self_tridx, &
+      & nimg_max, error, tridx, wsc)
    if (allocated(error)) return
 
    ! 6. CSR pointer array filling
@@ -327,8 +320,9 @@ subroutine build_list(self, mol, error, wsc)
    end if
 
    ! 8. Filling pass
-   call neighbor_pass(self, grid, .true., tridx, cnt, icnt, nself, self_tridx, &
-      & nimg_max, wsc, error)
+   call neighbor_pass(self, grid, .true., cnt, icnt, nself, self_tridx, &
+      & nimg_max, error, tridx, wsc)
+   if (allocated(error)) return
 
    if (use_wsc) then
       wsc%nimg_max = nimg_max
@@ -338,8 +332,8 @@ subroutine build_list(self, mol, error, wsc)
 end subroutine build_list
 
 !> Counting and filling pass over all cell pairs
-subroutine neighbor_pass(self, grid, lstore, tridx, cnt, icnt, nself, &
-   & self_tridx, nimg_max, wsc, error)
+subroutine neighbor_pass(self, grid, lstore, cnt, icnt, nself, &
+   & self_tridx, nimg_max, error, tridx, wsc)
 
    !> Instance of the neighborlist, filled if lstore is set
    type(csr_list), intent(inout) :: self
@@ -349,9 +343,6 @@ subroutine neighbor_pass(self, grid, lstore, tridx, cnt, icnt, nself, &
 
    !> Store the entries instead of counting them
    logical, intent(in) :: lstore
-
-   !> Offset of each atom into the image index array, only used when storing
-   integer(i8), intent(in), optional :: tridx(:)
 
    !> Number of neighbors of each atom, excluding the diagonal entry
    integer, intent(inout) :: cnt(:)
@@ -368,11 +359,14 @@ subroutine neighbor_pass(self, grid, lstore, tridx, cnt, icnt, nself, &
    !> Largest number of images found for a single pair
    integer, intent(inout) :: nimg_max
 
-   !> Wigner-Seitz cell type, enables the Wigner-Seitz image search
-   type(wignerseitz_cell), intent(inout), optional :: wsc
-
    !> Error message, set if the two passes disagree
    type(error_type), allocatable, intent(out) :: error
+
+   !> Offset of each atom into the image index array, only used when storing
+   integer(i8), intent(in), optional :: tridx(:)
+
+   !> Wigner-Seitz cell type, enables the Wigner-Seitz image search
+   type(wignerseitz_cell), intent(inout), optional :: wsc
 
    integer :: nsten, ntr, nmax
    integer :: ic, shift, ns, jc, lcatidx, lcatidxst, lcatidxfin
