@@ -231,6 +231,9 @@ subroutine test_wsc_3d(error)
    call check(error, size(wsc%trans, 2), 105)
    if (allocated(error)) return
 
+   call check(error, size(wsc%tridx, 1), max(1, wsc%nimg_max))
+   if (allocated(error)) return
+
    call verify_wsc_against_ref(mol, wsc, 4, error)
    if (allocated(error)) return
 
@@ -773,6 +776,31 @@ subroutine test_wsc_error_and_resource_limits(error)
 
    call check(error, size(wsc%trans, 2), 3)
    if (allocated(error)) return
+
+   call check(error, size(wsc%tridx, 1), max(1, wsc%nimg_max))
+   if (allocated(error)) return
+
+   ! 2b. Large valid 1D unwrapped shift (19,999 periods -> rep(1) = 19999 -> 39999 translations):
+   !     verifies O(1)-stack nearest-image scan and compact tridx first dimension (2 vs 39999)
+   xyz(:, 1) = 0.0_wp
+   xyz(:, 2) = 19999.0_wp * lat(:, 1) + [1.2_wp, 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%valid_pbc)
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, size(wsc%trans, 2), 39999)
+   if (allocated(error)) return
+
+   call check(error, size(wsc%tridx, 1), max(1, wsc%nimg_max))
+   if (allocated(error)) return
+
+   call check(error, size(wsc%tridx, 1), 2)
+   if (allocated(error)) return
+   xyz(:, 2) = [1.2_wp, 0.0_wp, 0.0_wp]
 
    ! 3. Degenerate active 1D lattice (zero active lattice vector)
    lat = 0.0_wp

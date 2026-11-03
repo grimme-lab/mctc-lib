@@ -107,10 +107,12 @@ subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
    !> Optional override for maximum candidate translation count
    integer(i8), intent(in), optional :: max_trans
 
-   integer :: iat, jat, ntr, nimg, rep(3), local_stat
-   integer(i8) :: nat_i8, npair_i8, ntr_i8
-   integer, allocatable :: tridx(:)
-   real(wp) :: vec(3)
+   integer, parameter :: init_tridx_cap = 8
+   integer :: iat, jat, ntr, nimg, nkeep, nimg_alloc, rep(3), local_stat
+   integer :: tridx_buf(init_tridx_cap)
+   integer(i8) :: nat_i8, npair_i8
+   integer, allocatable :: tridx_init(:, :, :)
+   real(wp) :: vec(3), min_r2
    real(wp), allocatable :: trans(:, :)
 
    ! Determine required lattice repetition bounds and validate periodic geometry
@@ -141,7 +143,6 @@ subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
 
    ntr = size(trans, 2)
    nat_i8 = int(mol%nat, i8)
-   ntr_i8 = int(ntr, i8)
    if (nat_i8 > huge(1_i8) / max(1_i8, nat_i8)) then
       local_stat = wsc_stat%integer_overflow
       if (present(stat)) stat = local_stat
@@ -152,8 +153,8 @@ subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
    end if
    npair_i8 = nat_i8 * nat_i8
 
-   ! Guard 32-bit default-integer allocation extents before allocating nimg/tridx
-   if (npair_i8 > int(huge(0), i8) .or. ntr_i8 > int(huge(0), i8) / max(1_i8, npair_i8)) then
+   ! Guard 32-bit default-integer allocation extents before allocating nimg/tridx_init
+   if (npair_i8 > int(huge(0), i8) / int(init_tridx_cap, i8)) then
       local_stat = wsc_stat%integer_overflow
       if (present(stat)) stat = local_stat
       if (present(error)) then
@@ -162,21 +163,56 @@ subroutine new_wignerseitz_cell(self, mol, error, stat, max_trans)
       return
    end if
 
-   allocate(self%nimg(mol%nat, mol%nat), self%tridx(ntr, mol%nat, mol%nat), &
-   & tridx(ntr))
+   allocate(self%nimg(mol%nat, mol%nat), tridx_init(init_tridx_cap, mol%nat, mol%nat))
+   tridx_init(:, :, :) = 0
 
    !$omp parallel do default(none) schedule(runtime) collapse(2) &
-   !$omp& shared(mol, trans, self) private(iat, jat, vec, nimg, tridx)
+   !$omp& shared(mol, trans, self, tridx_init) &
+   !$omp& private(iat, jat, vec, nimg, nkeep, tridx_buf, min_r2)
    do iat = 1, mol%nat
       do jat = 1, mol%nat
          vec(:) = mol%xyz(:, iat) - mol%xyz(:, jat)
-         call get_pairs(nimg, trans, vec, tridx)
+         call find_wsc_pairs(trans, vec, nimg, tridx_buf, min_r2)
          self%nimg(jat, iat) = nimg
-         self%tridx(:, jat, iat) = tridx
+         nkeep = min(nimg, init_tridx_cap)
+         if (nkeep > 0) tridx_init(1:nkeep, jat, iat) = tridx_buf(1:nkeep)
       end do
    end do
 
+   self%nimg_max = 0
    if (mol%nat > 0) self%nimg_max = maxval(self%nimg)
+   nimg_alloc = max(1, self%nimg_max)
+
+   if (nimg_alloc == init_tridx_cap) then
+      call move_alloc(tridx_init, self%tridx)
+   else if (nimg_alloc < init_tridx_cap) then
+      allocate(self%tridx(nimg_alloc, mol%nat, mol%nat))
+      self%tridx(1:nimg_alloc, :, :) = tridx_init(1:nimg_alloc, :, :)
+      deallocate(tridx_init)
+   else
+      deallocate(tridx_init)
+      if (int(nimg_alloc, i8) > int(huge(0), i8) / max(1_i8, npair_i8)) then
+         deallocate(self%nimg)
+         local_stat = wsc_stat%integer_overflow
+         if (present(stat)) stat = local_stat
+         if (present(error)) then
+            call report_wsc_error(local_stat, error)
+         end if
+         return
+      end if
+      allocate(self%tridx(nimg_alloc, mol%nat, mol%nat))
+      self%tridx(:, :, :) = 0
+      !$omp parallel do default(none) schedule(runtime) collapse(2) &
+      !$omp& shared(mol, trans, self) private(iat, jat, vec, nimg, min_r2)
+      do iat = 1, mol%nat
+         do jat = 1, mol%nat
+            if (self%nimg(jat, iat) <= 0) cycle
+            vec(:) = mol%xyz(:, iat) - mol%xyz(:, jat)
+            call find_wsc_pairs(trans, vec, nimg, self%tridx(:, jat, iat), min_r2)
+         end do
+      end do
+   end if
+
    call move_alloc(trans, self%trans)
 
 end subroutine new_wignerseitz_cell
@@ -1015,7 +1051,7 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, stat, max_trans)
 end subroutine get_wsc_rep_3d
 
 !> Find the nearest translation images for an interatomic vector
-subroutine get_pairs(iws, trans, rij, list)
+pure subroutine get_pairs(iws, trans, rij, list)
    !> Number of nearest images
    integer, intent(out) :: iws
    !> Translation vectors
@@ -1025,93 +1061,98 @@ subroutine get_pairs(iws, trans, rij, list)
    !> Indices of the nearest translation images
    integer, intent(out) :: list(:)
 
-   logical :: mask(size(list))
-   real(wp) :: dist(size(list)), vec(3), r2
-   integer :: itr, img, pos
-   integer :: index(size(list))
+   real(wp) :: min_r2
 
-   iws = 0
-   img = 0
-   list(:) = 0
-   index(:) = 0
-   mask(:) = .true.
-
-   do itr = 1, size(trans, 2)
-      vec(:) = rij - trans(:, itr)
-      r2 = vec(1)**2 + vec(2)**2 + vec(3)**2
-      if (r2 < thr) cycle
-      img = img + 1
-      dist(img) = r2
-      index(img) = itr
-   end do
-
-   if (img == 0) return
-
-   pos = minloc(dist(:img), dim=1)
-
-   r2 = dist(pos)
-   mask(pos) = .false.
-
-   iws = 1
-   list(iws) = index(pos)
-   if (img <= iws) return
-
-   do while (iws < img)
-      pos = minloc(dist(:img), dim=1, mask=mask(:img))
-      if (pos <= 0) exit
-      if (dist(pos) - r2 > tol) exit
-      mask(pos) = .false.
-      iws = iws + 1
-      list(iws) = index(pos)
-   end do
+   call get_pairs_csr(trans, rij, iws, list, min_r2)
 
 end subroutine get_pairs
 
+
 !> Find nearest translation images and their minimum squared distance
-subroutine get_pairs_csr(trans, rij, iws, list, min_r2)
+pure subroutine get_pairs_csr(trans, rij, iws, list, min_r2)
    !> Translation vectors
    real(wp), intent(in) :: trans(:, :)
    !> Interatomic vector
    real(wp), intent(in) :: rij(3)
-   !> Number of images for a pair
+   !> Number of images for a pair (capped at size(list))
    integer, intent(out) :: iws
    !> Indices of the nearest translation images
    integer, intent(out) :: list(:)
    !> Minimum squared distance found
    real(wp), intent(out) :: min_r2
 
-   real(wp) :: dx, dy, dz, dist(size(trans, 2))
-   integer :: itr, pos
+   integer :: nimg_total
 
-   iws = 0
+   call find_wsc_pairs(trans, rij, nimg_total, list, min_r2)
+   iws = min(nimg_total, size(list))
+
+end subroutine get_pairs_csr
+
+
+!> Two-pass O(1)-stack nearest-image finder returning the exact count of
+!> competing images within tol and filling up to size(list) sorted indices.
+pure subroutine find_wsc_pairs(trans, rij, nimg_total, list, min_r2)
+   !> Translation vectors
+   real(wp), intent(in) :: trans(:, :)
+   !> Interatomic vector
+   real(wp), intent(in) :: rij(3)
+   !> Total number of competing images within tol of min_r2
+   integer, intent(out) :: nimg_total
+   !> Sorted indices of the closest translation images (up to size(list))
+   integer, intent(out) :: list(:)
+   !> Minimum squared distance found
+   real(wp), intent(out) :: min_r2
+
+   real(wp) :: dx, dy, dz, r2, r2_prev
+   integer :: itr, pos, prev, cap, nkept
+
+   nimg_total = 0
+   list(:) = 0
    min_r2 = huge(1.0_wp)
 
-   ! First pass, distances of all images and the actual minimum
+   ! First pass: find minimum non-self squared distance using O(1) stack scalars
    do itr = 1, size(trans, 2)
       dx = rij(1) - trans(1, itr)
       dy = rij(2) - trans(2, itr)
       dz = rij(3) - trans(3, itr)
-      dist(itr) = dx*dx + dy*dy + dz*dz
-      if (dist(itr) < thr) cycle
-      min_r2 = min(min_r2, dist(itr))
+      r2 = dx*dx + dy*dy + dz*dz
+      if (r2 < thr) cycle
+      if (r2 < min_r2) min_r2 = r2
    end do
 
-   ! Second pass, collect all images within the tolerance of the minimum,
-   ! sorted by distance via insertion
+   if (min_r2 >= huge(1.0_wp)) return
+
+   ! Second pass: collect images within tol of min_r2 and insertion-sort into list
+   cap = size(list)
+   nkept = 0
    do itr = 1, size(trans, 2)
-      if (dist(itr) < thr) cycle
-      if (dist(itr) - min_r2 > tol) cycle
-      iws = iws + 1
-      pos = iws
+      dx = rij(1) - trans(1, itr)
+      dy = rij(2) - trans(2, itr)
+      dz = rij(3) - trans(3, itr)
+      r2 = dx*dx + dy*dy + dz*dz
+      if (r2 < thr) cycle
+      if (r2 - min_r2 > tol) cycle
+      nimg_total = nimg_total + 1
+      if (cap <= 0) cycle
+
+      pos = nkept + 1
       do while (pos > 1)
-         if (dist(list(pos - 1)) <= dist(itr)) exit
-         list(pos) = list(pos - 1)
+         prev = list(pos - 1)
+         dx = rij(1) - trans(1, prev)
+         dy = rij(2) - trans(2, prev)
+         dz = rij(3) - trans(3, prev)
+         r2_prev = dx*dx + dy*dy + dz*dz
+         if (r2_prev <= r2) exit
+         if (pos <= cap) list(pos) = prev
          pos = pos - 1
       end do
-      list(pos) = itr
+      if (pos <= cap) then
+         list(pos) = itr
+         if (nkept < cap) nkept = nkept + 1
+      end if
    end do
 
-end subroutine get_pairs_csr
+end subroutine find_wsc_pairs
 
 !> Compact C2 switching function for competing nearest images
 pure elemental function smooth_image_weight(delta) result(weight)
