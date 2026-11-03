@@ -13,13 +13,15 @@
 ! limitations under the License.
 
 module test_wignerseitz
+   use, intrinsic :: ieee_arithmetic, only: ieee_value, ieee_quiet_nan, ieee_positive_inf
    use mctc_cutoff, only: get_lattice_points
    use mctc_env, only: wp
    use mctc_env_testing, only: new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io_structure, only: structure_type, new
-   use mctc_wignerseitz, only : wignerseitz_cell, new_wignerseitz_cell, get_pairs, &
-      & get_wignerseitz_weights
+   use mctc_wignerseitz, only : get_pairs
+   use mctc_wignerseitz, only : wignerseitz_cell, new_wignerseitz_cell, &
+      & get_wignerseitz_weights, get_wsc_rep, wsc_stat
    use testsuite_structure, only : get_structure
    implicit none
    private
@@ -49,7 +51,8 @@ subroutine collect_wignerseitz(testsuite)
       & new_unittest("wignerseitz-cell-3d", test_wsc_3d), &
       & new_unittest("wignerseitz-robustness", test_wsc_robustness), &
       & new_unittest("wignerseitz-65deg-counterexample", test_wsc_65deg_counterexample), &
-      & new_unittest("wignerseitz-exhaustive-reference", test_wsc_exhaustive_reference) &
+      & new_unittest("wignerseitz-exhaustive-reference", test_wsc_exhaustive_reference), &
+      & new_unittest("wignerseitz-error-and-resource-limits", test_wsc_error_and_resource_limits) &
       & ]
 
 end subroutine collect_wignerseitz
@@ -547,16 +550,199 @@ subroutine test_wsc_exhaustive_reference(error)
       end do
    end do
 
-   ! 3. Degenerate (collinear 2D) lattice fails closed with 1 translation (origin)
+   ! 3. Degenerate (collinear 2D) lattice fails closed without allocating fake origin-only trans
    lat = 0.0_wp
    lat(:, 1) = [4.0_wp, 0.0_wp, 0.0_wp]
    lat(:, 2) = [8.0_wp, 0.0_wp, 0.0_wp]
    call new(mol, [6, 8], xyz(:, 1:2), lattice=lat, periodic=[.true., .true., .false.])
    call new_wignerseitz_cell(wsc, mol)
-   call check(error, size(wsc%trans, 2), 1)
+   call check(error, .not. allocated(wsc%trans))
    if (allocated(error)) return
 
 end subroutine test_wsc_exhaustive_reference
+
+
+!> Verify explicit status and error reporting across 0D, valid periodic, degenerate,
+!> nonfinite, integer-overflow, and 1D/2D resource-exhaustion geometries.
+subroutine test_wsc_error_and_resource_limits(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   type(error_type), allocatable :: wsc_err
+   real(wp) :: lat(3, 3), xyz(3, 2)
+   integer :: rep(3), stat
+
+   ! 1. Valid 0D geometry
+   call get_structure(mol, "mindless02")
+   call get_wsc_rep(mol, rep, stat)
+   call check(error, stat, wsc_stat%valid_0d)
+   if (allocated(error)) return
+
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, .not. allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, stat, wsc_stat%valid_0d)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc%trans))
+   if (allocated(error)) return
+
+   call check(error, size(wsc%trans, 2), 1)
+   if (allocated(error)) return
+
+   ! 2. Valid 1D periodic geometry
+   lat = 0.0_wp
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [2.0_wp, 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, .not. allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, stat, wsc_stat%valid_pbc)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc%trans))
+   if (allocated(error)) return
+
+   call check(error, size(wsc%trans, 2), 3)
+   if (allocated(error)) return
+
+   ! 3. Degenerate active 1D lattice (zero active lattice vector)
+   lat = 0.0_wp
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+   if (allocated(wsc_err)) deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%degenerate_lattice)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   ! 4. Degenerate active 2D lattice (collinear active lattice vectors)
+   lat = 0.0_wp
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   lat(:, 2) = [10.0_wp, 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .false.])
+   deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%degenerate_lattice)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   ! 5. Degenerate active 3D lattice (coplanar lattice vectors)
+   lat(:, 3) = [3.0_wp, 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .true.])
+   deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%degenerate_lattice)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   ! 6. Nonfinite coordinates and nonfinite active lattice vectors
+   lat = 0.0_wp
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [ieee_value(1.0_wp, ieee_quiet_nan), 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+   deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%nonfinite_input)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   xyz(:, 2) = [2.0_wp, 0.0_wp, 0.0_wp]
+   lat(1, 1) = ieee_value(1.0_wp, ieee_positive_inf)
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+   deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%nonfinite_input)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   ! 7. Integer overflow (fractional span exceeds 32-bit repetition bound)
+   lat = 0.0_wp
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [1.0e12_wp, 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+   deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%integer_overflow)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   ! 8. Mandatory 1D resource-limit exhaustion: a1 = [5, 0, 0], two atoms separated
+   !    by > 100,000 lattice periods along x (120,000 periods -> 600,000 bohr)
+   lat = 0.0_wp
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [600000.0_wp, 0.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+   deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%resource_exhausted)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   ! 9. Mandatory 2D resource-limit exhaustion: two atoms separated by 200 periods
+   !    along both a1 and a2 so (2*201 + 1)^2 = 162,409 > 100,000 candidate translations
+   lat = 0.0_wp
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   lat(:, 2) = [0.0_wp, 5.0_wp, 0.0_wp]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [1001.0_wp, 1001.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .false.])
+   deallocate(wsc_err)
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%resource_exhausted)
+   if (allocated(error)) return
+
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+end subroutine test_wsc_error_and_resource_limits
 
 
 subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
