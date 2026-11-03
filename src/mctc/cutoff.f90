@@ -59,8 +59,14 @@ module mctc_cutoff
    !> Default maximum number of generated lattice translation vectors
    integer(i8), parameter :: max_cutoff_trans = 10000000_i8
 
+   !> Maximum 32-bit repetition bound such that 2*rep + 1 fits in default integer
+   integer(i8), parameter :: max_rep_i8 = int((huge(0) - 1) / 2 - 1, i8)
+
+   !> Maximum translation count such that shape (3, ntr) fits in default integer
+   integer(i8), parameter :: max_trans_i4 = int((huge(0) - 1) / 3, i8)
+
    !> Maximum real value convertible to a signed 32-bit repetition bound without overflow
-   real(wp), parameter :: max_rep_real = real(huge(0) / 2 - 4, wp)
+   real(wp), parameter :: max_rep_real = real((huge(0) - 1) / 2 - 4, wp)
 
 
 contains
@@ -167,7 +173,7 @@ pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans, error, stat, 
    ! Compute 3D lattice point count in 64-bit integer arithmetic with overflow guards
    ntot_i8 = 1_i8
    do i = 1, 3
-      if (int(rep(i), i8) > int(huge(0) / 2 - 1, i8)) then
+      if (int(rep(i), i8) > max_rep_i8) then
          local_stat = cutoff_stat%integer_overflow
          if (present(stat)) stat = local_stat
          if (present(error)) call report_cutoff_error(local_stat, error)
@@ -186,7 +192,7 @@ pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans, error, stat, 
    if (.not. origin) ntot_i8 = ntot_i8 - 1_i8
 
    ! Guard 32-bit default-integer extent (trans has shape (3, ntr)) before resource check
-   if (ntot_i8 > int(huge(0), i8) / 3_i8) then
+   if (ntot_i8 > max_trans_i4) then
       local_stat = cutoff_stat%integer_overflow
       if (present(stat)) stat = local_stat
       if (present(error)) call report_cutoff_error(local_stat, error)
@@ -310,11 +316,17 @@ end subroutine get_lattice_points_cutoff
 !> Generate supercell repetition counts for active periodic directions based on a
 !> realspace cutoff using the metric of the active periodic subspace.
 pure subroutine get_translations(periodic, lat, rthr, rep, stat, max_trans)
+   !> Periodic dimensions
    logical, intent(in) :: periodic(:)
+   !> Lattice parameters
    real(wp), intent(in) :: lat(:, :)
+   !> Real space cutoff
    real(wp), intent(in) :: rthr
+   !> Supercell repetition bounds along each lattice vector
    integer, intent(out) :: rep(3)
+   !> Optional status code
    integer, intent(out), optional :: stat
+   !> Optional override for maximum generated translation count
    integer(i8), intent(in), optional :: max_trans
 
    integer :: i, ndim, p_axes(3)
@@ -361,6 +373,8 @@ pure subroutine get_translations(periodic, lat, rthr, rep, stat, max_trans)
    rep_i8(:) = 0_i8
    select case (ndim)
    case (1)
+
+      ! 1D periodic axis: repetition bound is ceiling(rthr / |a1|)
       a1 = lat(:, p_axes(1))
       len1 = norm2(a1)
       if (len1 <= tol_deg) then
@@ -375,6 +389,8 @@ pure subroutine get_translations(periodic, lat, rthr, rep, stat, max_trans)
       rep_i8(p_axes(1)) = ceiling(ratio1, i8)
 
    case (2)
+
+      ! 2D periodic plane: perpendicular heights are h1 = area / |a2|, h2 = area / |a1|
       a1 = lat(:, p_axes(1))
       a2 = lat(:, p_axes(2))
       len1 = norm2(a1)
@@ -398,6 +414,8 @@ pure subroutine get_translations(periodic, lat, rthr, rep, stat, max_trans)
       rep_i8(p_axes(2)) = ceiling(ratio2, i8)
 
    case (3)
+
+      ! 3D periodic cell: perpendicular heights are vol / |a_j x a_k|
       a1 = lat(:, 1)
       a2 = lat(:, 2)
       a3 = lat(:, 3)
@@ -439,7 +457,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep, stat, max_trans)
    ! Validate total translation count in 64-bit arithmetic before setting rep
    ntot_i8 = 1_i8
    do i = 1, 3
-      if (rep_i8(i) < 0_i8 .or. rep_i8(i) > int(huge(0) / 2 - 1, i8)) then
+      if (rep_i8(i) < 0_i8 .or. rep_i8(i) > max_rep_i8) then
          if (present(stat)) stat = cutoff_stat%integer_overflow
          return
       end if
@@ -451,7 +469,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep, stat, max_trans)
       ntot_i8 = ntot_i8 * factor_i8
    end do
 
-   if (ntot_i8 > int(huge(0), i8) / 3_i8) then
+   if (ntot_i8 > max_trans_i4) then
       if (present(stat)) stat = cutoff_stat%integer_overflow
       return
    end if
@@ -467,8 +485,11 @@ pure subroutine get_translations(periodic, lat, rthr, rep, stat, max_trans)
 end subroutine get_translations
 
 
+!> Check whether a scalar real value is finite (neither NaN nor Inf)
 pure elemental function is_finite_scalar(val) result(finite)
+   !> Scalar value to inspect
    real(wp), intent(in) :: val
+   !> True if val is finite
    logical :: finite
 
    finite = (val == val) .and. (abs(val) <= huge(1.0_wp))
@@ -476,8 +497,11 @@ pure elemental function is_finite_scalar(val) result(finite)
 end function is_finite_scalar
 
 
+!> Check whether a 1D real array contains only finite values
 pure function is_finite_vec(vec) result(finite)
+   !> Vector to inspect
    real(wp), intent(in) :: vec(:)
+   !> True if all entries of vec are finite
    logical :: finite
 
    finite = all(is_finite_scalar(vec))
@@ -485,10 +509,16 @@ pure function is_finite_vec(vec) result(finite)
 end function is_finite_vec
 
 
+!> Wrap Cartesian coordinates into the central periodic cell [0, 1)^d along active axes,
+!> preserving orthogonal non-periodic coordinates in 1D and 2D.
 pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
+   !> Cartesian atomic coordinates (3, nat), updated in place
    real(wp), intent(inout) :: xyz(:, :)
+   !> Lattice vectors (3, 3)
    real(wp), intent(in) :: lattice(:, :)
+   !> Periodic dimensions (3)
    logical, intent(in) :: periodic(:)
+
    real(wp) :: invlat(3, 3), vec(3), a1(3), a2(3), a3(3)
    real(wp) :: g11, g12, g22, det2, b1, b2, s1, s2, s1_wrap, s2_wrap
    real(wp) :: len1, len2, len3, vol
@@ -509,6 +539,8 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
 
    select case (ndim)
    case (1)
+
+      ! Project onto the active 1D axis and shift only the parallel component
       a1 = lattice(:, p_axes(1))
       g11 = dot_product(a1, a1)
       if (sqrt(g11) <= tol_deg) return
@@ -520,6 +552,8 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       end do
 
    case (2)
+
+      ! Project onto the active 2D plane via the 2x2 Gram matrix and preserve the normal component
       a1 = lattice(:, p_axes(1))
       a2 = lattice(:, p_axes(2))
       g11 = dot_product(a1, a1)
@@ -540,6 +574,8 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       end do
 
    case (3)
+
+      ! Wrap all three fractional coordinates in 3D via the 3x3 inverse lattice
       a1 = lattice(:, 1)
       a2 = lattice(:, 2)
       a3 = lattice(:, 3)
@@ -563,6 +599,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
 end subroutine wrap_to_central_cell
 
 
+!> Shift a fractional coordinate into the half-open unit interval [0, 1)
 elemental function shift_back_abc(in) result(out)
    !> fractional coordinate in (-∞,+∞)
    real(wp),intent(in) :: in
@@ -571,7 +608,7 @@ elemental function shift_back_abc(in) result(out)
    real(wp),parameter :: p_pbc_eps = 1.0e-14_wp
    out = in
    if (.not. is_finite_scalar(in)) return
-   if (abs(in) > real(huge(1_i8) / 2_i8, wp)) return
+   if (abs(in) > real((huge(1_i8) - 1_i8) / 2_i8, wp)) return
    if(in < (0.0_wp - p_pbc_eps)) then
      out = in + real(ceiling(-in, i8),wp)
    end if

@@ -21,7 +21,7 @@ module test_wignerseitz
    use mctc_io_structure, only: structure_type, new
    use mctc_wignerseitz, only : get_pairs
    use mctc_wignerseitz, only : wignerseitz_cell, new_wignerseitz_cell, &
-      & get_wignerseitz_weights, get_wsc_rep, wsc_stat
+      & get_wignerseitz_weights, get_wsc_rep, get_pairs, wsc_stat
    use testsuite_structure, only : get_structure
    implicit none
    private
@@ -53,7 +53,8 @@ subroutine collect_wignerseitz(testsuite)
       & new_unittest("wignerseitz-65deg-counterexample", test_wsc_65deg_counterexample), &
       & new_unittest("wignerseitz-3d-skewed-counterexample", test_wsc_3d_skewed_counterexample), &
       & new_unittest("wignerseitz-exhaustive-reference", test_wsc_exhaustive_reference), &
-      & new_unittest("wignerseitz-error-and-resource-limits", test_wsc_error_and_resource_limits) &
+      & new_unittest("wignerseitz-error-and-resource-limits", test_wsc_error_and_resource_limits), &
+      & new_unittest("wignerseitz-reduction-and-high-symmetry", test_wsc_reduction_and_high_symmetry) &
       & ]
 
 end subroutine collect_wignerseitz
@@ -932,6 +933,98 @@ subroutine test_wsc_error_and_resource_limits(error)
    if (allocated(error)) return
 
 end subroutine test_wsc_error_and_resource_limits
+
+
+!> Regression test for 2D/3D lattice-reduction termination at tie boundaries and
+!> high-symmetry WSC image retention when nimg > init_tridx_cap (12-fold FCC self-images).
+subroutine test_wsc_reduction_and_high_symmetry(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   type(error_type), allocatable :: wsc_err
+   real(wp) :: lat(3, 3), xyz(3, 2), weights(16)
+   integer :: stat, iws_small, iws_full, list_small(8), list_full(27)
+
+   ! 1. 2D 60-degree hexagonal lattice where mu = (a1 . a2) / |a1|^2 = 0.5 exactly:
+   !    verifies Lagrange-Gauss size reduction terminates immediately without oscillating
+   lat = 0.0_wp
+   lat(:, 1) = [6.0_wp, 0.0_wp, 0.0_wp]
+   lat(:, 2) = [3.0_wp, 3.0_wp * sqrt(3.0_wp), 0.0_wp]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [2.0_wp, 1.0_wp, 0.0_wp]
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .false.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%valid_pbc)
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc_err))
+   if (allocated(error)) return
+
+   call check(error, wsc%nimg(1, 1), 6)
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol, wsc, 4, error)
+   if (allocated(error)) return
+
+   ! 2. 3D LLL reduction on a reduced basis where |b3|^2 < |b2|^2 while the Lovasz
+   !    condition holds: verifies no 2-cycle oscillation occurs between columns 2 and 3
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   lat(:, 2) = 5.0_wp * [0.49_wp, sqrt(0.90_wp), 0.0_wp]
+   lat(:, 3) = 5.0_wp * [0.0_wp, 0.45_wp * sqrt(0.90_wp), sqrt(0.86775_wp)]
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = 0.48_wp * lat(:, 1) - 0.51_wp * lat(:, 2) + 0.49_wp * lat(:, 3)
+   call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .true., .true.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%valid_pbc)
+   if (allocated(error)) return
+
+   call check(error, .not. allocated(wsc_err))
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol, wsc, 4, error)
+   if (allocated(error)) return
+
+   ! 3. High-symmetry 3D FCC primitive cell with 12 equidistant nearest self-images
+   !    (exceeding init_tridx_cap = 8): verifies WSC retains all 12 images and
+   !    get_pairs respects output buffer capacity
+   lat(:, 1) = [0.0_wp, 4.0_wp, 4.0_wp]
+   lat(:, 2) = [4.0_wp, 0.0_wp, 4.0_wp]
+   lat(:, 3) = [4.0_wp, 4.0_wp, 0.0_wp]
+   call new(mol, [6], reshape([0.0_wp, 0.0_wp, 0.0_wp], [3, 1]), &
+      & lattice=lat, periodic=[.true., .true., .true.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err, stat)
+   call check(error, stat, wsc_stat%valid_pbc)
+   if (allocated(error)) return
+
+   call check(error, wsc%nimg(1, 1), 12)
+   if (allocated(error)) return
+
+   call check(error, size(wsc%tridx, 1), 12)
+   if (allocated(error)) return
+
+   call get_wignerseitz_weights(wsc, 1, 1, [0.0_wp, 0.0_wp, 0.0_wp], weights)
+   if (maxval(abs(weights(1:12) - 1.0_wp / 12.0_wp)) > 1.0e-12_wp) then
+      call test_failed(error, "FCC 12-fold self-image weights are not 1/12")
+      return
+   end if
+
+   call get_pairs(iws_small, wsc%trans, [0.0_wp, 0.0_wp, 0.0_wp], list_small)
+   call check(error, iws_small, 8)
+   if (allocated(error)) return
+
+   call get_pairs(iws_full, wsc%trans, [0.0_wp, 0.0_wp, 0.0_wp], list_full)
+   call check(error, iws_full, 12)
+   if (allocated(error)) return
+
+   if (any(list_small(1:8) /= list_full(1:8))) then
+      call test_failed(error, "get_pairs truncated list does not match leading sorted images")
+      return
+   end if
+
+end subroutine test_wsc_reduction_and_high_symmetry
 
 
 subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
