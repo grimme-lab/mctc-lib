@@ -19,6 +19,7 @@
 !> E. Caldeweyher, J.-M. Mewes, S. Ehlert and S. Grimme, *Phys. Chem. Chem. Phys.*,
 !> **2020**, 22, 8499-8512. DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 module mctc_wignerseitz
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io, only : structure_type
@@ -50,6 +51,11 @@ module mctc_wignerseitz
       !> Lattice translation vectors (3, ntrans)
       real(wp), allocatable :: trans(:, :)
    end type wignerseitz_cell
+
+   interface new_wignerseitz_cell
+      module procedure :: new_wignerseitz_cell
+      module procedure :: new_wignerseitz_cell_legacy
+   end interface new_wignerseitz_cell
 
    interface get_pairs
       module procedure get_pairs
@@ -161,6 +167,28 @@ subroutine new_wignerseitz_cell(self, mol, error)
    call move_alloc(trans, self%trans)
 
 end subroutine new_wignerseitz_cell
+
+
+!> Construct a Wigner-Seitz cell for a molecular structure.
+!>
+!> @note Deprecated: pass an explicit `error` argument instead.
+subroutine new_wignerseitz_cell_legacy(self, mol)
+
+   !> Wigner-Seitz cell instance
+   type(wignerseitz_cell), intent(out) :: self
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   type(error_type), allocatable :: error
+
+   call new_wignerseitz_cell(self, mol, error)
+   if (allocated(error)) then
+      write(error_unit, "(a)") error%message
+      error stop
+   end if
+
+end subroutine new_wignerseitz_cell_legacy
 
 
 !> Check whether a 1D array contains only finite IEEE values

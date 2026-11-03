@@ -14,6 +14,7 @@
 
 !> Declaration of base class for coordination number evaluations
 module mctc_ncoord_type
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_csrlist, only : csr_list
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : error_type, wp, i8
@@ -146,11 +147,8 @@ contains
 
       call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, lattr, error)
       if (allocated(error)) then
-         cn(:) = 0.0_wp
-         if (present(dcndr)) dcndr(:, :, :) = 0.0_wp
-         if (present(dcndL)) dcndL(:, :, :) = 0.0_wp
-         if (present(dcndrlist)) dcndrlist(:, :) = 0.0_wp
-         return
+         write(error_unit, "(a)") error%message
+         error stop
       end if
 
       call get_coordination_number(self, mol, lattr, cn, dcndr, dcndL, list, &

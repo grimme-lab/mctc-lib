@@ -17,6 +17,7 @@
 
 !> Realspace cutoff and lattice point generator utilities
 module mctc_cutoff
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io_math, only : crossprod, matinv_3x3
    implicit none
@@ -27,7 +28,9 @@ module mctc_cutoff
 
    interface get_lattice_points
       module procedure :: get_lattice_points_cutoff
+      module procedure :: get_lattice_points_cutoff_legacy
       module procedure :: get_lattice_points_rep_3d
+      module procedure :: get_lattice_points_rep_3d_legacy
    end interface get_lattice_points
 
    !> Tolerance for detecting degenerate lattice vectors, areas, and volumes
@@ -192,6 +195,62 @@ pure subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans, error)
    end if
 
 end subroutine get_lattice_points_cutoff
+
+
+!> Generate lattice points from repetitions.
+!>
+!> @note Deprecated: pass an explicit `error` argument instead.
+subroutine get_lattice_points_rep_3d_legacy(lat, rep, origin, trans)
+
+   !> Lattice vectors
+   real(wp), intent(in) :: lat(:, :)
+
+   !> Repeatitions of lattice points to generate
+   integer, intent(in) :: rep(:)
+
+   !> Include the origin in the generated lattice points
+   logical, intent(in) :: origin
+
+   !> Generated lattice points
+   real(wp), allocatable, intent(out) :: trans(:, :)
+
+   type(error_type), allocatable :: error
+
+   call get_lattice_points_rep_3d(lat, rep, origin, trans, error)
+   if (allocated(error)) then
+      write(error_unit, "(a)") error%message
+      error stop
+   end if
+
+end subroutine get_lattice_points_rep_3d_legacy
+
+
+!> Create lattice points within a given cutoff.
+!>
+!> @note Deprecated: pass an explicit `error` argument instead.
+subroutine get_lattice_points_cutoff_legacy(periodic, lat, rthr, trans)
+
+   !> Periodic dimensions
+   logical, intent(in) :: periodic(:)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: rthr
+
+   !> Lattice parameters
+   real(wp), intent(in) :: lat(:, :)
+
+   !> Generated lattice points
+   real(wp), allocatable, intent(out) :: trans(:, :)
+
+   type(error_type), allocatable :: error
+
+   call get_lattice_points_cutoff(periodic, lat, rthr, trans, error)
+   if (allocated(error)) then
+      write(error_unit, "(a)") error%message
+      error stop
+   end if
+
+end subroutine get_lattice_points_cutoff_legacy
 
 
 !> Generate supercell repetition counts for active periodic directions based on a

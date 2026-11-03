@@ -68,6 +68,7 @@
 !> DOI: [10.1016/j.cpc.2004.04.004](https://doi.org/10.1016/j.cpc.2004.04.004)
 
 module mctc_csrlist_type
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io, only : structure_type
@@ -77,6 +78,11 @@ module mctc_csrlist_type
    private
 
    public :: csr_list, new_csr_list, compute_grid, get_linked_cell, grid_type
+
+   interface new_csr_list
+      module procedure :: new_csr_list
+      module procedure :: new_csr_list_legacy
+   end interface new_csr_list
 
    !> Neighborlist in CSR format
    type :: csr_list
@@ -198,6 +204,39 @@ subroutine new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
    end if
 
 end subroutine new_csr_list
+
+!> Create a neighbor list for a geometry and cutoff.
+!>
+!> @note Deprecated: pass an explicit `error` argument instead.
+subroutine new_csr_list_legacy(self, mol, wsc, cutoff, trans, complete)
+
+   !> Instance of the neighborlist
+   type(csr_list), intent(out) :: self
+
+   !> Structure type
+   type(structure_type), intent(in) :: mol
+
+   !> Wigner-Seitz cell type, enables the Wigner-Seitz image search
+   type(wignerseitz_cell), intent(inout), optional :: wsc
+
+   !> Realspace cutoff for neighborlist generation
+   real(wp), intent(in), optional :: cutoff
+
+   !> Lattice translation vectors for periodic systems
+   real(wp), intent(in), optional :: trans(:, :)
+
+   !> Flag for complete neighborlist generation
+   logical, intent(in), optional :: complete
+
+   type(error_type), allocatable :: error
+
+   call new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
+   if (allocated(error)) then
+      write(error_unit, "(a)") error%message
+      error stop
+   end if
+
+end subroutine new_csr_list_legacy
 
 !> Build the CSR neighbor list for a structure
 subroutine build_list(self, mol, error, wsc)
