@@ -56,7 +56,10 @@ subroutine collect_wignerseitz(testsuite)
       & new_unittest("wignerseitz-robustness-1d", test_wsc_robustness_1d), &
       & new_unittest("wignerseitz-robustness-2d", test_wsc_robustness_2d), &
       & new_unittest("wignerseitz-robustness-2d-corner", test_wsc_robustness_2d_corner), &
-      & new_unittest("wignerseitz-sheared-3d", test_wsc_sheared_3d) &
+      & new_unittest("wignerseitz-sheared-3d", test_wsc_sheared_3d), &
+      & new_unittest("wignerseitz-derivatives-2d", test_wsc_derivatives_2d), &
+      & new_unittest("wignerseitz-derivatives-3d", test_wsc_derivatives_3d), &
+      & new_unittest("wignerseitz-window-edge", test_wsc_window_edge) &
       & ]
 
 end subroutine collect_wignerseitz
@@ -1240,6 +1243,238 @@ subroutine test_wsc_sheared_3d(error)
    end do
 
 end subroutine test_wsc_sheared_3d
+
+
+!> Competing images of a slab pair near the cell corner with unequal weights
+subroutine test_wsc_derivatives_2d(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   integer, parameter :: nat = 2
+   integer, parameter :: num(nat) = [8, 1]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 3.01_wp, 2.995_wp, 0.4_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 6.0_wp, 0.0_wp, 0.0_wp, &
+      & 0.0_wp, 6.0_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.0_wp], &
+      & [3, 3])
+
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .false.])
+   call test_derivatives_gen(error, mol, 2, 1)
+
+end subroutine test_wsc_derivatives_2d
+
+
+!> Competing images near the body center of a cube given in a sheared basis
+subroutine test_wsc_derivatives_3d(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   integer, parameter :: nat = 2
+   integer, parameter :: num(nat) = [8, 1]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 3.01_wp, 2.995_wp, 3.0035_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 6.0_wp, 0.0_wp, 0.0_wp, &
+      & 6.0_wp, 6.0_wp, 0.0_wp, &
+      & -6.0_wp, 6.0_wp, 6.0_wp], &
+      & [3, 3])
+
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .true.])
+   call test_derivatives_gen(error, mol, 2, 1)
+
+end subroutine test_wsc_derivatives_3d
+
+
+!> Check normalization, sum rules, and finite difference derivatives of the
+!> image weights. Images are identified by their physical translation, the
+!> displacements keep all images within the smooth switching interval.
+subroutine test_derivatives_gen(error, mol, iat, jat)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Atom indices of the examined pair
+   integer, intent(in) :: iat, jat
+
+   !> Central differences with a relative tolerance, the truncation error of
+   !> the steep switching function is about 1e-9 relative for this step
+   real(wp), parameter :: step = 1.0e-6_wp, thr_fd = 1.0e-7_wp
+   type(structure_type) :: displ
+   type(wignerseitz_cell) :: wsc
+   integer :: nimg, ic, jc
+   real(wp) :: rij(3), strain(3, 3)
+   real(wp), allocatable :: weight(:), dwdr(:, :), dwdL(:, :, :), trans(:, :)
+   real(wp), allocatable :: wr(:), wl(:)
+
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   nimg = wsc%nimg(jat, iat)
+   allocate(weight(nimg), dwdr(3, nimg), dwdL(3, 3, nimg), trans(3, nimg), &
+      & wr(nimg), wl(nimg))
+   rij = mol%xyz(:, iat) - mol%xyz(:, jat)
+   call get_wignerseitz_weights(wsc, jat, iat, rij, weight, dwdr, dwdL)
+   trans(:, :) = wsc%trans(:, wsc%tridx(:nimg, jat, iat))
+
+   call check(error, nimg >= 4 .and. maxval(weight) - minval(weight) > 0.1_wp, &
+      & "Expected several competing images with unequal weights")
+   if (allocated(error)) return
+
+   call check(error, abs(sum(weight) - 1.0_wp) < thr, "Weights are not normalized")
+   if (allocated(error)) return
+
+   call check(error, maxval(abs(sum(dwdr, dim=2))) < thr2 &
+      & .and. maxval(abs(sum(dwdL, dim=3))) < thr2, &
+      & "Weight derivatives do not sum to zero")
+   if (allocated(error)) return
+
+   do ic = 1, 3
+      displ = mol
+      displ%xyz(ic, iat) = mol%xyz(ic, iat) + step
+      call get_matched_weights(error, displ, iat, jat, trans, wr)
+      if (allocated(error)) return
+
+      displ%xyz(ic, iat) = mol%xyz(ic, iat) - step
+      call get_matched_weights(error, displ, iat, jat, trans, wl)
+      if (allocated(error)) return
+
+      if (maxval(abs((wr - wl) / (2 * step) - dwdr(ic, :))) &
+         & > thr_fd * max(1.0_wp, maxval(abs(dwdr(ic, :))))) then
+         call test_failed(error, "Weight derivative w.r.t. the pair vector is wrong")
+         return
+      end if
+   end do
+
+   do ic = 1, 3
+      do jc = 1, 3
+         strain(:, :) = reshape([1.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 1.0_wp, 0.0_wp, &
+            & 0.0_wp, 0.0_wp, 1.0_wp], [3, 3])
+         strain(ic, jc) = strain(ic, jc) + step
+
+         displ = mol
+         displ%xyz(:, :) = matmul(strain, mol%xyz)
+         displ%lattice(:, :) = matmul(strain, mol%lattice)
+         call get_matched_weights(error, displ, iat, jat, matmul(strain, trans), wr)
+         if (allocated(error)) return
+
+         strain(ic, jc) = strain(ic, jc) - 2 * step
+         displ%xyz(:, :) = matmul(strain, mol%xyz)
+         displ%lattice(:, :) = matmul(strain, mol%lattice)
+         call get_matched_weights(error, displ, iat, jat, matmul(strain, trans), wl)
+         if (allocated(error)) return
+
+         if (maxval(abs((wr - wl) / (2 * step) - dwdL(ic, jc, :))) &
+            & > thr_fd * max(1.0_wp, maxval(abs(dwdL(ic, jc, :))))) then
+            call test_failed(error, "Weight derivative w.r.t. strain is wrong")
+            return
+         end if
+      end do
+   end do
+
+end subroutine test_derivatives_gen
+
+
+!> Weights of a pair for the given physical translations, the image set must
+!> not change
+subroutine get_matched_weights(error, mol, iat, jat, trans, weight)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Atom indices of the examined pair
+   integer, intent(in) :: iat, jat
+
+   !> Physical translations of the images
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Weights of the images in the order of the translations
+   real(wp), intent(out) :: weight(:)
+
+   type(wignerseitz_cell) :: wsc
+   integer :: img, jmg
+   logical :: found
+   real(wp) :: rij(3), raw(size(weight))
+
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   call check(error, wsc%nimg(jat, iat), size(weight))
+   if (allocated(error)) return
+
+   rij = mol%xyz(:, iat) - mol%xyz(:, jat)
+   call get_wignerseitz_weights(wsc, jat, iat, rij, raw)
+   do img = 1, size(weight)
+      found = .false.
+      do jmg = 1, size(weight)
+         if (maxval(abs(wsc%trans(:, wsc%tridx(jmg, jat, iat)) - trans(:, img))) < thr2) then
+            weight(img) = raw(jmg)
+            found = .true.
+         end if
+      end do
+      if (.not. found) then
+         call test_failed(error, "Image set changed by the displacement")
+         return
+      end if
+   end do
+
+end subroutine get_matched_weights
+
+
+!> Images on the edge of the switching interval for distant unwrapped atoms,
+!> the second image lies at tol * (1 + eta) from the nearest one
+subroutine test_wsc_window_edge(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   integer :: icase, nimg, list(8)
+   real(wp) :: lat(3, 3), xyz(3, 2), min_r2
+   real(wp), allocatable :: trans(:, :)
+
+   integer, parameter :: ncell(4) = [11904, 15702, 14557, 657]
+   real(wp), parameter :: eta(4) = [-1.9993706177917171E-14_wp, &
+      & -1.7747065442496475E-14_wp, 1.1962650749815001E-14_wp, &
+      & -1.4853366378160838E-15_wp]
+
+   do icase = 1, size(ncell)
+      lat(:, :) = 0.0_wp
+      lat(1, 1) = sqrt(0.3_wp / (1.8_wp * (1.0_wp + eta(icase))))
+      xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+      xyz(:, 2) = [(ncell(icase) + 0.6_wp) * lat(1, 1), 0.3_wp, 0.0_wp]
+      call new(mol, [6, 8], xyz, lattice=lat, periodic=[.true., .false., .false.])
+      call new_wignerseitz_cell(wsc, mol, error)
+      if (allocated(error)) return
+
+      ! Same image search with plenty of translations
+      call get_lattice_points(lat, [ncell(icase) + 6, 0, 0], .true., trans, error)
+      if (allocated(error)) return
+      call get_pairs(trans, xyz(:, 2) - xyz(:, 1), nimg, list, min_r2)
+
+      call check(error, wsc%nimg(1, 2), nimg)
+      if (allocated(error)) return
+   end do
+
+end subroutine test_wsc_window_edge
 
 
 subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)

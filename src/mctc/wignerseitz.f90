@@ -227,6 +227,10 @@ subroutine get_wignerseitz_translations(mol, trans, error)
       end do
    end do
 
+   ! Widen the bound for round-off, which otherwise can lose images on the edge
+   ! of the switching interval for distant unwrapped atoms
+   bound(:) = bound + sqrt(epsilon(1.0_wp)) * (1.0_wp + bound)
+
    if (.not. (product(2.0_wp * aint(bound) + 1.0_wp) <= real(max_wsc_trans, wp))) then
       call fatal_error(error, &
          & "Too many candidate translations for the Wigner-Seitz cell")
