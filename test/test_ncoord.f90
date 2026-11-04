@@ -731,7 +731,8 @@ contains
       call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, &
          & cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
-      call dexp_ncoord%get_cn(mol, cn)
+      call dexp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -764,7 +765,8 @@ contains
       ! Test also the external interface
       call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, cut=cut)
       if(allocated(error)) return
-      call dexp_ncoord%get_cn(mol, cn)
+      call dexp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1030,7 +1032,8 @@ contains
       call new_ncoord(exp_ncoord, mol, cn_count%exp, error, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
-      call exp_ncoord%get_cn(mol, cn)
+      call exp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1064,7 +1067,8 @@ contains
       ! Test also the external interface
       call new_ncoord(exp_ncoord, mol, cn_count%exp, error, cut=cut)
       if(allocated(error)) return
-      call exp_ncoord%get_cn(mol, cn)
+      call exp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1331,7 +1335,8 @@ contains
       call new_ncoord(erf_ncoord, mol, cn_count%erf, error, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
-      call erf_ncoord%get_cn(mol, cn)
+      call erf_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1365,7 +1370,8 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_ncoord, mol, cn_count%erf, error, cut=cut)
       if(allocated(error)) return
-      call erf_ncoord%get_cn(mol, cn)
+      call erf_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1644,7 +1650,8 @@ contains
       call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
       if(allocated(error)) return
-      call erf_en_ncoord%get_cn(mol, cn)
+      call erf_en_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1678,7 +1685,8 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, cut=cut)
       if(allocated(error)) return
-      call erf_en_ncoord%get_cn(mol, cn)
+      call erf_en_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1971,7 +1979,8 @@ contains
       call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
          & cutoff=cutoff, rcov=rcov, en=en)
       if(allocated(error)) return
-      call erf_dftd4_ncoord%get_cn(mol, cn)
+      call erf_dftd4_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -2005,7 +2014,8 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, cut=cut)
       if(allocated(error)) return
-      call erf_dftd4_ncoord%get_cn(mol, cn)
+      call erf_dftd4_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")

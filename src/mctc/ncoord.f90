@@ -42,7 +42,7 @@
 !>
 !> call new_ncoord(ncoord, mol, cn_count%exp, error)
 !> allocate(cn(mol%nat))
-!> call ncoord%get_cn(mol, cn)
+!> call ncoord%get_cn(mol, cn, error)
 !>```
 module mctc_ncoord
    use mctc_env, only : error_type, fatal_error, wp

@@ -38,7 +38,9 @@ module mctc_ncoord_type
       real(wp)  :: cut = -1.0_wp
    contains
       !> Obtains lattice information and calls get_coordination number
-      procedure :: get_cn
+      generic :: get_cn => get_cn_checked, get_cn_legacy
+      procedure, private :: get_cn_checked => get_cn
+      procedure, private :: get_cn_legacy
       !> Decides whether the energy or gradient is calculated
       procedure :: get_coordination_number
       !> Evaluates the CN from the specific counting function
@@ -125,7 +127,38 @@ contains
 
 
    !> Wrapper for CN using the CN cutoff for the lattice
-   subroutine get_cn(self, mol, cn, dcndr, dcndL, list, dcndrlist)
+   subroutine get_cn(self, mol, cn, error, dcndr, dcndL, list, dcndrlist)
+      !> Coordination number container
+      class(ncoord_type), intent(in) :: self
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+      !> CSR list for neighbourlist-based CN evaluation
+      type(csr_list), intent(in), optional :: list
+      !> Error function coordination number.
+      real(wp), intent(out) :: cn(:)
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+      !> Derivative of the CN with respect to the Cartesian coordinates.
+      real(wp), intent(out), optional :: dcndr(:, :, :)
+      !> Derivative of the CN with respect to strain deformations.
+      real(wp), intent(out), optional :: dcndL(:, :, :)
+      !> Derivative of the CN with respect to the Cartesian coordinates
+      !> in the sparsity pattern of the CSR list
+      real(wp), intent(out), optional :: dcndrlist(:, :)
+
+      real(wp), allocatable :: lattr(:, :)
+
+      call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, lattr, error)
+      if (allocated(error)) return
+
+      call get_coordination_number(self, mol, lattr, cn, dcndr, dcndL, list, &
+         & dcndrlist)
+   end subroutine get_cn
+
+   !> Legacy wrapper for CN using the CN cutoff for the lattice
+   !>
+   !> @note Deprecated: pass an explicit error argument instead.
+   subroutine get_cn_legacy(self, mol, cn, dcndr, dcndL, list, dcndrlist)
       !> Coordination number container
       class(ncoord_type), intent(in) :: self
       !> Molecular structure data
@@ -143,17 +176,13 @@ contains
       real(wp), intent(out), optional :: dcndrlist(:, :)
 
       type(error_type), allocatable :: error
-      real(wp), allocatable :: lattr(:, :)
 
-      call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, lattr, error)
+      call get_cn(self, mol, cn, error, dcndr, dcndL, list, dcndrlist)
       if (allocated(error)) then
          write(error_unit, "(a)") error%message
          error stop
       end if
-
-      call get_coordination_number(self, mol, lattr, cn, dcndr, dcndL, list, &
-         & dcndrlist)
-   end subroutine get_cn
+   end subroutine get_cn_legacy
 
    !> Geometric fractional coordination number
    subroutine get_coordination_number(self, mol, trans, cn, dcndr, dcndL, list, &
