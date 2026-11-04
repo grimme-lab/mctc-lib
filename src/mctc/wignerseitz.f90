@@ -21,7 +21,7 @@
 module mctc_wignerseitz
    use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use mctc_cutoff, only : get_lattice_points
+   use mctc_cutoff, only : get_lattice_points, get_periodic_axes
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io, only : structure_type
    use mctc_io_math, only : crossprod, outerprod
@@ -256,17 +256,12 @@ pure subroutine get_wsc_rep(mol, rep, error)
    end if
 
    ! Collect active periodic axes and validate finiteness of active lattice vectors
-   ndim = 0
-   p_axes(:) = 0
-   do i = 1, 3
-      if (mol%periodic(i)) then
-         if (.not. all(ieee_is_finite(mol%lattice(:, i)))) then
-            call fatal_error(error, &
-               & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
-            return
-         end if
-         ndim = ndim + 1
-         p_axes(ndim) = i
+   call get_periodic_axes(mol%periodic, ndim, p_axes)
+   do i = 1, ndim
+      if (.not. all(ieee_is_finite(mol%lattice(:, p_axes(i))))) then
+         call fatal_error(error, &
+            & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
+         return
       end if
    end do
 

@@ -24,7 +24,7 @@ module mctc_cutoff
    implicit none
    private
 
-   public :: get_lattice_points, wrap_to_central_cell
+   public :: get_lattice_points, get_periodic_axes, wrap_to_central_cell
 
 
    interface get_lattice_points
@@ -42,6 +42,32 @@ module mctc_cutoff
 
 
 contains
+
+
+!> Extract the number and indices of active periodic axes
+pure subroutine get_periodic_axes(periodic, ndim, p_axes)
+
+   !> Periodicity mask
+   logical, intent(in) :: periodic(:)
+
+   !> Number of periodic dimensions (0, 1, 2, or 3)
+   integer, intent(out) :: ndim
+
+   !> Indices of active periodic axes in 1..ndim
+   integer, intent(out) :: p_axes(3)
+
+   integer :: i
+
+   ndim = 0
+   p_axes = 0
+   do i = 1, min(3, size(periodic))
+      if (periodic(i)) then
+         ndim = ndim + 1
+         p_axes(ndim) = i
+      end if
+   end do
+
+end subroutine get_periodic_axes
 
 
 !> Generate lattice points from repetitions
@@ -276,17 +302,12 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
       return
    end if
 
-   ndim = 0
-   p_axes(:) = 0
-   do i = 1, 3
-      if (periodic(i)) then
-         if (.not. all(ieee_is_finite(lat(1:3, i)))) then
-            call fatal_error(error, &
-               & "Nonfinite lattice vectors in cutoff enumeration")
-            return
-         end if
-         ndim = ndim + 1
-         p_axes(ndim) = i
+   call get_periodic_axes(periodic, ndim, p_axes)
+   do i = 1, ndim
+      if (.not. all(ieee_is_finite(lat(1:3, p_axes(i))))) then
+         call fatal_error(error, &
+            & "Nonfinite lattice vectors in cutoff enumeration")
+         return
       end if
    end do
 
@@ -416,14 +437,9 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
    if (.not.any(periodic)) return
    if (size(lattice, 1) < 3 .or. size(lattice, 2) < 3) return
 
-   ndim = 0
-   p_axes(:) = 0
-   do i = 1, min(3, size(periodic))
-      if (periodic(i)) then
-         if (.not. all(ieee_is_finite(lattice(:, i)))) return
-         ndim = ndim + 1
-         p_axes(ndim) = i
-      end if
+   call get_periodic_axes(periodic, ndim, p_axes)
+   do i = 1, ndim
+      if (.not. all(ieee_is_finite(lattice(:, p_axes(i))))) return
    end do
 
    select case (ndim)
