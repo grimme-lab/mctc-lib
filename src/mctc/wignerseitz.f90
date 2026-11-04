@@ -15,9 +15,18 @@
 !> @file mctc/wignerseitz.f90
 !> Declaration of the cyclic cluster Wigner-Seitz type, generation, and weight evaluation
 !>
-!> Periodic Wigner-Seitz cell construction for DFT-D4 and related models following:
-!> E. Caldeweyher, J.-M. Mewes, S. Ehlert and S. Grimme, *Phys. Chem. Chem. Phys.*,
-!> **2020**, 22, 8499-8512. DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
+!> Periodic cyclic cluster Wigner-Seitz model for DFT-D4 and related models following:
+!> - E. Caldeweyher, J.-M. Mewes, S. Ehlert and S. Grimme, *Phys. Chem. Chem. Phys.*,
+!>   **2020**, 22, 8499-8512. DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
+!>
+!> Exact 2D/3D lattice repetition bounds use basis reduction, nearest-plane seeding,
+!> and short-vector ellipsoid enumeration following:
+!> - A. K. Lenstra, H. W. Lenstra, Jr. and L. Lovasz, *Math. Ann.*,
+!>   **1982**, 261, 515-534. DOI: [10.1007/BF01457454](https://doi.org/10.1007/BF01457454)
+!> - L. Babai, *Combinatorica*, **1986**, 6, 1-13.
+!>   DOI: [10.1007/BF02579403](https://doi.org/10.1007/BF02579403)
+!> - U. Fincke and M. Pohst, *Math. Comp.*, **1985**, 44, 463-471.
+!>   DOI: [10.1090/S0025-5718-1985-0777278-8](https://doi.org/10.1090/S0025-5718-1985-0777278-8)
 module mctc_wignerseitz
    use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
    use, intrinsic :: iso_fortran_env, only : error_unit
@@ -366,7 +375,7 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
 end subroutine get_wsc_rep_1d
 
 
-!> Exact 2D Wigner-Seitz repetition bounds via Lagrange-Gauss reduction and Cholesky search
+!> Exact 2D Wigner-Seitz repetition bounds via Lagrange-Gauss reduction, Babai nearest-plane seeding, and Fincke-Pohst enumeration
 pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
    !> Cartesian atomic coordinates (3, nat)
    real(wp), intent(in) :: xyz(:, :)
@@ -601,7 +610,7 @@ pure subroutine size_reduce_pair_3d(i, j, mu_ij, bmat, u_mat, bstar, bnorm2, &
    !> Reference column index (< i)
    integer, intent(in) :: j
    !> Current Gram-Schmidt coefficient mu_{i,j}
-   real(wp), intent(in) :: mu_ij
+   real(wp), value, intent(in) :: mu_ij
    !> Working lattice basis (3, 3)
    real(wp), intent(inout) :: bmat(3, 3)
    !> Unimodular transformation matrix (3, 3)
@@ -642,7 +651,7 @@ pure subroutine size_reduce_pair_3d(i, j, mu_ij, bmat, u_mat, bstar, bnorm2, &
 end subroutine size_reduce_pair_3d
 
 
-!> Exact 3D Wigner-Seitz repetition bounds via LLL basis reduction and Cholesky sphere search
+!> Exact 3D Wigner-Seitz repetition bounds via LLL basis reduction, Babai nearest-plane seeding, and Fincke-Pohst enumeration
 pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
    !> Cartesian atomic coordinates (3, nat)
    real(wp), intent(in) :: xyz(:, :)

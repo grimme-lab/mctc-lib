@@ -578,7 +578,14 @@ subroutine test_wrap(error)
 
    type(structure_type) :: mol
    real(wp), allocatable :: xyz_shift(:, :)
+   integer :: iat
 
+   integer, parameter :: shifts(3, 4) = reshape([ &
+      & -1,  2, -1, &
+      &  2, -1,  3, &
+      & -2, -3,  1, &
+      &  1,  1, -2], &
+      & [3, 4])
    real(wp), parameter :: ref(3, 32) = reshape([&
       &  8.66499304004865_wp,  9.33379706146984_wp,  7.91683397818847_wp, &
       & 11.12335640640559_wp,  2.15906103856442_wp, 12.28606540623589_wp, &
@@ -616,13 +623,17 @@ subroutine test_wrap(error)
 
    call get_structure(mol, "x01")
 
-   xyz_shift = mol%xyz - mol%lattice(1, 1)
+   allocate(xyz_shift(3, mol%nat))
+   do iat = 1, mol%nat
+      xyz_shift(:, iat) = mol%xyz(:, iat) &
+         & + matmul(mol%lattice, real(shifts(:, mod(iat - 1, 4) + 1), wp))
+   end do
 
    call wrap_to_central_cell(xyz_shift, mol%lattice, mol%periodic)
 
-   if (any(abs(mol%xyz - ref) > thr)) then
+   if (any(abs(xyz_shift - ref) > thr)) then
       call test_failed(error, "Structures do not match")
-      print "(3es21.14)", mol%xyz
+      print "(3es21.14)", xyz_shift
    end if
 
 end subroutine test_wrap
