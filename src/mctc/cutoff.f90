@@ -17,6 +17,7 @@
 
 !> Realspace cutoff and lattice point generator utilities
 module mctc_cutoff
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
    use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io_math, only : crossprod, matinv_3x3
@@ -78,7 +79,7 @@ pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans, error)
          return
       end if
       if (rep(i) > 0) then
-         if (.not. is_finite_vec(lat(1:3, i))) then
+         if (.not. all(ieee_is_finite(lat(1:3, i)))) then
             call fatal_error(error, &
                & "Nonfinite lattice vectors in cutoff enumeration")
             return
@@ -178,7 +179,7 @@ pure subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans, error)
 
    integer :: rep(3)
 
-   if (rthr < 0.0_wp .or. .not. is_finite_scalar(rthr)) then
+   if (rthr < 0.0_wp .or. .not. ieee_is_finite(rthr)) then
       call fatal_error(error, &
          & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
       return
@@ -276,7 +277,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
 
    rep(:) = 0
 
-   if (rthr < 0.0_wp .or. .not. is_finite_scalar(rthr)) then
+   if (rthr < 0.0_wp .or. .not. ieee_is_finite(rthr)) then
       call fatal_error(error, &
          & "Negative or nonfinite cutoff or repetition bound in cutoff enumeration")
       return
@@ -292,7 +293,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
    p_axes(:) = 0
    do i = 1, 3
       if (periodic(i)) then
-         if (.not. is_finite_vec(lat(1:3, i))) then
+         if (.not. all(ieee_is_finite(lat(1:3, i)))) then
             call fatal_error(error, &
                & "Nonfinite lattice vectors in cutoff enumeration")
             return
@@ -413,30 +414,6 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
 end subroutine get_translations
 
 
-!> Check whether a scalar real value is finite (neither NaN nor Inf)
-pure elemental function is_finite_scalar(val) result(finite)
-   !> Scalar value to inspect
-   real(wp), intent(in) :: val
-   !> True if val is finite
-   logical :: finite
-
-   finite = (val == val) .and. (abs(val) <= huge(1.0_wp))
-
-end function is_finite_scalar
-
-
-!> Check whether a 1D real array contains only finite values
-pure function is_finite_vec(vec) result(finite)
-   !> Vector to inspect
-   real(wp), intent(in) :: vec(:)
-   !> True if all entries of vec are finite
-   logical :: finite
-
-   finite = all(is_finite_scalar(vec))
-
-end function is_finite_vec
-
-
 !> Wrap Cartesian coordinates into the central periodic cell [0, 1)^d along active axes,
 !> preserving orthogonal non-periodic coordinates in 1D and 2D.
 pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
@@ -459,7 +436,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
    p_axes(:) = 0
    do i = 1, min(3, size(periodic))
       if (periodic(i)) then
-         if (.not. is_finite_vec(lattice(:, i))) return
+         if (.not. all(ieee_is_finite(lattice(:, i)))) return
          ndim = ndim + 1
          p_axes(ndim) = i
       end if
@@ -473,7 +450,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       g11 = dot_product(a1, a1)
       if (sqrt(g11) <= tol_deg) return
       do iat = 1, size(xyz, 2)
-         if (.not. is_finite_vec(xyz(:, iat))) cycle
+         if (.not. all(ieee_is_finite(xyz(:, iat)))) cycle
          s1 = dot_product(xyz(:, iat), a1) / g11
          s1_wrap = shift_back_abc(s1)
          xyz(:, iat) = xyz(:, iat) + (s1_wrap - s1) * a1
@@ -491,7 +468,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       det2 = g11 * g22 - g12 * g12
       if (det2 <= (tol_deg**2) * g11 * g22) return
       do iat = 1, size(xyz, 2)
-         if (.not. is_finite_vec(xyz(:, iat))) cycle
+         if (.not. all(ieee_is_finite(xyz(:, iat)))) cycle
          b1 = dot_product(xyz(:, iat), a1)
          b2 = dot_product(xyz(:, iat), a2)
          s1 = (g22 * b1 - g12 * b2) / det2
@@ -515,7 +492,7 @@ pure subroutine wrap_to_central_cell(xyz, lattice, periodic)
       if (vol <= tol_deg * len1 * len2 * len3) return
       invlat = matinv_3x3(lattice)
       do iat = 1, size(xyz, 2)
-         if (.not. is_finite_vec(xyz(:, iat))) cycle
+         if (.not. all(ieee_is_finite(xyz(:, iat)))) cycle
          vec(:) = matmul(invlat, xyz(:, iat))
          vec(:) = shift_back_abc(vec)
          xyz(:, iat) = matmul(lattice, vec)
@@ -535,7 +512,7 @@ elemental function shift_back_abc(in) result(out)
    real(wp) :: out
    real(wp),parameter :: p_pbc_eps = 1.0e-14_wp
    out = in
-   if (.not. is_finite_scalar(in)) return
+   if (.not. ieee_is_finite(in)) return
    if (abs(in) > real((huge(1_i8) - 1_i8) / 2_i8, wp)) return
    if(in < (0.0_wp - p_pbc_eps)) then
      out = in + real(ceiling(-in, i8),wp)

@@ -19,6 +19,7 @@
 !> E. Caldeweyher, J.-M. Mewes, S. Ehlert and S. Grimme, *Phys. Chem. Chem. Phys.*,
 !> **2020**, 22, 8499-8512. DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 module mctc_wignerseitz
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_finite
    use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp, i8, error_type, fatal_error
@@ -191,25 +192,6 @@ subroutine new_wignerseitz_cell_legacy(self, mol)
 end subroutine new_wignerseitz_cell_legacy
 
 
-!> Check whether a 1D array contains only finite IEEE values
-pure function is_finite_vec(vec) result(finite)
-   !> Vector to inspect
-   real(wp), intent(in) :: vec(:)
-   !> True if all entries are finite
-   logical :: finite
-
-   integer :: i
-
-   finite = .true.
-   do i = 1, size(vec)
-      if (.not. (abs(vec(i)) <= huge(1.0_wp))) then
-         finite = .false.
-         return
-      end if
-   end do
-end function is_finite_vec
-
-
 !> Determine lattice repetition bounds needed to cover all Wigner-Seitz nearest
 !> images, accounting for unwrapped coordinates and skewed periodic subspaces.
 pure subroutine get_wsc_rep(mol, rep, error)
@@ -223,7 +205,7 @@ pure subroutine get_wsc_rep(mol, rep, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: i, iat, ndim, p_axes(3)
+   integer :: i, ndim, p_axes(3)
    integer(i8) :: rep_i8(3), ntr_i8
 
    rep(:) = 0
@@ -246,13 +228,11 @@ pure subroutine get_wsc_rep(mol, rep, error)
    end if
 
    ! Validate finiteness of atomic coordinates
-   do iat = 1, mol%nat
-      if (.not. is_finite_vec(mol%xyz(1:3, iat))) then
-         call fatal_error(error, &
-            & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
-         return
-      end if
-   end do
+   if (.not. all(ieee_is_finite(mol%xyz(1:3, 1:mol%nat)))) then
+      call fatal_error(error, &
+         & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
+      return
+   end if
 
    ! Handle non-periodic (0D) structures
    if (.not. allocated(mol%periodic)) return
@@ -280,7 +260,7 @@ pure subroutine get_wsc_rep(mol, rep, error)
    p_axes(:) = 0
    do i = 1, 3
       if (mol%periodic(i)) then
-         if (.not. is_finite_vec(mol%lattice(:, i))) then
+         if (.not. all(ieee_is_finite(mol%lattice(:, i)))) then
             call fatal_error(error, &
                & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
             return
