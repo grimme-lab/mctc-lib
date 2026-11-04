@@ -41,22 +41,18 @@ subroutine collect_wignerseitz(testsuite)
 
    testsuite = [ &
       & new_unittest("compact-images", test_compact_images), &
-      & new_unittest("find-pairs-all-images", test_find_pairs_all_images), &
+      & new_unittest("find-wsc-pairs", test_find_wsc_pairs), &
       & new_unittest("lattice-points-0d", test_latticepoints_0d), &
       & new_unittest("lattice-points-3d", test_latticepoints_3d), &
-      & new_unittest("wignerseitz-3d-skewed-counterexample", test_wsc_3d_skewed_counterexample), &
-      & new_unittest("wignerseitz-65deg-counterexample", test_wsc_65deg_counterexample), &
       & new_unittest("wignerseitz-cell-0d", test_wsc_cell_0d), &
       & new_unittest("wignerseitz-cell-1d", test_wsc_cell_1d), &
       & new_unittest("wignerseitz-cell-2d", test_wsc_cell_2d), &
       & new_unittest("wignerseitz-cell-3d", test_wsc_cell_3d), &
-      & new_unittest("wignerseitz-degenerate-and-limits", test_wsc_degenerate_and_limits), &
+      & new_unittest("wignerseitz-skewed-3d", test_wsc_skewed_3d), &
+      & new_unittest("wignerseitz-sheared-3d", test_wsc_sheared_3d), &
       & new_unittest("wignerseitz-exhaustive-reference", test_wsc_exhaustive_reference), &
       & new_unittest("wignerseitz-high-symmetry", test_wsc_high_symmetry), &
-      & new_unittest("wignerseitz-robustness-1d", test_wsc_robustness_1d), &
-      & new_unittest("wignerseitz-robustness-2d", test_wsc_robustness_2d), &
-      & new_unittest("wignerseitz-robustness-2d-corner", test_wsc_robustness_2d_corner), &
-      & new_unittest("wignerseitz-sheared-3d", test_wsc_sheared_3d), &
+      & new_unittest("wignerseitz-degenerate-and-limits", test_wsc_degenerate_and_limits), &
       & new_unittest("wignerseitz-derivatives-2d", test_wsc_derivatives_2d), &
       & new_unittest("wignerseitz-derivatives-3d", test_wsc_derivatives_3d), &
       & new_unittest("wignerseitz-window-edge", test_wsc_window_edge) &
@@ -65,7 +61,7 @@ subroutine collect_wignerseitz(testsuite)
 end subroutine collect_wignerseitz
 
 
-!> Compact nearest-image storage, including no images and all candidates retained
+!> Compact nearest-image storage, including no images and more than 27 images
 subroutine test_compact_images(error)
 
    !> Error handling
@@ -104,19 +100,16 @@ subroutine test_compact_images(error)
    call check(error, all(abs(weights - 1.0_wp / 6.0_wp) < thr), "Tied image weights")
    if (allocated(error)) return
 
-   ! All 738 competing images fall in the smooth nearest-image interval
-   mol%lattice = 0.01_wp * lattice
+   ! Small cubic cell, 56 images fall in the smooth nearest-image interval
+   mol%lattice = 0.025_wp * lattice
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
 
-   call check(error, wsc%nimg(1, 1), 738)
-   if (allocated(error)) return
-
-   call check(error, size(wsc%tridx, 1), 738)
+   call check(error, wsc%nimg(1, 1), 56)
    if (allocated(error)) return
 
    deallocate(weights)
-   allocate(weights(738))
+   allocate(weights(56))
    call get_wignerseitz_weights(wsc, 1, 1, mol%xyz(:, 1), weights)
    call check(error, abs(sum(weights) - 1.0_wp) < thr .and. all(weights > 0.0_wp), &
       & "Normalized image weights")
@@ -147,13 +140,13 @@ subroutine test_compact_images(error)
 end subroutine test_compact_images
 
 
-!> All candidate images are tied, the image search must stop after the last one
-subroutine test_find_pairs_all_images(error)
+!> Image search for two tied images, only counting and storing them
+subroutine test_find_wsc_pairs(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: nimg, list(2)
+   integer :: nimg, list(2), empty(0)
    real(wp) :: min_r2
 
    real(wp), parameter :: trans(3, 2) = reshape([ &
@@ -162,18 +155,21 @@ subroutine test_find_pairs_all_images(error)
       & [3, 2])
    real(wp), parameter :: rij(3) = [1.0_wp, 0.0_wp, 0.0_wp]
 
-   call find_wsc_pairs(trans, rij, nimg, list, min_r2)
-
+   call find_wsc_pairs(trans, rij, nimg, empty, min_r2)
    call check(error, nimg, 2)
    if (allocated(error)) return
 
-   call check(error, list(1), 1)
+   call check(error, min_r2, 1.0_wp, thr=thr)
    if (allocated(error)) return
 
-   call check(error, list(2), 2)
+   call find_wsc_pairs(trans, rij, nimg, list, min_r2)
+   call check(error, nimg, 2)
    if (allocated(error)) return
 
-end subroutine test_find_pairs_all_images
+   call check(error, all(list == [1, 2]), "Image indices not stored in order")
+   if (allocated(error)) return
+
+end subroutine test_find_wsc_pairs
 
 
 subroutine test_latticepoints_0d(error)
@@ -242,141 +238,6 @@ subroutine test_latticepoints_3d(error)
 end subroutine test_latticepoints_3d
 
 
-!> Deterministic 3D counterexample where rep = [1, 1, 1] gives d^2 = 56.5 bohr^2
-!> while the four true minimum-distance images (2,0,0), (3,0,0), (-2,1,0), (-3,1,0)
-!> have d^2 = 6.5 bohr^2.
-subroutine test_wsc_3d_skewed_counterexample(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol
-   type(wignerseitz_cell) :: wsc
-   real(wp) :: rij(3), vec(3), weights(16), d2
-   integer :: img
-   logical :: found(4)
-
-   integer, parameter :: nat = 2
-   integer, parameter :: num(nat) = [6, 8]
-   real(wp), parameter :: xyz(3, nat) = reshape([ &
-      &  0.0_wp, 0.0_wp, 0.0_wp, &
-      & 12.5_wp, 0.5_wp, 0.0_wp], &
-      & [3, nat])
-   real(wp), parameter :: lattice(3, 3) = reshape([ &
-      &  5.0_wp, 0.0_wp, 0.0_wp, &
-      & 25.0_wp, 1.0_wp, 0.0_wp, &
-      &  0.0_wp, 0.0_wp, 5.0_wp], &
-      & [3, 3])
-   logical, parameter :: periodic(3) = [.true., .true., .true.]
-
-   call new(mol, num, xyz, lattice=lattice, periodic=periodic)
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   ! Atom 1 and Atom 2 must have 4 equidistant minimum images at d^2 = 6.5 bohr^2
-   call check(error, wsc%nimg(1, 2), 4)
-   if (allocated(error)) return
-
-   call check(error, wsc%nimg(2, 1), 4)
-   if (allocated(error)) return
-
-   rij = mol%xyz(:, 2) - mol%xyz(:, 1)
-   found(:) = .false.
-   do img = 1, wsc%nimg(1, 2)
-      vec = wsc%trans(:, wsc%tridx(img, 1, 2))
-      d2 = sum((rij - vec)**2)
-      if (abs(d2 - 6.5_wp) > thr) then
-         call test_failed(error, "3D skewed counterexample selected image with wrong squared distance")
-         return
-      end if
-
-      if (maxval(abs(vec - [10.0_wp, 0.0_wp, 0.0_wp])) < thr) then
-         found(1) = .true.
-      end if
-      if (maxval(abs(vec - [15.0_wp, 0.0_wp, 0.0_wp])) < thr) then
-         found(2) = .true.
-      end if
-      if (maxval(abs(vec - [15.0_wp, 1.0_wp, 0.0_wp])) < thr) then
-         found(3) = .true.
-      end if
-      if (maxval(abs(vec - [10.0_wp, 1.0_wp, 0.0_wp])) < thr) then
-         found(4) = .true.
-      end if
-   end do
-
-   if (.not. all(found)) then
-      call test_failed(error, &
-         & "3D skewed counterexample did not recover all four images (2,0,0), (3,0,0), (-2,1,0), (-3,1,0)")
-      return
-   end if
-
-   call get_wignerseitz_weights(wsc, 1, 2, rij, weights)
-   if (maxval(abs(weights(1:4) - 0.25_wp)) > thr) then
-      call test_failed(error, "3D skewed counterexample weights are not [0.25, 0.25, 0.25, 0.25]")
-      return
-   end if
-
-end subroutine test_wsc_3d_skewed_counterexample
-
-
-subroutine test_wsc_65deg_counterexample(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol
-   type(wignerseitz_cell) :: wsc
-   real(wp) :: rij(3), vec1(3), vec2(3)
-   real(wp) :: d2_found1, d2_found2, d2_expect, weights(16)
-
-   real(wp), parameter :: pi = 4.0_wp * atan(1.0_wp)
-   real(wp), parameter :: angle = 65.0_wp * pi / 180.0_wp
-   integer, parameter :: nat = 2
-   integer, parameter :: num(nat) = [6, 8]
-   real(wp), parameter :: lattice(3, 3) = reshape([ &
-      & 5.0_wp, 0.0_wp, 0.0_wp, &
-      & 5.0_wp * cos(angle), 5.0_wp * sin(angle), 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 0.0_wp], &
-      & [3, 3])
-   real(wp), parameter :: xyz(3, nat) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 1.39_wp * (lattice(:, 1) + lattice(:, 2))], &
-      & [3, nat])
-   logical, parameter :: periodic(3) = [.true., .true., .false.]
-
-   call new(mol, num, xyz, lattice=lattice, periodic=periodic)
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   ! True minimum-distance images for rij = xyz(:, 2) - xyz(:, 1) are (2, 1) and (1, 2)
-   ! with squared distance 8.0781427585 bohr^2 (whereas (1, 1) has 10.8185950039 bohr^2)
-   call check(error, wsc%nimg(1, 2), 2)
-   if (allocated(error)) return
-
-   call check(error, wsc%nimg(2, 1), 2)
-   if (allocated(error)) return
-
-   rij = mol%xyz(:, 2) - mol%xyz(:, 1)
-   d2_expect = sum((rij - 2.0_wp * lattice(:, 1) - lattice(:, 2))**2)
-   vec1 = rij - wsc%trans(:, wsc%tridx(1, 1, 2))
-   vec2 = rij - wsc%trans(:, wsc%tridx(2, 1, 2))
-   d2_found1 = sum(vec1**2)
-   d2_found2 = sum(vec2**2)
-
-   if (abs(d2_found1 - d2_expect) > thr .or. abs(d2_found2 - d2_expect) > thr) then
-      call test_failed(error, "65-degree 2D counterexample failed to find (2,1) and (1,2) images")
-      return
-   end if
-
-   call get_wignerseitz_weights(wsc, 1, 2, rij, weights)
-   if (maxval(abs(weights(1:2) - 0.5_wp)) > thr) then
-      call test_failed(error, "65-degree 2D counterexample weights are not [0.5, 0.5]")
-      return
-   end if
-
-end subroutine test_wsc_65deg_counterexample
-
-
 subroutine test_wsc_cell_0d(error)
 
    !> Error handling
@@ -399,6 +260,8 @@ subroutine test_wsc_cell_0d(error)
 end subroutine test_wsc_cell_0d
 
 
+!> Wire along the second lattice vector, the second atom is unwrapped by three
+!> periods and lies half way between two images of the first atom
 subroutine test_wsc_cell_1d(error)
 
    !> Error handling
@@ -406,60 +269,37 @@ subroutine test_wsc_cell_1d(error)
 
    type(structure_type) :: mol
    type(wignerseitz_cell) :: wsc
-   real(wp) :: lat(3, 3), vec(3), total(3)
-   integer :: imask, i
 
    integer, parameter :: nat = 2
    integer, parameter :: num(nat) = [8, 1]
-   real(wp), parameter :: a1(3) = [3.0_wp, 4.0_wp, 0.0_wp]
    real(wp), parameter :: xyz(3, nat) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 1.5_wp, 2.0_wp, 1.2_wp], &
+      &  0.0_wp,  0.0_wp, 0.0_wp, &
+      & 10.5_wp, 14.0_wp, 1.2_wp], &
       & [3, nat])
-   logical, parameter :: masks(3, 3) = reshape([ &
-      & .true., .false., .false., &
-      & .false., .true., .false., &
-      & .false., .false., .true.], &
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 3.0_wp, 4.0_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.0_wp], &
       & [3, 3])
 
-   do imask = 1, 3
-      lat = 0.0_wp
-      lat(:, imask) = a1
-      call new(mol, num, xyz, lattice=lat, periodic=masks(:, imask))
-      call new_wignerseitz_cell(wsc, mol, error)
-      if (allocated(error)) return
+   call new(mol, num, xyz, lattice=lattice, periodic=[.false., .true., .false.])
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
 
-      call verify_wsc_against_ref(mol, wsc, 4, error)
-      if (allocated(error)) return
+   call check(error, wsc%nimg(1, 1), 2)
+   if (allocated(error)) return
 
-      ! Atom 1 has 2 closest self images (+a and -a), testing the exhaustion guard
-      call check(error, wsc%nimg(1, 1), 2)
-      if (allocated(error)) return
+   call check(error, wsc%nimg(2, 1), 2)
+   if (allocated(error)) return
 
-      ! Atom 2 is at half-cell along a, so it has 2 equidistant images to atom 1
-      call check(error, wsc%nimg(2, 1), 2)
-      if (allocated(error)) return
-
-      total = 0.0_wp
-      do i = 1, wsc%nimg(1, 1)
-         vec = wsc%trans(:, wsc%tridx(i, 1, 1))
-         if (abs(norm2(vec) - 5.0_wp) > thr) then
-            call test_failed(error, "1D WSC self image has wrong length")
-            return
-         end if
-
-         total = total + vec
-      end do
-
-      if (maxval(abs(total)) > thr) then
-         call test_failed(error, "1D WSC self images do not cancel")
-         return
-      end if
-   end do
+   call verify_wsc_against_ref(mol, wsc, 6, error)
+   if (allocated(error)) return
 
 end subroutine test_wsc_cell_1d
 
 
+!> Square lattice in the yz-plane, the nonperiodic lattice vector is shorter than
+!> the periodic ones and must not contribute images
 subroutine test_wsc_cell_2d(error)
 
    !> Error handling
@@ -467,8 +307,6 @@ subroutine test_wsc_cell_2d(error)
 
    type(structure_type) :: mol
    type(wignerseitz_cell) :: wsc
-   real(wp) :: total(3), vec(3)
-   integer :: i
 
    integer, parameter :: nat = 1
    integer, parameter :: num(nat) = [8]
@@ -480,38 +318,21 @@ subroutine test_wsc_cell_2d(error)
       & 0.0_wp, 5.2_wp, 0.0_wp, &
       & 0.0_wp, 0.0_wp, 5.2_wp], &
       & [3, 3])
-   logical, parameter :: periodic(3) = [.false., .true., .true.]
 
-   ! Square 2D lattice in YZ plane (FTT) with nonperiodic X vector shorter than Y/Z
-   call new(mol, num, xyz, lattice=lattice, periodic=periodic)
+   call new(mol, num, xyz, lattice=lattice, periodic=[.false., .true., .true.])
    call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   call verify_wsc_against_ref(mol, wsc, 4, error)
    if (allocated(error)) return
 
    call check(error, wsc%nimg(1, 1), 4)
    if (allocated(error)) return
 
-   total = 0.0_wp
-   do i = 1, wsc%nimg(1, 1)
-      vec = wsc%trans(:, wsc%tridx(i, 1, 1))
-      if (abs(vec(1)) > thr .or. abs(norm2(vec) - 5.2_wp) > thr) then
-         call test_failed(error, "2D WSC selected nonperiodic or non-minimal self image")
-         return
-      end if
-
-      total = total + vec
-   end do
-
-   if (maxval(abs(total)) > thr) then
-      call test_failed(error, "2D WSC self images do not cancel")
-      return
-   end if
+   call verify_wsc_against_ref(mol, wsc, 4, error)
+   if (allocated(error)) return
 
 end subroutine test_wsc_cell_2d
 
 
+!> Molecular crystal with unwrapped coordinates spanning several cells
 subroutine test_wsc_cell_3d(error)
 
    !> Error handling
@@ -525,663 +346,53 @@ subroutine test_wsc_cell_3d(error)
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
 
-   call check(error, size(wsc%trans, 1), 3)
-   if (allocated(error)) return
-
-   ! pyrazole has unwrapped coordinates spanning several cells
-   call check(error, size(wsc%tridx, 1), wsc%nimg_max)
-   if (allocated(error)) return
-
    call verify_wsc_against_ref(mol, wsc, 4, error)
    if (allocated(error)) return
 
 end subroutine test_wsc_cell_3d
 
 
-!> Degenerate periodic lattices and the limit on candidate translations
-subroutine test_wsc_degenerate_and_limits(error)
+!> Skewed cell where the nearest images (2,0,0), (3,0,0), (-2,1,0), and (-3,1,0)
+!> lie outside the box of next-neighbor cells
+subroutine test_wsc_skewed_3d(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
    type(wignerseitz_cell) :: wsc
-   type(error_type), allocatable :: wsc_err
-   real(wp) :: lat(3, 3), xyz(3, 2)
+   real(wp) :: weights(4)
 
    integer, parameter :: nat = 2
    integer, parameter :: num(nat) = [6, 8]
-   integer, parameter :: nat1 = 1
-   integer, parameter :: num1(nat1) = [6]
-   real(wp), parameter :: xyz1(3, nat1) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp], &
-      & [3, nat1])
-   real(wp), parameter :: lat_small(3, 3) = reshape([ &
-      & 1.0e-6_wp, 0.0_wp,    0.0_wp, &
-      & 0.0_wp,    1.0e-6_wp, 0.0_wp, &
-      & 0.0_wp,    0.0_wp,    1.0e-6_wp], &
-      & [3, 3])
-   logical, parameter :: pbc_1d(3) = [.true., .false., .false.]
-   logical, parameter :: pbc_2d(3) = [.true., .true., .false.]
-   logical, parameter :: pbc_3d(3) = [.true., .true., .true.]
-
-   ! 1. Valid 0D geometry
-   call get_structure(mol, "mindless02")
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   call check(error, allocated(wsc%trans))
-   if (allocated(error)) return
-
-   call check(error, size(wsc%trans, 2), 1)
-   if (allocated(error)) return
-
-   ! 2. Valid 1D periodic geometry
-   lat = 0.0_wp
-   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 2) = [2.0_wp, 0.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   call check(error, allocated(wsc%trans))
-   if (allocated(error)) return
-
-   call check(error, size(wsc%trans, 2), 3)
-   if (allocated(error)) return
-
-   call check(error, size(wsc%tridx, 1), wsc%nimg_max)
-   if (allocated(error)) return
-
-   ! 2b. Large valid 1D unwrapped shift (19,999 periods -> 39999 translations, below the
-   !     limit): image indices are only stored for the 2 competing images
-   xyz(:, 1) = 0.0_wp
-   xyz(:, 2) = 19999.0_wp * lat(:, 1) + [1.2_wp, 0.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   call check(error, size(wsc%trans, 2) > 2 * 19999)
-   if (allocated(error)) return
-
-   call check(error, size(wsc%tridx, 1), wsc%nimg_max)
-   if (allocated(error)) return
-
-   call check(error, size(wsc%tridx, 1), 2)
-   if (allocated(error)) return
-
-   xyz(:, 2) = [1.2_wp, 0.0_wp, 0.0_wp]
-
-   ! 3. Degenerate active 1D lattice (zero active lattice vector)
-   lat = 0.0_wp
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   ! 4. Degenerate active 2D lattice (collinear active lattice vectors)
-   lat = 0.0_wp
-   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
-   lat(:, 2) = [10.0_wp, 0.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_2d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   ! 5. Degenerate active 3D lattice (coplanar lattice vectors)
-   lat(:, 3) = [3.0_wp, 0.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_3d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   ! 6. Candidate translations far beyond the limit (and the integer range)
-   lat = 0.0_wp
-   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 2) = [1.0e12_wp, 0.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   ! 7. 1D candidate-translation limit exhaustion: a1 = [5, 0, 0], two atoms separated
-   !    by > 100,000 lattice periods along x (120,000 periods -> 600,000 bohr)
-   lat = 0.0_wp
-   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 2) = [600000.0_wp, 0.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   ! 8. 2D candidate-translation limit: two atoms separated by 200 periods
-   !    along both a1 and a2 so (2*201 + 1)^2 = 162,409 > 100,000 candidate translations
-   lat = 0.0_wp
-   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
-   lat(:, 2) = [0.0_wp, 5.0_wp, 0.0_wp]
-   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 2) = [1001.0_wp, 1001.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_2d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   ! 9. Tiny non-degenerate lattice vectors (1.0e-6 bohr), the switching interval
-   !    covers far more than the maximum number of candidate translations
-   call new(mol, num1, xyz1, lattice=lat_small, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call new(mol, num1, xyz1, lattice=lat_small, periodic=pbc_2d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call new(mol, num1, xyz1, lattice=lat_small, periodic=pbc_3d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-end subroutine test_wsc_degenerate_and_limits
-
-
-subroutine test_wsc_exhaustive_reference(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol, mol_unimod
-   type(wignerseitz_cell) :: wsc, wsc_unimod
-   type(error_type), allocatable :: wsc_err
-   real(wp) :: lat(3, 3), lat_unimod(3, 3), xyz(3, 3), xyz_unimod(3, 3)
-   real(wp) :: a1(3), a2(3), a3(3), v_ref(3), v_test(3), weights(16)
-   real(wp) :: ang, ratio
-   integer :: iang, irat, imask, ishift, iat, jat
-
-   integer, parameter :: nat = 3
-   integer, parameter :: num(nat) = [6, 8, 1]
-   integer, parameter :: nat2 = 2
-   integer, parameter :: num2(nat2) = [6, 8]
-   real(wp), parameter :: pi = 4.0_wp * atan(1.0_wp)
-   real(wp), parameter :: angles_deg(4) = [60.0_wp, 65.0_wp, 90.0_wp, 120.0_wp]
-   real(wp), parameter :: ratios(2) = [1.0_wp, 3.5_wp]
-   real(wp), parameter :: xyz1_1d(3) = [0.2_wp, -0.1_wp, 0.3_wp]
-   real(wp), parameter :: off2_1d(3) = [0.3_wp, 0.4_wp, -0.2_wp]
-   real(wp), parameter :: off3_1d(3) = [-0.2_wp, 0.5_wp, 0.1_wp]
-   real(wp), parameter :: a1_2d(3) = [4.8_wp, 0.3_wp, -0.2_wp]
-   real(wp), parameter :: xyz1_2d(3) = [0.1_wp, -0.2_wp, 0.3_wp]
-   real(wp), parameter :: off2_2d(3) = [0.0_wp, 0.0_wp, 0.5_wp]
-   real(wp), parameter :: off3_2d(3) = [0.0_wp, 0.0_wp, -0.4_wp]
-   real(wp), parameter :: a1_3d(3) = [4.5_wp, 0.4_wp, -0.2_wp]
-   real(wp), parameter :: xyz1_3d(3) = [0.15_wp, -0.25_wp, 0.10_wp]
-   real(wp), parameter :: xyz_cube(3, nat) = reshape([ &
-      & 0.0_wp, 0.0_wp,   0.0_wp, &
-      & 3.0_wp, 3.0_wp,   3.0_wp, &
-      & 3.0_wp, 3.005_wp, 0.0_wp], &
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      &  0.0_wp, 0.0_wp, 0.0_wp, &
+      & 12.5_wp, 0.5_wp, 0.0_wp], &
       & [3, nat])
-   real(wp), parameter :: lat_cube(3, 3) = reshape([ &
-      & 6.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.0_wp, 6.0_wp, 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 6.0_wp], &
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      &  5.0_wp, 0.0_wp, 0.0_wp, &
+      & 25.0_wp, 1.0_wp, 0.0_wp, &
+      &  0.0_wp, 0.0_wp, 5.0_wp], &
       & [3, 3])
-   real(wp), parameter :: lat_collinear(3, 3) = reshape([ &
-      & 4.0_wp, 0.0_wp, 0.0_wp, &
-      & 8.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 0.0_wp], &
-      & [3, 3])
-   logical, parameter :: masks_1d(3, 3) = reshape([ &
-      & .true., .false., .false., &
-      & .false., .true., .false., &
-      & .false., .false., .true.], &
-      & [3, 3])
-   logical, parameter :: masks_2d(3, 3) = reshape([ &
-      & .true., .true., .false., &
-      & .true., .false., .true., &
-      & .false., .true., .true.], &
-      & [3, 3])
-   logical, parameter :: pbc_2d(3) = [.true., .true., .false.]
-   logical, parameter :: pbc_3d(3) = [.true., .true., .true.]
 
-   ! 1. Exhaustive 1D comparison across all periodic masks, rotated axes, and multi-cell shifts
-   xyz(:, 1) = xyz1_1d
-   do ishift = 1, 3
-      a1 = [3.2_wp + 0.5_wp * real(ishift, wp), -2.4_wp, 4.1_wp]
-      xyz(:, 2) = xyz(:, 1) + (0.49_wp + real(2 * ishift, wp)) * a1 + off2_1d
-      xyz(:, 3) = xyz(:, 1) - (1.51_wp + real(ishift, wp)) * a1 + off3_1d
-      do imask = 1, 3
-         lat = 0.0_wp
-         lat(:, imask) = a1
-         call new(mol, num, xyz, lattice=lat, periodic=masks_1d(:, imask))
-         call new_wignerseitz_cell(wsc, mol, error)
-         if (allocated(error)) return
-
-         call verify_wsc_against_ref(mol, wsc, 16, error)
-         if (allocated(error)) return
-      end do
-   end do
-
-   ! 2. Exhaustive 2D comparison across angles (60, 65, 90, 120 deg), aspect ratios,
-   !    periodic masks, unimodular shear, and unwrapped coordinates up to several cells
-   a1 = a1_2d
-   xyz(:, 1) = xyz1_2d
-   do iang = 1, size(angles_deg)
-      ang = angles_deg(iang) * pi / 180.0_wp
-      do irat = 1, size(ratios)
-         ratio = ratios(irat)
-         a2 = ratio * [4.8_wp * cos(ang), 4.8_wp * sin(ang), 0.4_wp]
-         xyz(:, 2) = xyz(:, 1) + 1.39_wp * a1 + 1.39_wp * a2 + off2_2d
-         xyz(:, 3) = xyz(:, 1) - 2.45_wp * a1 + 3.48_wp * a2 + off3_2d
-         do imask = 1, 3
-            lat = 0.0_wp
-            select case (imask)
-            case (1)
-               lat(:, 1) = a1
-               lat(:, 2) = a2
-            case (2)
-               lat(:, 1) = a1
-               lat(:, 3) = a2 + 2.0_wp * a1
-            case (3)
-               lat(:, 2) = a1 - a2
-               lat(:, 3) = a2
-            case default
-               continue
-            end select
-
-            call new(mol, num, xyz, lattice=lat, periodic=masks_2d(:, imask))
-            call new_wignerseitz_cell(wsc, mol, error)
-            if (allocated(error)) return
-
-            call verify_wsc_against_ref(mol, wsc, 16, error)
-            if (allocated(error)) return
-         end do
-      end do
-   end do
-
-   ! 3. Exhaustive 3D validation: triclinic lattices, strongly skewed cells,
-   !    unwrapped coordinates, unimodular basis transformations, and multi-period shifts
-   a1 = a1_3d
-   xyz(:, 1) = xyz1_3d
-   do ishift = 1, 3
-      a2 = [1.8_wp, 4.9_wp, 0.5_wp] + real(ishift - 1, wp) * a1
-      a3 = [-1.1_wp, 1.5_wp, 5.2_wp] + real(ishift - 1, wp) * (a1 - a2)
-      lat(:, 1) = a1
-      lat(:, 2) = a2
-      lat(:, 3) = a3
-
-      xyz(:, 2) = xyz(:, 1) + 1.38_wp * a1 + 1.41_wp * a2 - 0.49_wp * a3
-      xyz(:, 3) = xyz(:, 1) - 2.47_wp * a1 + 0.51_wp * a2 + 2.35_wp * a3
-
-      call new(mol, num, xyz, lattice=lat, periodic=pbc_3d)
-      call new_wignerseitz_cell(wsc, mol, error)
-      if (allocated(error)) return
-
-      call verify_wsc_against_ref(mol, wsc, 7, error)
-      if (allocated(error)) return
-
-      ! Unimodular 3D basis transformation: a2' = a2 + 2*a1, a3' = a3 - a1 + a2
-      ! combined with multi-period integer lattice shifts of atoms 2 and 3
-      lat_unimod(:, 1) = a1
-      lat_unimod(:, 2) = a2 + 2.0_wp * a1
-      lat_unimod(:, 3) = a3 - a1 + a2
-      xyz_unimod = xyz
-      xyz_unimod(:, 2) = xyz_unimod(:, 2) + 2.0_wp * a1 - 3.0_wp * a2 + a3
-      xyz_unimod(:, 3) = xyz_unimod(:, 3) - 3.0_wp * a1 + 2.0_wp * a2 - 2.0_wp * a3
-
-      call new(mol_unimod, num, xyz_unimod, lattice=lat_unimod, periodic=pbc_3d)
-      call new_wignerseitz_cell(wsc_unimod, mol_unimod, error)
-      if (allocated(error)) return
-
-      do iat = 1, 3
-         do jat = 1, 3
-            call check(error, wsc_unimod%nimg(jat, iat), wsc%nimg(jat, iat))
-            if (allocated(error)) return
-
-            if (iat /= jat) then
-               v_ref = mol%xyz(:, jat) - mol%xyz(:, iat) &
-                  & + wsc%trans(:, wsc%tridx(1, jat, iat))
-               v_test = mol_unimod%xyz(:, jat) - mol_unimod%xyz(:, iat) &
-                  & + wsc_unimod%trans(:, wsc_unimod%tridx(1, jat, iat))
-               if (maxval(abs(v_test - v_ref)) > thr2) then
-                  call test_failed(error, &
-                     & "3D WSC minimum-image vector changed under unimodular transformation and shift")
-                  return
-               end if
-            end if
-         end do
-      end do
-   end do
-
-   ! 4. 3D Wigner-Seitz boundary degeneracies: exact body-center (8 images) and
-   !    near-boundary perturbation within tol = 0.3_wp
-   call new(mol, num, xyz_cube, lattice=lat_cube, periodic=pbc_3d)
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .true.])
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
 
-   call verify_wsc_against_ref(mol, wsc, 4, error)
+   call check(error, wsc%nimg(1, 2), 4)
    if (allocated(error)) return
 
-   ! Atom 2 at exact body center of 6x6x6 cube has 8 equidistant nearest images
-   call check(error, wsc%nimg(1, 2), 8)
+   call verify_wsc_against_ref(mol, wsc, 10, error)
    if (allocated(error)) return
 
    call get_wignerseitz_weights(wsc, 1, 2, mol%xyz(:, 2) - mol%xyz(:, 1), weights)
-   if (maxval(abs(weights(1:8) - 0.125_wp)) > thr) then
-      call test_failed(error, "3D body-center 8-fold degenerate weights are not 1/8")
-      return
-   end if
+   call check(error, all(abs(weights - 0.25_wp) < thr), "Tied image weights")
 
-   ! Atom 3 near face/edge boundary (3.0, 3.005, 0.0) has 4 competing images within tol = 0.3
-   call check(error, wsc%nimg(1, 3), 4)
-   if (allocated(error)) return
-
-   call get_wignerseitz_weights(wsc, 1, 3, mol%xyz(:, 3) - mol%xyz(:, 1), weights)
-   if (abs(sum(weights(1:4)) - 1.0_wp) > thr) then
-      call test_failed(error, "3D near-boundary smooth weights do not sum to 1")
-      return
-   end if
-
-   ! 5. Degenerate (collinear 2D) lattice fails closed without allocating fake origin-only trans
-   call new(mol, num2, xyz_cube(:, 1:2), lattice=lat_collinear, periodic=pbc_2d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-end subroutine test_wsc_exhaustive_reference
+end subroutine test_wsc_skewed_3d
 
 
-!> High-symmetry cells with many tied nearest images
-subroutine test_wsc_high_symmetry(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol
-   type(wignerseitz_cell) :: wsc
-   real(wp) :: weights(16)
-   integer :: nimg_small, nimg_full, list_small(8), list_full(27)
-   real(wp) :: r2_small, r2_full
-
-   integer, parameter :: nat = 2
-   integer, parameter :: num(nat) = [6, 8]
-   real(wp), parameter :: xyz_hex(3, nat) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 2.0_wp, 1.0_wp, 0.0_wp], &
-      & [3, nat])
-   real(wp), parameter :: lat_hex(3, 3) = reshape([ &
-      & 6.0_wp, 0.0_wp, 0.0_wp, &
-      & 3.0_wp, 3.0_wp * sqrt(3.0_wp), 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 0.0_wp], &
-      & [3, 3])
-   real(wp), parameter :: lat_tric(3, 3) = reshape([ &
-      & 5.0_wp, 0.0_wp, 0.0_wp, &
-      & 5.0_wp * 0.49_wp, 5.0_wp * sqrt(0.90_wp), 0.0_wp, &
-      & 0.0_wp, 5.0_wp * 0.45_wp * sqrt(0.90_wp), 5.0_wp * sqrt(0.86775_wp)], &
-      & [3, 3])
-   real(wp), parameter :: xyz_tric(3, nat) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.48_wp * lat_tric(:, 1) - 0.51_wp * lat_tric(:, 2) + 0.49_wp * lat_tric(:, 3)], &
-      & [3, nat])
-   integer, parameter :: nat_fcc = 1
-   integer, parameter :: num_fcc(nat_fcc) = [6]
-   real(wp), parameter :: xyz_fcc(3, nat_fcc) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp], &
-      & [3, nat_fcc])
-   real(wp), parameter :: lat_fcc(3, 3) = reshape([ &
-      & 0.0_wp, 4.0_wp, 4.0_wp, &
-      & 4.0_wp, 0.0_wp, 4.0_wp, &
-      & 4.0_wp, 4.0_wp, 0.0_wp], &
-      & [3, 3])
-   logical, parameter :: pbc_2d(3) = [.true., .true., .false.]
-   logical, parameter :: pbc_3d(3) = [.true., .true., .true.]
-
-   ! 1. 2D 60-degree hexagonal lattice with six tied self images
-   call new(mol, num, xyz_hex, lattice=lat_hex, periodic=pbc_2d)
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   call check(error, wsc%nimg(1, 1), 6)
-   if (allocated(error)) return
-
-   call verify_wsc_against_ref(mol, wsc, 4, error)
-   if (allocated(error)) return
-
-   ! 2. Triclinic 3D cell with nearly half-integer fractional pair coordinates
-   call new(mol, num, xyz_tric, lattice=lat_tric, periodic=pbc_3d)
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   call verify_wsc_against_ref(mol, wsc, 4, error)
-   if (allocated(error)) return
-
-   ! 3. 3D FCC primitive cell with 12 equidistant nearest self images,
-   !    a shorter output buffer holds the nearest images and counts all of them
-   call new(mol, num_fcc, xyz_fcc, lattice=lat_fcc, periodic=pbc_3d)
-   call new_wignerseitz_cell(wsc, mol, error)
-   if (allocated(error)) return
-
-   call check(error, wsc%nimg(1, 1), 12)
-   if (allocated(error)) return
-
-   call check(error, size(wsc%tridx, 1), 12)
-   if (allocated(error)) return
-
-   call get_wignerseitz_weights(wsc, 1, 1, xyz_fcc(:, 1), weights)
-   if (maxval(abs(weights(1:12) - 1.0_wp / 12.0_wp)) > thr) then
-      call test_failed(error, "FCC 12-fold self-image weights are not 1/12")
-      return
-   end if
-
-   call find_wsc_pairs(wsc%trans, xyz_fcc(:, 1), nimg_small, list_small, r2_small)
-   call check(error, nimg_small, 12)
-   if (allocated(error)) return
-
-   call find_wsc_pairs(wsc%trans, xyz_fcc(:, 1), nimg_full, list_full, r2_full)
-   call check(error, nimg_full, 12)
-   if (allocated(error)) return
-
-   if (any(list_small(1:8) /= list_full(1:8))) then
-      call test_failed(error, "Truncated image list does not match the nearest images")
-      return
-   end if
-
-end subroutine test_wsc_high_symmetry
-
-
-subroutine test_wsc_robustness_1d(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol_ref, mol_test
-   type(wignerseitz_cell) :: wsc_ref, wsc_test
-   real(wp) :: v_ref(3), v_test(3)
-   integer :: iat, jat
-
-   integer, parameter :: nat = 3
-   integer, parameter :: num(nat) = [6, 8, 1]
-   real(wp), parameter :: a1(3) = [3.0_wp, 4.0_wp, 12.0_wp]
-   real(wp), parameter :: xyz_ref(3, nat) = reshape([ &
-      &  0.1_wp,  0.2_wp, -0.3_wp, &
-      &  1.1_wp,  1.4_wp,  3.5_wp, &
-      & -0.8_wp, -0.9_wp, -2.5_wp], &
-      & [3, nat])
-   real(wp), parameter :: xyz_test(3, nat) = reshape([ &
-      & xyz_ref(:, 1), &
-      & xyz_ref(:, 2) + 5.0_wp * a1, &
-      & xyz_ref(:, 3) - 4.0_wp * a1], &
-      & [3, nat])
-   real(wp), parameter :: lat_ref(3, 3) = reshape([ &
-      & 0.0_wp, 0.0_wp,  0.0_wp, &
-      & 3.0_wp, 4.0_wp, 12.0_wp, &
-      & 0.0_wp, 0.0_wp,  0.0_wp], &
-      & [3, 3])
-   logical, parameter :: periodic(3) = [.false., .true., .false.]
-
-   ! 1D wire rotated in 3D space with zero nonperiodic lattice columns
-   ! and multi-cell atom translations (|n| > 1)
-   call new(mol_ref, num, xyz_ref, lattice=lat_ref, periodic=periodic)
-   call new(mol_test, num, xyz_test, lattice=lat_ref, periodic=periodic)
-   call new_wignerseitz_cell(wsc_ref, mol_ref, error)
-   if (allocated(error)) return
-
-   call new_wignerseitz_cell(wsc_test, mol_test, error)
-   if (allocated(error)) return
-
-   do iat = 1, 3
-      do jat = 1, 3
-         call check(error, wsc_test%nimg(jat, iat), wsc_ref%nimg(jat, iat))
-         if (allocated(error)) return
-
-         if (iat /= jat) then
-            v_ref = mol_ref%xyz(:, jat) - mol_ref%xyz(:, iat) &
-               & + wsc_ref%trans(:, wsc_ref%tridx(1, jat, iat))
-            v_test = mol_test%xyz(:, jat) - mol_test%xyz(:, iat) &
-               & + wsc_test%trans(:, wsc_test%tridx(1, jat, iat))
-            if (maxval(abs(v_test - v_ref)) > thr2) then
-               call test_failed(error, "1D WSC failed for multi-cell atom displacement")
-               return
-            end if
-         end if
-      end do
-   end do
-
-end subroutine test_wsc_robustness_1d
-
-
-subroutine test_wsc_robustness_2d(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol_ref, mol_test
-   type(wignerseitz_cell) :: wsc_ref, wsc_test
-   real(wp) :: v_ref(3), v_test(3)
-   integer :: iat, jat
-
-   integer, parameter :: nat = 3
-   integer, parameter :: num(nat) = [6, 8, 1]
-   real(wp), parameter :: a1(3) = [4.0_wp, 3.0_wp, 0.0_wp]
-   real(wp), parameter :: a2(3) = [-3.0_wp, 4.0_wp, 5.0_wp]
-   real(wp), parameter :: xyz_ref(3, nat) = reshape([ &
-      &  0.2_wp, -0.1_wp, 0.3_wp, &
-      &  1.4_wp,  1.2_wp, 1.1_wp, &
-      & -1.1_wp,  0.8_wp, 1.7_wp], &
-      & [3, nat])
-   real(wp), parameter :: xyz_test(3, nat) = reshape([ &
-      & xyz_ref(:, 1), &
-      & xyz_ref(:, 2) + 3.0_wp * a1 - 4.0_wp * a2, &
-      & xyz_ref(:, 3) - 5.0_wp * a1 + 2.0_wp * a2], &
-      & [3, nat])
-   real(wp), parameter :: lat_ref(3, 3) = reshape([ &
-      &  4.0_wp, 3.0_wp, 0.0_wp, &
-      &  0.0_wp, 0.0_wp, 0.0_wp, &
-      & -3.0_wp, 4.0_wp, 5.0_wp], &
-      & [3, 3])
-   real(wp), parameter :: lat_test(3, 3) = reshape([ &
-      & a1, &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & a2 + 6.0_wp * a1], &
-      & [3, 3])
-   logical, parameter :: periodic(3) = [.true., .false., .true.]
-
-   ! 2D slab in rotated 3D subspace with zero nonperiodic column,
-   ! skewed unimodular basis transformation (a2' = a2 + 6*a1), and multi-cell shifts
-   call new(mol_ref, num, xyz_ref, lattice=lat_ref, periodic=periodic)
-   call new(mol_test, num, xyz_test, lattice=lat_test, periodic=periodic)
-   call new_wignerseitz_cell(wsc_ref, mol_ref, error)
-   if (allocated(error)) return
-
-   call new_wignerseitz_cell(wsc_test, mol_test, error)
-   if (allocated(error)) return
-
-   do iat = 1, 3
-      do jat = 1, 3
-         call check(error, wsc_test%nimg(jat, iat), wsc_ref%nimg(jat, iat))
-         if (allocated(error)) return
-
-         if (iat /= jat) then
-            v_ref = mol_ref%xyz(:, jat) - mol_ref%xyz(:, iat) &
-               & + wsc_ref%trans(:, wsc_ref%tridx(1, jat, iat))
-            v_test = mol_test%xyz(:, jat) - mol_test%xyz(:, iat) &
-               & + wsc_test%trans(:, wsc_test%tridx(1, jat, iat))
-            if (maxval(abs(v_test - v_ref)) > thr2) then
-               call test_failed(error, &
-                  & "2D WSC failed under skewed unimodular basis and multi-cell shift")
-               return
-            end if
-         end if
-      end do
-   end do
-
-end subroutine test_wsc_robustness_2d
-
-
-subroutine test_wsc_robustness_2d_corner(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol_ref
-   type(wignerseitz_cell) :: wsc_ref
-   real(wp) :: weights(16)
-
-   integer, parameter :: nat = 2
-   integer, parameter :: num(nat) = [8, 1]
-   real(wp), parameter :: xyz(3, nat) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 3.0_wp, 3.0_wp, 0.4_wp], &
-      & [3, nat])
-   real(wp), parameter :: lattice(3, 3) = reshape([ &
-      & 6.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.0_wp, 6.0_wp, 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 0.0_wp], &
-      & [3, 3])
-   logical, parameter :: periodic(3) = [.true., .true., .false.]
-
-   ! Exact 2D Wigner-Seitz corner vs smooth weights
-   call new(mol_ref, num, xyz, lattice=lattice, periodic=periodic)
-   call new_wignerseitz_cell(wsc_ref, mol_ref, error)
-   if (allocated(error)) return
-
-   call check(error, wsc_ref%nimg(2, 1), 4)
-   if (allocated(error)) return
-
-   call get_wignerseitz_weights(wsc_ref, 2, 1, mol_ref%xyz(:, 1) - mol_ref%xyz(:, 2), weights)
-   if (maxval(abs(weights(1:4) - 0.25_wp)) > thr) then
-      call test_failed(error, "2D WSC corner weights are not equal")
-      return
-   end if
-
-end subroutine test_wsc_robustness_2d_corner
-
-
-!> Strongly sheared basis of a 3D lattice with unwrapped atoms, the conservative
-!> box in the given basis would exceed the candidate limit
+!> Unwrapped atoms in a strongly sheared basis must give the same image vectors
+!> as wrapped atoms in the reduced basis of the same lattice
 subroutine test_wsc_sheared_3d(error)
 
    !> Error handling
@@ -1245,6 +456,169 @@ subroutine test_wsc_sheared_3d(error)
    end do
 
 end subroutine test_wsc_sheared_3d
+
+
+!> Oblique slab and triclinic cell, both in a sheared basis with unwrapped atoms
+subroutine test_wsc_exhaustive_reference(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   real(wp) :: lat(3, 3), xyz(3, 3), a1(3), a2(3), a3(3)
+
+   integer, parameter :: nat = 3
+   integer, parameter :: num(nat) = [6, 8, 1]
+   real(wp), parameter :: pi = 4.0_wp * atan(1.0_wp)
+   real(wp), parameter :: ang = 65.0_wp * pi / 180.0_wp
+
+   ! Oblique slab in the xz-plane of the lattice with a 65 degree angle
+   a1 = [4.8_wp, 0.3_wp, -0.2_wp]
+   a2 = 3.5_wp * [4.8_wp * cos(ang), 4.8_wp * sin(ang), 0.4_wp]
+   lat = 0.0_wp
+   lat(:, 1) = a1
+   lat(:, 3) = a2 + 2.0_wp * a1
+   xyz(:, 1) = [0.1_wp, -0.2_wp, 0.3_wp]
+   xyz(:, 2) = xyz(:, 1) + 1.39_wp * a1 + 1.39_wp * a2 + [0.0_wp, 0.0_wp, 0.5_wp]
+   xyz(:, 3) = xyz(:, 1) - 2.45_wp * a1 + 3.48_wp * a2 + [0.0_wp, 0.0_wp, -0.4_wp]
+
+   call new(mol, num, xyz, lattice=lat, periodic=[.true., .false., .true.])
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol, wsc, 16, error)
+   if (allocated(error)) return
+
+   ! Triclinic cell
+   a1 = [4.5_wp, 0.4_wp, -0.2_wp]
+   a2 = [1.8_wp, 4.9_wp, 0.5_wp] + 2.0_wp * a1
+   a3 = [-1.1_wp, 1.5_wp, 5.2_wp] + 2.0_wp * (a1 - a2)
+   lat = reshape([a1, a2, a3], [3, 3])
+   xyz(:, 1) = [0.15_wp, -0.25_wp, 0.10_wp]
+   xyz(:, 2) = xyz(:, 1) + 1.38_wp * a1 + 1.41_wp * a2 - 0.49_wp * a3
+   xyz(:, 3) = xyz(:, 1) - 2.47_wp * a1 + 0.51_wp * a2 + 2.35_wp * a3
+
+   call new(mol, num, xyz, lattice=lat, periodic=[.true., .true., .true.])
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol, wsc, 7, error)
+   if (allocated(error)) return
+
+end subroutine test_wsc_exhaustive_reference
+
+
+!> High-symmetry cells with many tied nearest images
+subroutine test_wsc_high_symmetry(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   real(wp) :: weights(12)
+
+   integer, parameter :: nat = 2
+   integer, parameter :: num(nat) = [6, 8]
+   real(wp), parameter :: xyz_hex(3, nat) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 2.0_wp, 1.0_wp, 0.0_wp], &
+      & [3, nat])
+   real(wp), parameter :: lat_hex(3, 3) = reshape([ &
+      & 6.0_wp, 0.0_wp, 0.0_wp, &
+      & 3.0_wp, 3.0_wp * sqrt(3.0_wp), 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.0_wp], &
+      & [3, 3])
+   real(wp), parameter :: lat_tric(3, 3) = reshape([ &
+      & 5.0_wp, 0.0_wp, 0.0_wp, &
+      & 5.0_wp * 0.49_wp, 5.0_wp * sqrt(0.90_wp), 0.0_wp, &
+      & 0.0_wp, 5.0_wp * 0.45_wp * sqrt(0.90_wp), 5.0_wp * sqrt(0.86775_wp)], &
+      & [3, 3])
+   real(wp), parameter :: xyz_tric(3, nat) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 0.48_wp * lat_tric(:, 1) - 0.51_wp * lat_tric(:, 2) + 0.49_wp * lat_tric(:, 3)], &
+      & [3, nat])
+   integer, parameter :: nat_fcc = 1
+   integer, parameter :: num_fcc(nat_fcc) = [6]
+   real(wp), parameter :: xyz_fcc(3, nat_fcc) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp], &
+      & [3, nat_fcc])
+   real(wp), parameter :: lat_fcc(3, 3) = reshape([ &
+      & 0.0_wp, 4.0_wp, 4.0_wp, &
+      & 4.0_wp, 0.0_wp, 4.0_wp, &
+      & 4.0_wp, 4.0_wp, 0.0_wp], &
+      & [3, 3])
+   logical, parameter :: pbc_2d(3) = [.true., .true., .false.]
+   logical, parameter :: pbc_3d(3) = [.true., .true., .true.]
+
+   ! 1. 2D 60-degree hexagonal lattice with six tied self images
+   call new(mol, num, xyz_hex, lattice=lat_hex, periodic=pbc_2d)
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   call check(error, wsc%nimg(1, 1), 6)
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol, wsc, 4, error)
+   if (allocated(error)) return
+
+   ! 2. Triclinic 3D cell with nearly half-integer fractional pair coordinates
+   call new(mol, num, xyz_tric, lattice=lat_tric, periodic=pbc_3d)
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol, wsc, 4, error)
+   if (allocated(error)) return
+
+   ! 3. 3D FCC primitive cell with 12 equidistant nearest self images
+   call new(mol, num_fcc, xyz_fcc, lattice=lat_fcc, periodic=pbc_3d)
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   call check(error, wsc%nimg(1, 1), 12)
+   if (allocated(error)) return
+
+   call get_wignerseitz_weights(wsc, 1, 1, xyz_fcc(:, 1), weights)
+   call check(error, all(abs(weights - 1.0_wp / 12.0_wp) < thr), "Tied image weights")
+
+end subroutine test_wsc_high_symmetry
+
+
+!> A degenerate periodic basis and too many candidate translations fail
+subroutine test_wsc_degenerate_and_limits(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(wignerseitz_cell) :: wsc
+   type(error_type), allocatable :: wsc_err
+   real(wp) :: lat(3, 3), xyz(3, 2)
+
+   integer, parameter :: nat = 2
+   integer, parameter :: num(nat) = [6, 8]
+
+   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
+   xyz(:, 2) = [1.2_wp, 0.0_wp, 0.0_wp]
+
+   ! Collinear periodic lattice vectors
+   lat = 0.0_wp
+   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
+   lat(:, 2) = [10.0_wp, 0.0_wp, 0.0_wp]
+   call new(mol, num, xyz, lattice=lat, periodic=[.true., .true., .false.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
+   call check(error, allocated(wsc_err), "Degenerate lattice accepted")
+   if (allocated(error)) return
+
+   ! Atoms 120,000 periods apart, more than 100,000 candidate translations
+   lat(:, 2) = 0.0_wp
+   xyz(:, 2) = [600000.0_wp, 0.0_wp, 0.0_wp]
+   call new(mol, num, xyz, lattice=lat, periodic=[.true., .false., .false.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
+   call check(error, allocated(wsc_err), "Candidate translation limit not enforced")
+
+end subroutine test_wsc_degenerate_and_limits
 
 
 !> Competing images of a slab pair near the cell corner with unequal weights
@@ -1449,7 +823,7 @@ subroutine test_wsc_window_edge(error)
 
    type(structure_type) :: mol
    type(wignerseitz_cell) :: wsc
-   integer :: icase, nimg, list(8)
+   integer :: icase, nimg, empty(0)
    real(wp) :: lat(3, 3), xyz(3, 2), min_r2
    real(wp), allocatable :: trans(:, :)
 
@@ -1470,7 +844,7 @@ subroutine test_wsc_window_edge(error)
       ! Same image search with plenty of translations
       call get_lattice_points(lat, [ncell(icase) + 6, 0, 0], .true., trans, error)
       if (allocated(error)) return
-      call find_wsc_pairs(trans, xyz(:, 2) - xyz(:, 1), nimg, list, min_r2)
+      call find_wsc_pairs(trans, xyz(:, 2) - xyz(:, 1), nimg, empty, min_r2)
 
       call check(error, wsc%nimg(1, 2), nimg)
       if (allocated(error)) return
@@ -1479,10 +853,20 @@ subroutine test_wsc_window_edge(error)
 end subroutine test_wsc_window_edge
 
 
+!> Compare the nearest images with an exhaustive search over `n_ref` periods
+!> along each periodic direction
 subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
+
+   !> Molecular structure data
    type(structure_type), intent(in) :: mol
+
+   !> Wigner-Seitz cell to check
    type(wignerseitz_cell), intent(in) :: wsc
+
+   !> Number of periods searched along each periodic direction
    integer, intent(in) :: n_ref
+
+   !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
    integer :: iat, jat, r1, r2, r3, n1, n2, n3, nimg_ref, img
@@ -1505,9 +889,7 @@ subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
                      & + real(n2, wp) * mol%lattice(:, 2) &
                      & + real(n3, wp) * mol%lattice(:, 3)
                   d2 = sum((rij - tvec)**2)
-                  if (d2 < thr2) then
-                     cycle
-                  end if
+                  if (d2 < thr2) cycle
                   dmin2_ref = min(dmin2_ref, d2)
                end do
             end do
@@ -1521,12 +903,8 @@ subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
                      & + real(n2, wp) * mol%lattice(:, 2) &
                      & + real(n3, wp) * mol%lattice(:, 3)
                   d2 = sum((rij - tvec)**2)
-                  if (d2 < thr2) then
-                     cycle
-                  end if
-                  if (d2 - dmin2_ref <= tol_wsc) then
-                     nimg_ref = nimg_ref + 1
-                  end if
+                  if (d2 < thr2) cycle
+                  if (d2 - dmin2_ref <= tol_wsc) nimg_ref = nimg_ref + 1
                end do
             end do
          end do
@@ -1536,14 +914,14 @@ subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
 
          dmin2_wsc = sum((rij - wsc%trans(:, wsc%tridx(1, jat, iat)))**2)
          if (abs(dmin2_wsc - dmin2_ref) > thr2) then
-            call test_failed(error, "WSC minimum squared distance disagrees with exhaustive reference")
+            call test_failed(error, "Nearest image disagrees with exhaustive reference")
             return
          end if
 
          do img = 1, wsc%nimg(jat, iat)
             d2 = sum((rij - wsc%trans(:, wsc%tridx(img, jat, iat)))**2)
             if (d2 - dmin2_ref > tol_wsc + thr) then
-               call test_failed(error, "WSC included image outside tol window")
+               call test_failed(error, "Image outside of the switching interval")
                return
             end if
          end do

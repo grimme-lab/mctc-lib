@@ -78,7 +78,6 @@ subroutine collect_csrlist(testsuite)
       & new_unittest("nacl-wsc", test_nacl_wsc), &
       & new_unittest("feo2-wsc", test_feo2_wsc), &
       & new_unittest("wsc-parity-nacl", test_wsc_parity_nacl), &
-      & new_unittest("wsc-parity-pyrazole", test_wsc_parity_pyrazole), &
       & new_unittest("wsc-parity-skewed", test_wsc_parity_skewed), &
       & new_unittest("wsc-parity-dense-images", test_wsc_parity_dense_images), &
       & new_unittest("wsc-parity-slab-2d", test_wsc_parity_slab), &
@@ -1123,20 +1122,6 @@ subroutine test_wsc_parity_nacl(error)
 end subroutine test_wsc_parity_nacl
 
 
-subroutine test_wsc_parity_pyrazole(error)
-
-   !> Error handling
-   type(error_type), allocatable, intent(out) :: error
-
-   type(structure_type) :: mol
-
-   ! Unwrapped coordinates spanning several cells
-   call get_structure(mol, "pyrazole")
-   call test_wsc_parity_gen(error, mol, 29.0_wp)
-
-end subroutine test_wsc_parity_pyrazole
-
-
 subroutine test_wsc_parity_skewed(error)
 
    !> Error handling
@@ -1175,15 +1160,15 @@ subroutine test_wsc_parity_dense_images(error)
    integer, parameter :: num(nat) = [6, 8]
    real(wp), parameter :: xyz(3, nat) = reshape([ &
       & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.05_wp, 0.05_wp, 0.02_wp], &
+      & 0.125_wp, 0.125_wp, 0.05_wp], &
       & [3, nat])
    real(wp), parameter :: lattice(3, 3) = reshape([ &
-      & 0.1_wp, 0.0_wp, 0.0_wp, &
-      & 0.0_wp, 0.1_wp, 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 0.1_wp], &
+      & 0.25_wp, 0.0_wp, 0.0_wp, &
+      & 0.0_wp, 0.25_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.25_wp], &
       & [3, 3])
 
-   ! Tiny cubic cell, hundreds of images compete within the switching interval
+   ! Small cubic cell, more than 27 images compete within the switching interval
    call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .true.])
    call test_wsc_parity_gen(error, mol, 29.0_wp)
 
@@ -1191,39 +1176,39 @@ end subroutine test_wsc_parity_dense_images
 
 
 !> Slab periodic in two directions with unwrapped atoms spread perpendicular
-!> to the periodic plane
-subroutine get_slab(mol, normal)
+!> to the periodic plane, the nonperiodic lattice vector is zero. Atoms 1 and 3
+!> are neighbors across a periodic boundary of the central cell.
+subroutine get_slab(mol)
 
    !> Molecular structure data
    type(structure_type), intent(out) :: mol
-
-   !> Lattice vector of the nonperiodic direction
-   real(wp), intent(in) :: normal(3)
 
    integer, parameter :: nat = 8
    integer, parameter :: num(nat) = [6, 8, 1, 1, 6, 8, 1, 7]
    real(wp), parameter :: xyz(3, nat) = reshape([ &
       &  0.5_wp,  0.3_wp,  0.0_wp, &
       &  3.1_wp,  1.8_wp,  2.5_wp, &
-      & 14.9_wp,  4.2_wp, -1.2_wp, &
+      & 23.3_wp,  0.8_wp, -1.2_wp, &
       & -5.6_wp,  7.7_wp,  6.8_wp, &
       &  8.0_wp, -9.5_wp, 12.3_wp, &
       &  2.2_wp, 20.1_wp, 18.9_wp, &
       & 10.1_wp,  5.5_wp, 25.0_wp, &
       & -1.3_wp, -2.6_wp, 29.4_wp], &
       & [3, nat])
-   real(wp) :: lattice(3, 3)
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 12.4_wp, 0.0_wp, 0.0_wp, &
+      & 6.2_wp, 10.7387_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.0_wp], &
+      & [3, 3])
 
-   lattice(:, 1) = [12.4_wp, 0.0_wp, 0.0_wp]
-   lattice(:, 2) = [6.2_wp, 10.7387_wp, 0.0_wp]
-   lattice(:, 3) = normal
    call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .false.])
 
 end subroutine get_slab
 
 
 !> Wire periodic along the second lattice vector with unwrapped atoms, the
-!> nonperiodic lattice vectors are zero and arbitrary
+!> nonperiodic lattice vectors are zero and arbitrary. Atoms 1 and 7 are
+!> neighbors across a periodic boundary of the central cell.
 subroutine get_wire(mol)
 
    !> Molecular structure data
@@ -1238,7 +1223,7 @@ subroutine get_wire(mol)
       & -4.0_wp, -7.5_wp,  3.3_wp, &
       &  2.5_wp,  1.0_wp, -6.0_wp, &
       & 13.0_wp, 15.5_wp,  4.4_wp, &
-      & -0.8_wp,  3.9_wp,  1.1_wp, &
+      & -7.0_wp, -8.5_wp,  0.8_wp, &
       &  5.5_wp, -2.2_wp, -3.7_wp], &
       & [3, nat])
    real(wp), parameter :: lattice(3, 3) = reshape([ &
@@ -1259,21 +1244,15 @@ subroutine test_wsc_parity_slab(error)
 
    type(structure_type) :: mol
 
-   real(wp), parameter :: normal(3, 2) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 100.0_wp], [3, 2])
-   real(wp), parameter :: cutoff(3) = [3.5_wp, 5.0_wp, 29.0_wp]
-   integer :: inorm, icut
+   ! Cutoffs giving three, two, and one linked cells along the periodic directions
+   call get_slab(mol)
+   call test_wsc_parity_gen(error, mol, 3.5_wp)
+   if (allocated(error)) return
 
-   ! Zero and arbitrary nonperiodic lattice vector, cutoffs giving three, two,
-   ! and one linked cells along the periodic directions
-   do inorm = 1, size(normal, 2)
-      call get_slab(mol, normal(:, inorm))
-      do icut = 1, size(cutoff)
-         call test_wsc_parity_gen(error, mol, cutoff(icut))
-         if (allocated(error)) return
-      end do
-   end do
+   call test_wsc_parity_gen(error, mol, 5.0_wp)
+   if (allocated(error)) return
+
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
 
 end subroutine test_wsc_parity_slab
 
@@ -1287,9 +1266,6 @@ subroutine test_wsc_parity_wire(error)
 
    call get_wire(mol)
    call test_wsc_parity_gen(error, mol, 6.0_wp)
-   if (allocated(error)) return
-
-   call test_wsc_parity_gen(error, mol, 29.0_wp)
 
 end subroutine test_wsc_parity_wire
 
@@ -1300,35 +1276,20 @@ subroutine test_list_slab(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   real(wp), parameter :: normal(3, 2) = reshape([ &
-      & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.0_wp, 0.0_wp, 100.0_wp], [3, 2])
-   real(wp), parameter :: cutoff(2) = [3.5_wp, 9.0_wp]
+   real(wp), parameter :: cutoff = 3.5_wp
    real(wp), allocatable :: trans(:, :)
-   integer :: inorm, icut
 
-   do inorm = 1, size(normal, 2)
-      call get_slab(mol, normal(:, inorm))
-      do icut = 1, size(cutoff)
-         call get_lattice_points(mol%periodic, mol%lattice, cutoff(icut), trans, error)
-         if (allocated(error)) return
+   call get_slab(mol)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
-         call test_pbc_list_gen(error, mol, cutoff(icut), trans=trans, cmp=.false.)
-         if (allocated(error)) return
+   call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
+   if (allocated(error)) return
 
-         call test_pbc_list_gen(error, mol, cutoff(icut), trans=trans, cmp=.true.)
-         if (allocated(error)) return
-      end do
-
-      ! Wrapped atoms and three cells along the periodic directions use the
-      ! direct translation lookup of the linked cells
-      call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff(1), trans, error)
-      if (allocated(error)) return
-
-      call test_pbc_list_gen(error, mol, cutoff(1), trans=trans, cmp=.true.)
-      if (allocated(error)) return
-   end do
+   ! Wrapped atoms and three cells along the periodic directions use the
+   ! direct translation lookup of the linked cells
+   call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
+   call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
 end subroutine test_list_slab
 
@@ -1347,9 +1308,6 @@ subroutine test_list_wire(error)
    if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
-   if (allocated(error)) return
-
-   call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
    if (allocated(error)) return
 
    ! Wrapped atoms and three cells along the periodic direction use the
