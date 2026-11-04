@@ -73,7 +73,7 @@ module mctc_csrlist_type
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io, only : structure_type
    use mctc_io_math, only : matdet_3x3, matinv_3x3, crossprod
-   use mctc_wignerseitz, only : wignerseitz_cell, get_pairs, &
+   use mctc_wignerseitz, only : wignerseitz_cell, find_wsc_pairs, &
       & get_wignerseitz_translations
    implicit none
    private
@@ -322,7 +322,7 @@ subroutine build_list(self, mol, error, wsc)
    if (use_wsc) then
       allocate(self_tridx(size(self%trans, 2)))
       zero_vec = 0.0_wp
-      call get_pairs(self%trans, zero_vec, nimg_count, self_tridx, r2_min)
+      call find_wsc_pairs(self%trans, zero_vec, nimg_count, self_tridx, r2_min)
       if (nimg_count > 0 .and. r2_min <= cutoff2) nself = nimg_count
       nimg_max = nself
    else
@@ -515,7 +515,7 @@ subroutine neighbor_pass(self, grid, lstore, cnt, icnt, nself, &
                   vec(1) = xi - grid%x(checkat)
                   vec(2) = yi - grid%y(checkat)
                   vec(3) = zi - grid%z(checkat)
-                  call get_pairs(trans, vec, nimg_count, tridx_arr, r2_min)
+                  call find_wsc_pairs(trans, vec, nimg_count, tridx_arr, r2_min)
                   if (nimg_count <= 0 .or. r2_min > cutoff2) cycle
                   nn = nn + 1
                   nmax = max(nmax, nimg_count)

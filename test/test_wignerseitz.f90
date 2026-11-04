@@ -19,7 +19,7 @@ module test_wignerseitz
       & test_failed
    use mctc_io_structure, only : structure_type, new
    use mctc_wignerseitz, only : wignerseitz_cell, new_wignerseitz_cell, &
-      & get_wignerseitz_weights, get_pairs
+      & get_wignerseitz_weights, find_wsc_pairs
    use testsuite_structure, only : get_structure
    implicit none
    private
@@ -41,7 +41,7 @@ subroutine collect_wignerseitz(testsuite)
 
    testsuite = [ &
       & new_unittest("compact-images", test_compact_images), &
-      & new_unittest("get-pairs-all-images", test_get_pairs_all_images), &
+      & new_unittest("find-pairs-all-images", test_find_pairs_all_images), &
       & new_unittest("lattice-points-0d", test_latticepoints_0d), &
       & new_unittest("lattice-points-3d", test_latticepoints_3d), &
       & new_unittest("wignerseitz-3d-skewed-counterexample", test_wsc_3d_skewed_counterexample), &
@@ -148,12 +148,13 @@ end subroutine test_compact_images
 
 
 !> All candidate images are tied, the image search must stop after the last one
-subroutine test_get_pairs_all_images(error)
+subroutine test_find_pairs_all_images(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
    integer :: nimg, list(2)
+   real(wp) :: min_r2
 
    real(wp), parameter :: trans(3, 2) = reshape([ &
       & 0.0_wp, 0.0_wp, 0.0_wp, &
@@ -161,7 +162,7 @@ subroutine test_get_pairs_all_images(error)
       & [3, 2])
    real(wp), parameter :: rij(3) = [1.0_wp, 0.0_wp, 0.0_wp]
 
-   call get_pairs(nimg, trans, rij, list)
+   call find_wsc_pairs(trans, rij, nimg, list, min_r2)
 
    call check(error, nimg, 2)
    if (allocated(error)) return
@@ -172,7 +173,7 @@ subroutine test_get_pairs_all_images(error)
    call check(error, list(2), 2)
    if (allocated(error)) return
 
-end subroutine test_get_pairs_all_images
+end subroutine test_find_pairs_all_images
 
 
 subroutine test_latticepoints_0d(error)
@@ -431,7 +432,7 @@ subroutine test_wsc_cell_1d(error)
       call verify_wsc_against_ref(mol, wsc, 4, error)
       if (allocated(error)) return
 
-      ! Atom 1 has 2 closest self images (+a and -a), testing get_pairs exhaustion guard
+      ! Atom 1 has 2 closest self images (+a and -a), testing the exhaustion guard
       call check(error, wsc%nimg(1, 1), 2)
       if (allocated(error)) return
 
@@ -922,7 +923,8 @@ subroutine test_wsc_high_symmetry(error)
    type(structure_type) :: mol
    type(wignerseitz_cell) :: wsc
    real(wp) :: weights(16)
-   integer :: iws_small, iws_full, list_small(8), list_full(27)
+   integer :: nimg_small, nimg_full, list_small(8), list_full(27)
+   real(wp) :: r2_small, r2_full
 
    integer, parameter :: nat = 2
    integer, parameter :: num(nat) = [6, 8]
@@ -977,7 +979,7 @@ subroutine test_wsc_high_symmetry(error)
    if (allocated(error)) return
 
    ! 3. 3D FCC primitive cell with 12 equidistant nearest self images,
-   !    get_pairs returns the leading images if the output buffer is shorter
+   !    a shorter output buffer holds the nearest images and counts all of them
    call new(mol, num_fcc, xyz_fcc, lattice=lat_fcc, periodic=pbc_3d)
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
@@ -994,16 +996,16 @@ subroutine test_wsc_high_symmetry(error)
       return
    end if
 
-   call get_pairs(iws_small, wsc%trans, xyz_fcc(:, 1), list_small)
-   call check(error, iws_small, 8)
+   call find_wsc_pairs(wsc%trans, xyz_fcc(:, 1), nimg_small, list_small, r2_small)
+   call check(error, nimg_small, 12)
    if (allocated(error)) return
 
-   call get_pairs(iws_full, wsc%trans, xyz_fcc(:, 1), list_full)
-   call check(error, iws_full, 12)
+   call find_wsc_pairs(wsc%trans, xyz_fcc(:, 1), nimg_full, list_full, r2_full)
+   call check(error, nimg_full, 12)
    if (allocated(error)) return
 
    if (any(list_small(1:8) /= list_full(1:8))) then
-      call test_failed(error, "get_pairs truncated list does not match leading sorted images")
+      call test_failed(error, "Truncated image list does not match the nearest images")
       return
    end if
 
@@ -1468,7 +1470,7 @@ subroutine test_wsc_window_edge(error)
       ! Same image search with plenty of translations
       call get_lattice_points(lat, [ncell(icase) + 6, 0, 0], .true., trans, error)
       if (allocated(error)) return
-      call get_pairs(trans, xyz(:, 2) - xyz(:, 1), nimg, list, min_r2)
+      call find_wsc_pairs(trans, xyz(:, 2) - xyz(:, 1), nimg, list, min_r2)
 
       call check(error, wsc%nimg(1, 2), nimg)
       if (allocated(error)) return

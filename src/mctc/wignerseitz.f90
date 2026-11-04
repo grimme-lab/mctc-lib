@@ -28,7 +28,7 @@ module mctc_wignerseitz
    private
 
    public :: new_wignerseitz_cell, get_wignerseitz_weights, wignerseitz_cell, &
-      & get_wignerseitz_translations, get_pairs
+      & get_wignerseitz_translations, find_wsc_pairs
 
    !> Wigner-Seitz cell and its nearest image translations.
    !>
@@ -56,11 +56,6 @@ module mctc_wignerseitz
       module procedure :: new_wignerseitz_cell
       module procedure :: new_wignerseitz_cell_legacy
    end interface new_wignerseitz_cell
-
-   interface get_pairs
-      module procedure get_pairs
-      module procedure get_pairs_csr
-   end interface get_pairs
 
 
    !> Squared distance below which an image is the atom itself
@@ -274,64 +269,13 @@ pure subroutine reduce_basis(lat)
 end subroutine reduce_basis
 
 
-!> Find the nearest translation images for an interatomic vector.
+!> Find the nearest translation images of an interatomic vector.
 !>
-!> At most `size(list)` indices of the nearest images, sorted by distance,
-!> are returned and counted in `iws`.
-pure subroutine get_pairs(iws, trans, rij, list)
-
-   !> Number of nearest images stored in `list`
-   integer, intent(out) :: iws
-
-   !> Translation vectors
-   real(wp), intent(in) :: trans(:, :)
-
-   !> Interatomic vector
-   real(wp), intent(in) :: rij(3)
-
-   !> Indices of the nearest translation images
-   integer, intent(out) :: list(:)
-
-   real(wp) :: min_r2
-
-   list(:) = 0
-   call get_pairs_csr(trans, rij, iws, list, min_r2)
-
-end subroutine get_pairs
-
-
-!> Find nearest translation images and their minimum squared distance.
-!>
-!> At most `size(list)` indices of the nearest images, sorted by distance,
-!> are returned and counted in `iws`. A list with one entry per translation
-!> can hold all images.
-pure subroutine get_pairs_csr(trans, rij, iws, list, min_r2)
-
-   !> Translation vectors
-   real(wp), intent(in) :: trans(:, :)
-
-   !> Interatomic vector
-   real(wp), intent(in) :: rij(3)
-
-   !> Number of nearest images stored in `list`
-   integer, intent(out) :: iws
-
-   !> Indices of the nearest translation images
-   integer, intent(out) :: list(:)
-
-   !> Minimum squared distance found
-   real(wp), intent(out) :: min_r2
-
-   integer :: nimg
-
-   call find_wsc_pairs(trans, rij, nimg, list, min_r2)
-   iws = min(nimg, size(list))
-
-end subroutine get_pairs_csr
-
-
-!> Count all images within the switching interval of the nearest image and
-!> store the first `size(list)` of them sorted by distance.
+!> All images within the switching interval of the nearest image are counted
+!> in `nimg`, and the nearest `min(nimg, size(list))` of them are stored in
+!> `list` sorted by distance. A zero-length list only counts the images, a
+!> list with one entry per translation holds all of them. Entries of `list`
+!> beyond the stored images are left unchanged.
 pure subroutine find_wsc_pairs(trans, rij, nimg, list, min_r2)
 
    !> Translation vectors
