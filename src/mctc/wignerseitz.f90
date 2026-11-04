@@ -209,6 +209,7 @@ pure subroutine get_wsc_rep(mol, rep, error)
 
    rep(:) = 0
 
+   ! Validate basic molecular structure allocation and extents
    if (mol%nat <= 0 .or. .not. allocated(mol%xyz)) then
       call fatal_error(error, &
          & "Invalid molecular structure in Wigner-Seitz construction")
@@ -219,12 +220,15 @@ pure subroutine get_wsc_rep(mol, rep, error)
          & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
+
+   ! Validate finiteness of atomic coordinates
    if (.not. all(ieee_is_finite(mol%xyz(1:3, 1:mol%nat)))) then
       call fatal_error(error, &
          & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
       return
    end if
 
+   ! Handle non-periodic (0D) structures and validate periodic 3x3 lattice
    if (.not. allocated(mol%periodic)) return
    if (.not. any(mol%periodic)) return
    if (size(mol%periodic) /= 3 .or. .not. allocated(mol%lattice)) then
@@ -238,6 +242,7 @@ pure subroutine get_wsc_rep(mol, rep, error)
       return
    end if
 
+   ! Collect active periodic axes and validate finiteness of active lattice vectors
    call get_periodic_axes(mol%periodic, ndim, p_axes)
    do i = 1, ndim
       if (.not. all(ieee_is_finite(mol%lattice(:, p_axes(i))))) then
@@ -268,7 +273,8 @@ pure subroutine get_wsc_rep(mol, rep, error)
 
    if (allocated(error)) return
 
-   ! Use 64-bit arithmetic for the translation-count product.
+   ! Bound each repetition count and accumulated product by max_wsc_trans in 64-bit
+   ! integer arithmetic so intermediate products and 32-bit conversion cannot overflow.
    ntr_i8 = 1_i8
    do i = 1, 3
       if (rep_i8(i) > max_wsc_trans) then
@@ -319,7 +325,8 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
    do iat = 1, nat
       do jat = 1, iat
 
-         ! Decompose pair vector rij into parallel fractional coordinate ds and perpendicular distance
+         ! Coordinate transformation: decompose pair vector rij into parallel fractional
+         ! coordinate ds = (rij . a1) / |a1|^2 and perpendicular squared distance d_perp2
          rij = xyz(:, iat) - xyz(:, jat)
          ds = dot_product(rij, a1) / g11
          if (.not. (abs(ds) <= max_rep_real)) then
@@ -329,7 +336,8 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
          end if
          d_perp2 = sum((rij - ds * a1)**2)
 
-         ! Nearest integer shift n0 = nint(ds); step to closest non-self integer if < thr
+         ! Initial search bound: nearest integer shift n0 = nint(ds); if (n0) is a
+         ! self-image (total squared distance < thr), step to the closest non-self integer
          n0 = nint(ds, i8)
          xi = ds - real(n0, wp)
          d0_par2 = xi * xi * g11
@@ -339,7 +347,7 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
             d0_par2 = (real(k_min, wp) - abs(xi))**2 * g11
          end if
 
-         ! Include all competing images within tol of d0_par2
+         ! Competing images: find all integer shifts n with (n - ds)^2 |a1|^2 <= d0_par2 + tol
          r_comp2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta_s = sqrt(r_comp2 / g11)
          n_lo = ceiling(ds - delta_s, i8)
@@ -396,7 +404,10 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
       return
    end if
 
-   ! Lagrange-Gauss reduction [b1, b2] = [a1, a2] * U with unimodular U in GL(2, Z)
+   ! Basis reduction: Lagrange-Gauss reduction [b1, b2] = [a1, a2] * U with
+   ! unimodular U in GL(2, Z) such that |b1| <= |b2| and |b1 . b2| <= |b1|^2 / 2.
+   ! Unlike Ewald summation (which sums directly in the reduced basis), Wigner-Seitz
+   ! cell construction must track U to map competing images back to the input basis.
    b1 = a1
    b2 = a2
    u_mat = reshape([1_i8, 0_i8, 0_i8, 1_i8], [2, 2])
@@ -437,7 +448,7 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
       return
    end if
 
-   ! Reduced metric tensor G = B^T B and Cholesky height h2_sq = det(G) / g11
+   ! Metric tensor G = B^T B and Cholesky height h2^2 = det(G) / g11 of b2 orthogonal to b1
    g12 = dot_product(b1, b2)
    g22 = dot_product(b2, b2)
    det2 = g11 * g22 - g12 * g12
@@ -455,7 +466,9 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
    do iat = 1, nat
       do jat = 1, iat
 
-         ! Fractional coordinates (ds1, ds2) in reduced basis [b1, b2] and out-of-plane distance
+         ! Coordinate transformation: express pair vector rij in the reduced basis
+         ! [b1, b2] via G^{-1} to obtain fractional coordinates (ds1, ds2) and the
+         ! out-of-plane perpendicular squared distance d_perp2
          rij = xyz(:, iat) - xyz(:, jat)
          proj1 = dot_product(rij, b1)
          proj2 = dot_product(rij, b2)
@@ -468,7 +481,9 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
          end if
          d_perp2 = sum((rij - ds1 * b1 - ds2 * b2)**2)
 
-         ! Babai nearest-plane integer estimate (n1_0, n2_0), stepping along b1 if self-image
+         ! Initial search bound: Babai nearest-plane integer estimate (n1_0, n2_0) using
+         ! the Cholesky decomposition d_par^2 = g11 * (n1 - c1)^2 + h2_sq * (n2 - ds2)^2;
+         ! if this point is a self-image (< thr), step along b1 to a valid upper bound d0_par2
          n2_0 = nint(ds2, i8)
          c1_0 = ds1 - (g12 / g11) * (real(n2_0, wp) - ds2)
          n1_0 = nint(c1_0, i8)
@@ -480,7 +495,8 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
                & + h2_sq * (real(n2_0, wp) - ds2)**2
          end if
 
-         ! Cholesky ellipse search for exact minimum squared distance dmin_par2
+         ! Nearest-image search: enumerate all integer points (n1, n2) inside the
+         ! Cholesky ellipse d_par^2 <= d0_par2 + tol to find the exact minimum dmin_par2
          r_max2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta2 = sqrt(r_max2 / h2_sq)
          if (2.0_wp * delta2 + 1.0_wp > real(max_wsc_trans, wp) &
@@ -507,7 +523,8 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
             end do
          end do
 
-         ! Enumerate competing images within tol of dmin_par2 and map back via m = U * n
+         ! Competing images: enumerate all integer points within tol of dmin_par2
+         ! that receive non-zero weight in the smooth Wigner-Seitz switching window
          r_comp2 = (dmin_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta2 = sqrt(r_comp2 / h2_sq)
          n2_lo = ceiling(ds2 - delta2, i8)
@@ -525,6 +542,8 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
                if (d_perp2 + d_par2 < thr) cycle
                if (d_par2 > r_comp2) cycle
 
+               ! Return to the original basis: map reduced integer coordinates
+               ! (n1, n2) back to unreduced lattice indices m = U * n
                m1_orig = u_mat(1, 1) * n1 + u_mat(1, 2) * n2
                m2_orig = u_mat(2, 1) * n1 + u_mat(2, 2) * n2
                rep1_max = max(rep1_max, abs(m1_orig))
@@ -663,7 +682,12 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
       return
    end if
 
-   ! 3D LLL reduction B = A * U with unimodular U in GL(3, Z)
+   ! Basis reduction: 3D LLL reduction B = A * U with unimodular U in GL(3, Z).
+   ! Size reduction enforces |mu_{i,j}| <= 1/2 for j < i, and the Lovasz condition
+   ! enforces |b_k^*|^2 >= (delta_lll - mu_{k,k-1}^2) |b_{k-1}^*|^2 so the Gram-Schmidt
+   ! heights |b_k^*|^2 cannot collapse on skewed cells. Unlike Ewald summation (which
+   ! sums directly in the reduced basis), WSC construction tracks U to map competing
+   ! integer shifts back to the original lattice vectors.
    bmat(:, 1) = a1
    bmat(:, 2) = a2
    bmat(:, 3) = a3
@@ -693,13 +717,14 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
          & mu21, mu31, mu32, error)
       if (allocated(error)) return
 
-      ! Lovasz conditions between adjacent columns
+      ! Lovasz condition between columns 1 and 2
       if (bnorm2(2) < (delta_lll - mu21 * mu21) * bnorm2(1)) then
          tmp_v = bmat(:, 1); bmat(:, 1) = bmat(:, 2); bmat(:, 2) = tmp_v
          tmp_u = u_mat(:, 1); u_mat(:, 1) = u_mat(:, 2); u_mat(:, 2) = tmp_u
          cycle
       end if
 
+      ! Lovasz condition between columns 2 and 3
       if (bnorm2(3) < (delta_lll - mu32 * mu32) * bnorm2(2)) then
          tmp_v = bmat(:, 2); bmat(:, 2) = bmat(:, 3); bmat(:, 3) = tmp_v
          tmp_u = u_mat(:, 2); u_mat(:, 2) = u_mat(:, 3); u_mat(:, 3) = tmp_u
@@ -721,7 +746,9 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
    do iat = 1, nat
       do jat = 1, iat
 
-         ! Project pair vector rij onto the orthogonal Gram-Schmidt basis {b1^*, b2^*, b3^*}
+         ! Coordinate transformation: project pair vector rij onto the orthogonal
+         ! Gram-Schmidt basis {b1^*, b2^*, b3^*}, giving upper-triangular Cholesky
+         ! coordinates ||B*n - rij||^2 = sum_k |b_k^*|^2 * (n_k - c_k)^2
          rij = xyz(:, iat) - xyz(:, jat)
          alpha1 = dot_product(rij, bstar(:, 1)) / bnorm2(1)
          alpha2 = dot_product(rij, bstar(:, 2)) / bnorm2(2)
@@ -733,7 +760,9 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
             return
          end if
 
-         ! Babai nearest-plane integer estimate (n1_0, n2_0, n3_0), stepping along b1 if self-image
+         ! Initial search bound: Babai nearest-plane integer estimate (n1_0, n2_0, n3_0)
+         ! by rounding from n3 down to n1; if this gives a self-image (< thr), step
+         ! along b1 to obtain a guaranteed positive distance bound d0_sq
          n3_0 = nint(alpha3, i8)
          c2_0 = alpha2 - mu32 * real(n3_0, wp)
          n2_0 = nint(c2_0, i8)
@@ -751,7 +780,8 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
                & + bnorm2(3) * (real(n3_0, wp) - alpha3)**2
          end if
 
-         ! Cholesky ellipsoid search for exact minimum squared distance dmin_sq
+         ! Nearest-image search: enumerate all integer points (n1, n2, n3) inside the
+         ! Cholesky ellipsoid ||B*n - rij||^2 <= d0_sq + tol to find the exact minimum dmin_sq
          r_max2 = (d0_sq + tol) * (1.0_wp + 1.0e-12_wp)
          if (any(2.0_wp * sqrt(r_max2 / bnorm2) + 1.0_wp > real(max_wsc_trans, wp))) then
             call fatal_error(error, &
@@ -786,7 +816,8 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
             end do
          end do
 
-         ! Enumerate competing images within tol of dmin_sq and map back via m = U * n
+         ! Competing images: enumerate all integer points within tol of dmin_sq
+         ! that receive non-zero weight in the smooth Wigner-Seitz switching window
          r_comp2 = (dmin_sq + tol) * (1.0_wp + 1.0e-12_wp)
          delta3 = sqrt(r_comp2 / bnorm2(3))
          n3_lo = ceiling(alpha3 - delta3, i8)
@@ -811,6 +842,8 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
                   if (d_sq < thr) cycle
                   if (d_sq > r_comp2) cycle
 
+                  ! Return to the original basis: map reduced integer coordinates
+                  ! (n1, n2, n3) back to unreduced lattice indices m = U * n
                   do k = 1, 3
                      m_orig(k) = u_mat(k, 1) * n1 + u_mat(k, 2) * n2 + u_mat(k, 3) * n3
                      rep_max(k) = max(rep_max(k), abs(m_orig(k)))
