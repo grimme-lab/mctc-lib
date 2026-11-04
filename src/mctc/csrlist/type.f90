@@ -73,7 +73,8 @@ module mctc_csrlist_type
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io, only : structure_type
    use mctc_io_math, only : matdet_3x3, matinv_3x3, crossprod
-   use mctc_wignerseitz, only : wignerseitz_cell, get_pairs
+   use mctc_wignerseitz, only : wignerseitz_cell, get_pairs, &
+      & get_wignerseitz_translations
    implicit none
    private
 
@@ -256,11 +257,11 @@ subroutine build_list(self, mol, error, wsc)
    type(grid_type) :: grid
 
    logical :: periodic, use_wsc, lshift, lmulti
-   integer :: nat, iat, nself, nimg_max, nimg_count, self_tridx(27)
+   integer :: nat, iat, nself, nimg_max, nimg_count
    integer(i8) :: npair, nimgs
    real(wp) :: cutoff2, lat_inv(3, 3), cell_w(3), min_xyz(3), zero_vec(3), r2_min, det
 
-   integer, allocatable :: cnt(:), icnt(:)
+   integer, allocatable :: cnt(:), icnt(:), self_tridx(:)
    integer(i8), allocatable :: tridx(:)
    real(wp), allocatable :: trans(:, :)
 
@@ -270,13 +271,11 @@ subroutine build_list(self, mol, error, wsc)
    use_wsc = present(wsc)
    nimg_max = 0
    nself = 0
-   self_tridx = 0
    min_xyz = 0.0_wp
 
    ! 1. Generate lattice translations
    if (use_wsc) then
-      call get_lattice_points(mol%periodic, mol%lattice, sqrt(epsilon(0.0_wp)), trans, &
-         & error)
+      call get_wignerseitz_translations(mol, trans, error)
       if (allocated(error)) return
 
       self%trans = trans
@@ -316,12 +315,16 @@ subroutine build_list(self, mol, error, wsc)
       grid%single = grid%trmap(0, 0, 0) > 0
    end if
 
-   ! 4. Resolve diagonal self-images, which are independent of the atom
+   ! 4. Resolve diagonal self-images, which are independent of the atom.
+   ! An image list with one entry per translation holds all images.
    if (use_wsc) then
+      allocate(self_tridx(size(self%trans, 2)))
       zero_vec = 0.0_wp
       call get_pairs(self%trans, zero_vec, nimg_count, self_tridx, r2_min)
       if (nimg_count > 0 .and. r2_min <= cutoff2) nself = nimg_count
       nimg_max = nself
+   else
+      allocate(self_tridx(0))
    end if
 
    ! 5. Counting pass, determines the exact size of every CSR array
@@ -410,13 +413,13 @@ subroutine neighbor_pass(self, grid, lstore, cnt, icnt, nself, &
    integer :: nsten, ntr, nmax
    integer :: ic, shift, ns, jc, lcatidx, lcatidxst, lcatidxfin
    integer :: checkat, checkatst, checkatfin, tr, trst, trfin
-   integer :: iat, jmin, nn, nimgs, nimg_count, tridx_arr(27)
+   integer :: iat, jmin, nn, nimgs, nimg_count
    integer(i8) :: pos, itp
    real(wp) :: cutoff2, xi, yi, zi, xit, yit, zit, dx, dy, dz, r2, r2_min, vec(3)
    logical :: use_wsc, lnltr, complete
    real(wp), allocatable :: trans(:,:)
 
-   integer, allocatable :: jcl(:), itrl(:)
+   integer, allocatable :: jcl(:), itrl(:), tridx_arr(:)
 
    nsten = size(grid%off, 2)
    cutoff2 = self%cutoff**2
@@ -438,7 +441,8 @@ subroutine neighbor_pass(self, grid, lstore, cnt, icnt, nself, &
    !$omp& shared(nimg_max, wsc, cutoff2, complete, use_wsc, lnltr) &
    !$omp& shared(nsten, ntr, trans) &
    !$omp& reduction(max: nmax)
-   allocate(jcl(nsten), itrl(nsten))
+   ! An image list with one entry per translation holds all images of a pair
+   allocate(jcl(nsten), itrl(nsten), tridx_arr(size(trans, 2)))
 
    !$omp do schedule(runtime)
    ! Loop over all cells in the grid instead of each individual atom
@@ -579,7 +583,7 @@ subroutine neighbor_pass(self, grid, lstore, cnt, icnt, nself, &
    end do
    !$omp end do
 
-   deallocate(jcl, itrl)
+   deallocate(jcl, itrl, tridx_arr)
    !$omp end parallel
 
    nimg_max = max(nimg_max, nmax)

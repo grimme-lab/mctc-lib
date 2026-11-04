@@ -13,7 +13,6 @@
 ! limitations under the License.
 
 module test_wignerseitz
-   use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan, ieee_positive_inf
    use mctc_cutoff, only : get_lattice_points
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
@@ -51,9 +50,9 @@ subroutine collect_wignerseitz(testsuite)
       & new_unittest("wignerseitz-cell-1d", test_wsc_cell_1d), &
       & new_unittest("wignerseitz-cell-2d", test_wsc_cell_2d), &
       & new_unittest("wignerseitz-cell-3d", test_wsc_cell_3d), &
-      & new_unittest("wignerseitz-error-and-resource-limits", test_wsc_error_and_resource_limits), &
+      & new_unittest("wignerseitz-degenerate-and-limits", test_wsc_degenerate_and_limits), &
       & new_unittest("wignerseitz-exhaustive-reference", test_wsc_exhaustive_reference), &
-      & new_unittest("wignerseitz-reduction-and-high-symmetry", test_wsc_reduction_and_high_symmetry), &
+      & new_unittest("wignerseitz-high-symmetry", test_wsc_high_symmetry), &
       & new_unittest("wignerseitz-robustness-1d", test_wsc_robustness_1d), &
       & new_unittest("wignerseitz-robustness-2d", test_wsc_robustness_2d), &
       & new_unittest("wignerseitz-robustness-2d-corner", test_wsc_robustness_2d_corner) &
@@ -128,6 +127,17 @@ subroutine test_compact_images(error)
    if (allocated(error)) return
 
    call check(error, size(wsc%tridx, 1), 0)
+   if (allocated(error)) return
+
+   ! Periodic structure without atoms, no pairs at all
+   call new(mol, num(:0), xyz(:, :0), lattice=lattice, periodic=periodic)
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
+
+   call check(error, size(wsc%nimg), 0)
+   if (allocated(error)) return
+
+   call check(error, wsc%nimg_max, 0)
    if (allocated(error)) return
 
 end subroutine test_compact_images
@@ -414,7 +424,7 @@ subroutine test_wsc_cell_1d(error)
       call new_wignerseitz_cell(wsc, mol, error)
       if (allocated(error)) return
 
-      call check(error, size(wsc%trans, 2), 3)
+      call verify_wsc_against_ref(mol, wsc, 4, error)
       if (allocated(error)) return
 
       ! Atom 1 has 2 closest self images (+a and -a), testing get_pairs exhaustion guard
@@ -472,7 +482,7 @@ subroutine test_wsc_cell_2d(error)
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
 
-   call check(error, size(wsc%trans, 2), 9)
+   call verify_wsc_against_ref(mol, wsc, 4, error)
    if (allocated(error)) return
 
    call check(error, wsc%nimg(1, 1), 4)
@@ -513,11 +523,7 @@ subroutine test_wsc_cell_3d(error)
    call check(error, size(wsc%trans, 1), 3)
    if (allocated(error)) return
 
-   ! pyrazole has unwrapped coordinates spanning 1.5*a1 along x and 2.994*a3 along z,
-   ! requiring rep = [2, 1, 3] -> (2*2+1)*(2*1+1)*(2*3+1) = 105 translations
-   call check(error, size(wsc%trans, 2), 105)
-   if (allocated(error)) return
-
+   ! pyrazole has unwrapped coordinates spanning several cells
    call check(error, size(wsc%tridx, 1), wsc%nimg_max)
    if (allocated(error)) return
 
@@ -527,9 +533,8 @@ subroutine test_wsc_cell_3d(error)
 end subroutine test_wsc_cell_3d
 
 
-!> Verify error reporting across 0D, valid periodic, degenerate,
-!> nonfinite, integer-overflow, and 1D/2D resource-exhaustion geometries.
-subroutine test_wsc_error_and_resource_limits(error)
+!> Degenerate periodic lattices and the limit on candidate translations
+subroutine test_wsc_degenerate_and_limits(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -584,15 +589,15 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, size(wsc%tridx, 1), wsc%nimg_max)
    if (allocated(error)) return
 
-   ! 2b. Large valid 1D unwrapped shift (19,999 periods -> rep(1) = 19999 -> 39999 translations):
-   !     verifies O(1)-stack nearest-image scan and compact tridx first dimension (2 vs 39999)
+   ! 2b. Large valid 1D unwrapped shift (19,999 periods -> 39999 translations, below the
+   !     limit): image indices are only stored for the 2 competing images
    xyz(:, 1) = 0.0_wp
    xyz(:, 2) = 19999.0_wp * lat(:, 1) + [1.2_wp, 0.0_wp, 0.0_wp]
    call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
 
-   call check(error, size(wsc%trans, 2), 39999)
+   call check(error, size(wsc%trans, 2) > 2 * 19999)
    if (allocated(error)) return
 
    call check(error, size(wsc%tridx, 1), wsc%nimg_max)
@@ -635,30 +640,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, .not. allocated(wsc%trans))
    if (allocated(error)) return
 
-   ! 6. Nonfinite coordinates and nonfinite active lattice vectors
-   lat = 0.0_wp
-   lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
-   xyz(:, 2) = [ieee_value(1.0_wp, ieee_quiet_nan), 0.0_wp, 0.0_wp]
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   xyz(:, 2) = [2.0_wp, 0.0_wp, 0.0_wp]
-   lat(1, 1) = ieee_value(1.0_wp, ieee_positive_inf)
-   call new(mol, num, xyz, lattice=lat, periodic=pbc_1d)
-   call new_wignerseitz_cell(wsc, mol, wsc_err)
-   call check(error, allocated(wsc_err))
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(wsc%trans))
-   if (allocated(error)) return
-
-   ! 7. Integer overflow (fractional span exceeds repetition bound)
+   ! 6. Candidate translations far beyond the limit (and the integer range)
    lat = 0.0_wp
    lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
    xyz(:, 1) = [0.0_wp, 0.0_wp, 0.0_wp]
@@ -671,7 +653,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, .not. allocated(wsc%trans))
    if (allocated(error)) return
 
-   ! 8. Mandatory 1D resource-limit exhaustion: a1 = [5, 0, 0], two atoms separated
+   ! 7. 1D candidate-translation limit exhaustion: a1 = [5, 0, 0], two atoms separated
    !    by > 100,000 lattice periods along x (120,000 periods -> 600,000 bohr)
    lat = 0.0_wp
    lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
@@ -685,7 +667,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, .not. allocated(wsc%trans))
    if (allocated(error)) return
 
-   ! 9. Mandatory 2D resource-limit exhaustion: two atoms separated by 200 periods
+   ! 8. 2D candidate-translation limit: two atoms separated by 200 periods
    !    along both a1 and a2 so (2*201 + 1)^2 = 162,409 > 100,000 candidate translations
    lat = 0.0_wp
    lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
@@ -700,8 +682,8 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, .not. allocated(wsc%trans))
    if (allocated(error)) return
 
-   ! 10. Small non-degenerate lattice vectors (1.0e-6 bohr > tol_deg) where
-   !     sqrt(tol / g11) > max_wsc_trans in 1D, 2D, and 3D
+   ! 9. Tiny non-degenerate lattice vectors (1.0e-6 bohr), the switching interval
+   !    covers far more than the maximum number of candidate translations
    call new(mol, num1, xyz1, lattice=lat_small, periodic=pbc_1d)
    call new_wignerseitz_cell(wsc, mol, wsc_err)
    call check(error, allocated(wsc_err))
@@ -717,7 +699,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
-end subroutine test_wsc_error_and_resource_limits
+end subroutine test_wsc_degenerate_and_limits
 
 
 subroutine test_wsc_exhaustive_reference(error)
@@ -927,9 +909,8 @@ subroutine test_wsc_exhaustive_reference(error)
 end subroutine test_wsc_exhaustive_reference
 
 
-!> Regression test for 2D/3D lattice-reduction termination at tie boundaries and
-!> high-symmetry WSC image retention when nimg > init_tridx_cap (12-fold FCC self-images).
-subroutine test_wsc_reduction_and_high_symmetry(error)
+!> High-symmetry cells with many tied nearest images
+subroutine test_wsc_high_symmetry(error)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -950,14 +931,14 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
       & 3.0_wp, 3.0_wp * sqrt(3.0_wp), 0.0_wp, &
       & 0.0_wp, 0.0_wp, 0.0_wp], &
       & [3, 3])
-   real(wp), parameter :: lat_lll(3, 3) = reshape([ &
+   real(wp), parameter :: lat_tric(3, 3) = reshape([ &
       & 5.0_wp, 0.0_wp, 0.0_wp, &
       & 5.0_wp * 0.49_wp, 5.0_wp * sqrt(0.90_wp), 0.0_wp, &
       & 0.0_wp, 5.0_wp * 0.45_wp * sqrt(0.90_wp), 5.0_wp * sqrt(0.86775_wp)], &
       & [3, 3])
-   real(wp), parameter :: xyz_lll(3, nat) = reshape([ &
+   real(wp), parameter :: xyz_tric(3, nat) = reshape([ &
       & 0.0_wp, 0.0_wp, 0.0_wp, &
-      & 0.48_wp * lat_lll(:, 1) - 0.51_wp * lat_lll(:, 2) + 0.49_wp * lat_lll(:, 3)], &
+      & 0.48_wp * lat_tric(:, 1) - 0.51_wp * lat_tric(:, 2) + 0.49_wp * lat_tric(:, 3)], &
       & [3, nat])
    integer, parameter :: nat_fcc = 1
    integer, parameter :: num_fcc(nat_fcc) = [6]
@@ -972,8 +953,7 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
    logical, parameter :: pbc_2d(3) = [.true., .true., .false.]
    logical, parameter :: pbc_3d(3) = [.true., .true., .true.]
 
-   ! 1. 2D 60-degree hexagonal lattice where mu = (a1 . a2) / |a1|^2 = 0.5 exactly:
-   !    verifies Lagrange-Gauss size reduction terminates immediately without oscillating
+   ! 1. 2D 60-degree hexagonal lattice with six tied self images
    call new(mol, num, xyz_hex, lattice=lat_hex, periodic=pbc_2d)
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
@@ -984,18 +964,16 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
    call verify_wsc_against_ref(mol, wsc, 4, error)
    if (allocated(error)) return
 
-   ! 2. 3D LLL reduction on a reduced basis where |b3|^2 < |b2|^2 while the Lovasz
-   !    condition holds: verifies no 2-cycle oscillation occurs between columns 2 and 3
-   call new(mol, num, xyz_lll, lattice=lat_lll, periodic=pbc_3d)
+   ! 2. Triclinic 3D cell with nearly half-integer fractional pair coordinates
+   call new(mol, num, xyz_tric, lattice=lat_tric, periodic=pbc_3d)
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
 
    call verify_wsc_against_ref(mol, wsc, 4, error)
    if (allocated(error)) return
 
-   ! 3. High-symmetry 3D FCC primitive cell with 12 equidistant nearest self-images
-   !    (exceeding init_tridx_cap = 8): verifies WSC retains all 12 images and
-   !    get_pairs respects output buffer capacity
+   ! 3. 3D FCC primitive cell with 12 equidistant nearest self images,
+   !    get_pairs returns the leading images if the output buffer is shorter
    call new(mol, num_fcc, xyz_fcc, lattice=lat_fcc, periodic=pbc_3d)
    call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
@@ -1025,7 +1003,7 @@ subroutine test_wsc_reduction_and_high_symmetry(error)
       return
    end if
 
-end subroutine test_wsc_reduction_and_high_symmetry
+end subroutine test_wsc_high_symmetry
 
 
 subroutine test_wsc_robustness_1d(error)

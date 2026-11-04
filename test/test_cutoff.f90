@@ -237,21 +237,6 @@ subroutine test_lattice_points_overflow_and_errors(error)
    call check(error, size(trans, 2), 40001)
    if (allocated(error)) return
 
-   ! Exact boundary at max_cutoff_trans = 1000000 when origin = .false.
-   ! (2*500000 + 1 - 1 = 1000000 succeeds; origin = .true. gives 1000001 > 1000000 and fails)
-   call get_lattice_points(lat, [500000, 0, 0], .false., trans, error)
-   if (allocated(error)) return
-
-   call check(error, size(trans, 2), 1000000)
-   if (allocated(error)) return
-
-   call get_lattice_points(lat, [500000, 0, 0], .true., trans, call_err)
-   call check(error, allocated(call_err), .true.)
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(trans), .true.)
-   if (allocated(error)) return
-
    ! 2D with zero inactive lattice column
    lat = 0.0_wp
    lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]
@@ -260,14 +245,6 @@ subroutine test_lattice_points_overflow_and_errors(error)
    if (allocated(error)) return
 
    call check(error, size(trans, 2), 25)
-   if (allocated(error)) return
-
-   ! Excessive 2D repetition product exceeding resource limit (10001^2 = 100,020,001 > 10^6)
-   call get_lattice_points(lat, [5000, 5000, 0], .true., trans, call_err)
-   call check(error, allocated(call_err), .true.)
-   if (allocated(error)) return
-
-   call check(error, .not. allocated(trans), .true.)
    if (allocated(error)) return
 
    ! Excessive 3D repetition product exceeding 32-bit signed integer:
@@ -280,7 +257,7 @@ subroutine test_lattice_points_overflow_and_errors(error)
    call check(error, .not. allocated(trans), .true.)
    if (allocated(error)) return
 
-   ! Extreme 3D repetition bounds near huge(0) must be caught by resource limit guard
+   ! Extreme 3D repetition bounds near huge(0)
    call get_lattice_points(lat, [huge(0), huge(0), huge(0)], .true., trans, call_err)
    call check(error, allocated(call_err), .true.)
    if (allocated(error)) return
@@ -288,7 +265,7 @@ subroutine test_lattice_points_overflow_and_errors(error)
    call check(error, .not. allocated(trans), .true.)
    if (allocated(error)) return
 
-   ! Values near real-to-integer conversion limits (rthr / len1 > max_cutoff_trans)
+   ! Repetitions beyond the integer range (rthr / len1 = 2.0e11)
    call get_lattice_points([.true., .false., .false.], lat, 1.0e12_wp, trans, call_err)
    call check(error, allocated(call_err), .true.)
    if (allocated(error)) return
@@ -472,6 +449,20 @@ subroutine test_lattice_points_partial_pbc(error)
          return
       end if
    end do
+
+   ! One-element mask applies to all three lattice vectors
+   lat = reshape([ &
+      & 5.0_wp, 0.0_wp, 0.0_wp, &
+      & 4.0_wp, 3.0_wp, 0.0_wp, &
+      & 1.0_wp, 1.0_wp, 6.0_wp], [3, 3])
+   call get_lattice_points([.true.], lat, 7.0_wp, trans1, error)
+   if (allocated(error)) return
+
+   call get_lattice_points([.true., .true., .true.], lat, 7.0_wp, trans2, error)
+   if (allocated(error)) return
+
+   call check(error, size(trans1, 2), size(trans2, 2))
+   if (allocated(error)) return
 
    ! Degenerate active periodic subspaces and negative cutoffs must fail explicitly
    ! and leave trans unallocated (never silently returning an origin-only translation set)

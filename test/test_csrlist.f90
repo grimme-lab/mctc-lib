@@ -33,6 +33,9 @@ module test_csrlist
    !> Tolerance for floating-point comparisons
    real(wp), parameter :: thr = 100*epsilon(1.0_wp)
 
+   !> Tolerance for comparing image vectors built from different translations
+   real(wp), parameter :: thr2 = sqrt(epsilon(1.0_wp))
+
 
 contains
 
@@ -73,7 +76,11 @@ subroutine collect_csrlist(testsuite)
       & new_unittest("csr-vs-verlet-x04-complete", test_list_x04_complete), &
       & new_unittest("csr-vs-verlet-x05-complete", test_list_x05_complete), &
       & new_unittest("nacl-wsc", test_nacl_wsc), &
-      & new_unittest("feo2-wsc", test_feo2_wsc) &
+      & new_unittest("feo2-wsc", test_feo2_wsc), &
+      & new_unittest("wsc-parity-nacl", test_wsc_parity_nacl), &
+      & new_unittest("wsc-parity-pyrazole", test_wsc_parity_pyrazole), &
+      & new_unittest("wsc-parity-skewed", test_wsc_parity_skewed), &
+      & new_unittest("wsc-parity-dense-images", test_wsc_parity_dense_images) &
       & ]
 
 end subroutine collect_csrlist
@@ -1029,5 +1036,153 @@ subroutine test_feo2_wsc(error)
    call test_wsc(error, mol, cutoff, .false., ref_list, ref_nimg)
 
 end subroutine test_feo2_wsc
+
+
+!> Compare the CSR Wigner-Seitz images with the dense Wigner-Seitz cell
+subroutine test_wsc_parity_gen(error, mol, cutoff)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Cutoff radius
+   real(wp), intent(in) :: cutoff
+
+   type(csr_list) :: list
+   type(wignerseitz_cell) :: dense, wsc
+   integer :: iat, jat, img, jmg, nimg, nref
+   integer(i8) :: kat, itr
+   real(wp) :: rij(3), vec(3), ref(3), r2
+   logical :: found
+
+   call new_wignerseitz_cell(dense, mol, error)
+   if (allocated(error)) return
+
+   call new_csr_list(list, mol, error, wsc, cutoff=cutoff, complete=.true.)
+   if (allocated(error)) return
+
+   do iat = 1, mol%nat
+      ! Every pair whose nearest image lies within the cutoff must be listed
+      nref = 0
+      do jat = 1, mol%nat
+         if (jat == iat .or. dense%nimg(jat, iat) == 0) cycle
+         rij = mol%xyz(:, iat) - mol%xyz(:, jat)
+         r2 = sum((rij - dense%trans(:, dense%tridx(1, jat, iat)))**2)
+         if (r2 <= cutoff**2) nref = nref + 1
+      end do
+      call check(error, int(list%inl(iat + 1) - list%inl(iat)) - 1, nref)
+      if (allocated(error)) return
+
+      do kat = list%inl(iat), list%inl(iat + 1) - 1
+         jat = list%nlat(kat)
+         nimg = wsc%nimg_list(kat)
+         ! Diagonal entries carry no images if the self images lie beyond the cutoff
+         if (jat == iat .and. nimg == 0) cycle
+
+         call check(error, nimg, dense%nimg(jat, iat))
+         if (allocated(error)) return
+
+         ! Compare the physical image vectors, which are independent of the
+         ! translation ordering
+         rij = mol%xyz(:, iat) - mol%xyz(:, jat)
+         do img = 0, nimg - 1
+            itr = wsc%itr_list(kat) + img
+            vec = rij - wsc%trans(:, wsc%tridx_list(itr))
+            found = .false.
+            do jmg = 1, dense%nimg(jat, iat)
+               ref = rij - dense%trans(:, dense%tridx(jmg, jat, iat))
+               found = found .or. maxval(abs(vec - ref)) < thr2
+            end do
+            if (.not. found) then
+               call test_failed(error, "CSR Wigner-Seitz image not selected by dense cell")
+               return
+            end if
+         end do
+      end do
+   end do
+
+end subroutine test_wsc_parity_gen
+
+
+subroutine test_wsc_parity_nacl(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   call get_structure(mol, "nacl")
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_nacl
+
+
+subroutine test_wsc_parity_pyrazole(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   ! Unwrapped coordinates spanning several cells
+   call get_structure(mol, "pyrazole")
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_pyrazole
+
+
+subroutine test_wsc_parity_skewed(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   integer, parameter :: nat = 3
+   integer, parameter :: num(nat) = [6, 8, 1]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      &  0.0_wp, 0.0_wp, 0.0_wp, &
+      & 12.5_wp, 0.5_wp, 0.0_wp, &
+      & -7.3_wp, 0.9_wp, 11.2_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      &  5.0_wp, 0.0_wp, 0.0_wp, &
+      & 25.0_wp, 1.0_wp, 0.0_wp, &
+      &  0.0_wp, 0.0_wp, 5.0_wp], &
+      & [3, 3])
+
+   ! Strongly skewed cell, nearest images lie several translations away
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .true.])
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_skewed
+
+
+subroutine test_wsc_parity_dense_images(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   integer, parameter :: nat = 2
+   integer, parameter :: num(nat) = [6, 8]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 0.05_wp, 0.05_wp, 0.02_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 0.1_wp, 0.0_wp, 0.0_wp, &
+      & 0.0_wp, 0.1_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.1_wp], &
+      & [3, 3])
+
+   ! Tiny cubic cell, hundreds of images compete within the switching interval
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .true.])
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_dense_images
 
 end module test_csrlist
