@@ -16,7 +16,7 @@
 module test_csrlist
    use mctc_csrlist, only : csr_list, new_csr_list, compute_grid, &
       & get_linked_cell, grid_type
-   use mctc_cutoff, only : get_lattice_points
+   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
    use mctc_env, only : wp, i8, timer_type, format_time
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed, check
@@ -1319,6 +1319,15 @@ subroutine test_list_slab(error)
          call test_pbc_list_gen(error, mol, cutoff(icut), trans=trans, cmp=.true.)
          if (allocated(error)) return
       end do
+
+      ! Wrapped atoms and three cells along the periodic directions use the
+      ! direct translation lookup of the linked cells
+      call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff(1), trans, error)
+      if (allocated(error)) return
+
+      call test_pbc_list_gen(error, mol, cutoff(1), trans=trans, cmp=.true.)
+      if (allocated(error)) return
    end do
 
 end subroutine test_list_slab
@@ -1341,6 +1350,15 @@ subroutine test_list_wire(error)
    if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
+   if (allocated(error)) return
+
+   ! Wrapped atoms and three cells along the periodic direction use the
+   ! direct translation lookup of the linked cells
+   call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
+   call get_lattice_points(mol%periodic, mol%lattice, 3.3_wp, trans, error)
+   if (allocated(error)) return
+
+   call test_pbc_list_gen(error, mol, 3.3_wp, trans=trans, cmp=.true.)
 
 end subroutine test_list_wire
 
