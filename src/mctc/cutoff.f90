@@ -27,7 +27,8 @@ module mctc_cutoff
    implicit none
    private
 
-   public :: get_lattice_points, get_inverse_metric, wrap_to_central_cell
+   public :: get_lattice_points, get_periodic_axes, get_inverse_metric, &
+      & wrap_to_central_cell
 
 
    interface get_lattice_points
@@ -42,6 +43,38 @@ module mctc_cutoff
 
 
 contains
+
+
+!> Extract the number and indices of the periodic lattice directions
+pure subroutine get_periodic_axes(periodic, ndim, p_axes)
+
+   !> Periodic dimensions, a one-element mask applies to all directions
+   logical, intent(in) :: periodic(:)
+
+   !> Number of periodic dimensions (0, 1, 2, or 3)
+   integer, intent(out) :: ndim
+
+   !> Indices of the periodic directions in 1..ndim
+   integer, intent(out) :: p_axes(3)
+
+   integer :: i
+   logical :: active
+
+   ndim = 0
+   p_axes(:) = 0
+   do i = 1, 3
+      if (size(periodic) == 1) then
+         active = periodic(1)
+      else
+         active = periodic(i)
+      end if
+      if (active) then
+         ndim = ndim + 1
+         p_axes(ndim) = i
+      end if
+   end do
+
+end subroutine get_periodic_axes
 
 
 !> Lattice vectors of the periodic directions and the inverse metric of the
@@ -69,17 +102,13 @@ pure subroutine get_inverse_metric(periodic, lattice, lat, ginv, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: k
+   integer :: k, ndim, p_axes(3)
    logical :: active(3)
    real(wp) :: metric(3, 3)
 
-   do k = 1, 3
-      if (size(periodic) == 1) then
-         active(k) = periodic(1)
-      else
-         active(k) = periodic(k)
-      end if
-   end do
+   call get_periodic_axes(periodic, ndim, p_axes)
+   active(:) = .false.
+   active(p_axes(:ndim)) = .true.
 
    lat(:, :) = 0.0_wp
    metric(:, :) = 0.0_wp

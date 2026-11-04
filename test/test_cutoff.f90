@@ -14,7 +14,7 @@
 
 module test_cutoff
    use, intrinsic :: ieee_arithmetic, only : ieee_value, ieee_quiet_nan, ieee_positive_inf
-   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
+   use mctc_cutoff, only : get_lattice_points, get_periodic_axes, wrap_to_central_cell
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & check, test_failed
@@ -44,7 +44,8 @@ subroutine collect_cutoff(testsuite)
       & new_unittest("lattice-points-partial-pbc", test_lattice_points_partial_pbc), &
       & new_unittest("lattice-points-rep", test_lattice_points_rep), &
       & new_unittest("wrap", test_wrap), &
-      & new_unittest("wrap-partial-pbc", test_wrap_partial_pbc) &
+      & new_unittest("wrap-partial-pbc", test_wrap_partial_pbc), &
+      & new_unittest("periodic-axes", test_periodic_axes) &
       & ]
 
 end subroutine collect_cutoff
@@ -744,6 +745,33 @@ subroutine test_wrap_partial_pbc(error)
    end do
 
 end subroutine test_wrap_partial_pbc
+
+
+
+!> Periodic directions from full and one-element masks
+subroutine test_periodic_axes(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer :: ndim, p_axes(3)
+
+   call get_periodic_axes([.false., .true., .true.], ndim, p_axes)
+   call check(error, ndim == 2 .and. all(p_axes == [2, 3, 0]))
+   if (allocated(error)) return
+
+   call get_periodic_axes([.false., .false., .false.], ndim, p_axes)
+   call check(error, ndim == 0 .and. all(p_axes == 0))
+   if (allocated(error)) return
+
+   call get_periodic_axes([.true.], ndim, p_axes)
+   call check(error, ndim == 3 .and. all(p_axes == [1, 2, 3]))
+   if (allocated(error)) return
+
+   call get_periodic_axes([.false.], ndim, p_axes)
+   call check(error, ndim == 0)
+
+end subroutine test_periodic_axes
 
 
 end module test_cutoff

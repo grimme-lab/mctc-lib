@@ -69,7 +69,7 @@
 
 module mctc_csrlist_type
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use mctc_cutoff, only : get_lattice_points
+   use mctc_cutoff, only : get_lattice_points, get_periodic_axes
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io, only : structure_type
    use mctc_io_math, only : matdet_3x3, matinv_3x3, crossprod
@@ -920,15 +920,14 @@ subroutine compute_grid(mol, cutoff, grid, det, lat_inv, cell_w, origin)
 
    real(wp) :: H(3), cross_ij(3), lattice(3, 3)
    real(wp) :: max_xyz(3), min_xyz(3), shift(3)
-   integer  :: i
+   integer  :: i, ndim, p_axes(3)
 
    if (present(lat_inv)) lat_inv = 0.0_wp
    shift(:) = 0.0_wp
 
    if (any(mol%periodic)) then
-      do i = 1, 3
-         grid%pbc(i) = mol%periodic(min(i, size(mol%periodic)))
-      end do
+      call get_periodic_axes(mol%periodic, ndim, p_axes)
+      grid%pbc(p_axes(:ndim)) = .true.
 
       ! Inverse Lattice Matrix, nonperiodic directions span the structure
       lattice = mol%lattice
