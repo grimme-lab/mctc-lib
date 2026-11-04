@@ -157,6 +157,9 @@ end subroutine new_wignerseitz_cell_legacy
 !> hence all images within the switching interval satisfy
 !> (s - n)^T G (s - n) <= d0^2 + tol. By the Cauchy-Schwarz inequality, this
 !> ellipsoid is confined to |n_k - s_k| <= sqrt((d0^2 + tol) G^-1_kk).
+!>
+!> The bound holds for any basis of the lattice. A reduced basis keeps it small
+!> for skewed cells, the translations are generated in this basis.
 subroutine get_wignerseitz_translations(mol, trans, error)
 
    !> Molecular structure data
@@ -169,7 +172,7 @@ subroutine get_wignerseitz_translations(mol, trans, error)
    type(error_type), allocatable, intent(out) :: error
 
    integer :: iat, jat, k, kmin
-   real(wp) :: lat(3, 3), ginv(3, 3), length(3), bound(3)
+   real(wp) :: basis(3, 3), lat(3, 3), ginv(3, 3), length(3), bound(3)
    real(wp) :: sij(3), diff(3), perp2, par2, step
    real(wp), allocatable :: frac(:, :), perp(:, :)
 
@@ -178,7 +181,11 @@ subroutine get_wignerseitz_translations(mol, trans, error)
       return
    end if
 
-   call get_inverse_metric(mol%periodic, mol%lattice, lat, ginv, error)
+   call get_inverse_metric(mol%periodic, mol%lattice, basis, ginv, error)
+   if (allocated(error)) return
+
+   call reduce_basis(basis)
+   call get_inverse_metric(mol%periodic, basis, lat, ginv, error)
    if (allocated(error)) return
 
    ! Shortest periodic lattice vector, used to step away from self images
@@ -229,6 +236,38 @@ subroutine get_wignerseitz_translations(mol, trans, error)
    call get_lattice_points(lat, int(bound), .true., trans, error)
 
 end subroutine get_wignerseitz_translations
+
+
+!> Pairwise size reduction of the lattice vectors, which gives a shorter and
+!> more orthogonal basis of the same lattice
+pure subroutine reduce_basis(lat)
+
+   !> Lattice vectors, zero for nonperiodic directions
+   real(wp), intent(inout) :: lat(3, 3)
+
+   integer :: i, j
+   real(wp) :: vec(3)
+   logical :: reduced
+
+   reduced = .false.
+   do while (.not. reduced)
+      reduced = .true.
+      do i = 1, 3
+         do j = 1, 3
+            ! Nonperiodic directions are exactly zero
+            if (i == j .or. .not. sum(lat(:, j)**2) > 0.0_wp) cycle
+            vec(:) = lat(:, i) - anint(dot_product(lat(:, i), lat(:, j)) &
+               & / dot_product(lat(:, j), lat(:, j))) * lat(:, j)
+            ! Only accept strictly shorter vectors, ties would cycle forever
+            if (sum(vec**2) < (1.0_wp - 1.0e-12_wp) * sum(lat(:, i)**2)) then
+               lat(:, i) = vec
+               reduced = .false.
+            end if
+         end do
+      end do
+   end do
+
+end subroutine reduce_basis
 
 
 !> Find the nearest translation images for an interatomic vector.

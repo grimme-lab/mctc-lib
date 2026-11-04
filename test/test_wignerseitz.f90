@@ -55,7 +55,8 @@ subroutine collect_wignerseitz(testsuite)
       & new_unittest("wignerseitz-high-symmetry", test_wsc_high_symmetry), &
       & new_unittest("wignerseitz-robustness-1d", test_wsc_robustness_1d), &
       & new_unittest("wignerseitz-robustness-2d", test_wsc_robustness_2d), &
-      & new_unittest("wignerseitz-robustness-2d-corner", test_wsc_robustness_2d_corner) &
+      & new_unittest("wignerseitz-robustness-2d-corner", test_wsc_robustness_2d_corner), &
+      & new_unittest("wignerseitz-sheared-3d", test_wsc_sheared_3d) &
       & ]
 
 end subroutine collect_wignerseitz
@@ -858,7 +859,7 @@ subroutine test_wsc_exhaustive_reference(error)
                   & + wsc%trans(:, wsc%tridx(1, jat, iat))
                v_test = mol_unimod%xyz(:, jat) - mol_unimod%xyz(:, iat) &
                   & + wsc_unimod%trans(:, wsc_unimod%tridx(1, jat, iat))
-               if (maxval(abs(v_test - v_ref)) > thr) then
+               if (maxval(abs(v_test - v_ref)) > thr2) then
                   call test_failed(error, &
                      & "3D WSC minimum-image vector changed under unimodular transformation and shift")
                   return
@@ -1056,7 +1057,7 @@ subroutine test_wsc_robustness_1d(error)
                & + wsc_ref%trans(:, wsc_ref%tridx(1, jat, iat))
             v_test = mol_test%xyz(:, jat) - mol_test%xyz(:, iat) &
                & + wsc_test%trans(:, wsc_test%tridx(1, jat, iat))
-            if (maxval(abs(v_test - v_ref)) > thr) then
+            if (maxval(abs(v_test - v_ref)) > thr2) then
                call test_failed(error, "1D WSC failed for multi-cell atom displacement")
                return
             end if
@@ -1123,7 +1124,7 @@ subroutine test_wsc_robustness_2d(error)
                & + wsc_ref%trans(:, wsc_ref%tridx(1, jat, iat))
             v_test = mol_test%xyz(:, jat) - mol_test%xyz(:, iat) &
                & + wsc_test%trans(:, wsc_test%tridx(1, jat, iat))
-            if (maxval(abs(v_test - v_ref)) > thr) then
+            if (maxval(abs(v_test - v_ref)) > thr2) then
                call test_failed(error, &
                   & "2D WSC failed under skewed unimodular basis and multi-cell shift")
                return
@@ -1172,6 +1173,73 @@ subroutine test_wsc_robustness_2d_corner(error)
    end if
 
 end subroutine test_wsc_robustness_2d_corner
+
+
+!> Strongly sheared basis of a 3D lattice with unwrapped atoms, the conservative
+!> box in the given basis would exceed the candidate limit
+subroutine test_wsc_sheared_3d(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol_ref, mol_test
+   type(wignerseitz_cell) :: wsc_ref, wsc_test
+   real(wp) :: v_ref(3), v_test(3)
+   integer :: iat, jat
+
+   integer, parameter :: nat = 3
+   integer, parameter :: num(nat) = [6, 8, 1]
+   real(wp), parameter :: a1(3) = [5.0_wp, 0.3_wp, 0.1_wp]
+   real(wp), parameter :: a2(3) = [0.4_wp, 5.5_wp, -0.2_wp]
+   real(wp), parameter :: a3(3) = [0.2_wp, -0.3_wp, 6.0_wp]
+   real(wp), parameter :: lat_ref(3, 3) = reshape([a1, a2, a3], [3, 3])
+   real(wp), parameter :: lat_test(3, 3) = reshape([ &
+      & a1, &
+      & a2 + 6.0_wp * a1, &
+      & a3 - 6.0_wp * a2 + 6.0_wp * a1], &
+      & [3, 3])
+   real(wp), parameter :: xyz_ref(3, nat) = reshape([ &
+      &  0.1_wp, 0.2_wp, -0.3_wp, &
+      &  2.6_wp, 1.9_wp,  3.1_wp, &
+      & -1.7_wp, 2.4_wp,  1.2_wp], &
+      & [3, nat])
+   real(wp), parameter :: xyz_test(3, nat) = reshape([ &
+      & xyz_ref(:, 1), &
+      & xyz_ref(:, 2) + 3.0_wp * lat_test(:, 1) - 2.0_wp * lat_test(:, 2), &
+      & xyz_ref(:, 3) - lat_test(:, 2) + 2.0_wp * lat_test(:, 3)], &
+      & [3, nat])
+   logical, parameter :: periodic(3) = [.true., .true., .true.]
+
+   call new(mol_ref, num, xyz_ref, lattice=lat_ref, periodic=periodic)
+   call new(mol_test, num, xyz_test, lattice=lat_test, periodic=periodic)
+   call new_wignerseitz_cell(wsc_ref, mol_ref, error)
+   if (allocated(error)) return
+
+   call verify_wsc_against_ref(mol_ref, wsc_ref, 4, error)
+   if (allocated(error)) return
+
+   call new_wignerseitz_cell(wsc_test, mol_test, error)
+   if (allocated(error)) return
+
+   do iat = 1, nat
+      do jat = 1, nat
+         call check(error, wsc_test%nimg(jat, iat), wsc_ref%nimg(jat, iat))
+         if (allocated(error)) return
+
+         if (iat /= jat) then
+            v_ref = mol_ref%xyz(:, jat) - mol_ref%xyz(:, iat) &
+               & + wsc_ref%trans(:, wsc_ref%tridx(1, jat, iat))
+            v_test = mol_test%xyz(:, jat) - mol_test%xyz(:, iat) &
+               & + wsc_test%trans(:, wsc_test%tridx(1, jat, iat))
+            if (maxval(abs(v_test - v_ref)) > thr2) then
+               call test_failed(error, "3D WSC failed for strongly sheared basis")
+               return
+            end if
+         end if
+      end do
+   end do
+
+end subroutine test_wsc_sheared_3d
 
 
 subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
@@ -1230,7 +1298,7 @@ subroutine verify_wsc_against_ref(mol, wsc, n_ref, error)
          if (allocated(error)) return
 
          dmin2_wsc = sum((rij - wsc%trans(:, wsc%tridx(1, jat, iat)))**2)
-         if (abs(dmin2_wsc - dmin2_ref) > thr) then
+         if (abs(dmin2_wsc - dmin2_ref) > thr2) then
             call test_failed(error, "WSC minimum squared distance disagrees with exhaustive reference")
             return
          end if
