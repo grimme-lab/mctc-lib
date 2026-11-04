@@ -19,7 +19,6 @@ module test_wignerseitz
    use mctc_env_testing, only: new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io_structure, only: structure_type, new
-   use mctc_wignerseitz, only : get_pairs
    use mctc_wignerseitz, only : wignerseitz_cell, new_wignerseitz_cell, &
       & get_wignerseitz_weights, get_pairs
    use testsuite_structure, only : get_structure
@@ -183,7 +182,8 @@ subroutine test_compact_images(error)
       & lattice=lattice, periodic=[.true., .true., .true.])
 
    ! Simple cubic cell, six tied nearest images
-   call new_wignerseitz_cell(wsc, mol)
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
    call check(error, wsc%nimg(1, 1), 6)
    if (allocated(error)) return
    call check(error, size(wsc%tridx, 1), 6)
@@ -193,15 +193,16 @@ subroutine test_compact_images(error)
    call check(error, all(abs(weights - 1.0_wp/6.0_wp) < thr1), "Tied image weights")
    if (allocated(error)) return
 
-   ! All 26 nonzero candidates fall in the smooth nearest-image interval
+   ! All 738 competing images fall in the smooth nearest-image interval
    mol%lattice = 0.01_wp*lattice
-   call new_wignerseitz_cell(wsc, mol)
-   call check(error, wsc%nimg(1, 1), 26)
+   call new_wignerseitz_cell(wsc, mol, error)
    if (allocated(error)) return
-   call check(error, size(wsc%tridx, 1), 26)
+   call check(error, wsc%nimg(1, 1), 738)
+   if (allocated(error)) return
+   call check(error, size(wsc%tridx, 1), 738)
    if (allocated(error)) return
    deallocate(weights)
-   allocate(weights(26))
+   allocate(weights(738))
    call get_wignerseitz_weights(wsc, 1, 1, mol%xyz(:, 1), weights)
    call check(error, abs(sum(weights) - 1.0_wp) < thr1 .and. all(weights > 0.0_wp), &
       & "Normalized image weights")
@@ -209,7 +210,8 @@ subroutine test_compact_images(error)
 
    ! Non-periodic structure, no images at all
    mol%periodic = .false.
-   call new_wignerseitz_cell(wsc, mol)
+   call new_wignerseitz_cell(wsc, mol, error)
+   if (allocated(error)) return
    call check(error, wsc%nimg(1, 1), 0)
    if (allocated(error)) return
    call check(error, size(wsc%tridx, 1), 0)
@@ -238,7 +240,7 @@ subroutine test_wsc_3d(error)
    call check(error, size(wsc%trans, 2), 105)
    if (allocated(error)) return
 
-   call check(error, size(wsc%tridx, 1), max(1, wsc%nimg_max))
+   call check(error, size(wsc%tridx, 1), wsc%nimg_max)
    if (allocated(error)) return
 
    call verify_wsc_against_ref(mol, wsc, 4, error)
@@ -792,7 +794,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, size(wsc%trans, 2), 3)
    if (allocated(error)) return
 
-   call check(error, size(wsc%tridx, 1), max(1, wsc%nimg_max))
+   call check(error, size(wsc%tridx, 1), wsc%nimg_max)
    if (allocated(error)) return
 
    ! 2b. Large valid 1D unwrapped shift (19,999 periods -> rep(1) = 19999 -> 39999 translations):
@@ -806,7 +808,7 @@ subroutine test_wsc_error_and_resource_limits(error)
    call check(error, size(wsc%trans, 2), 39999)
    if (allocated(error)) return
 
-   call check(error, size(wsc%tridx, 1), max(1, wsc%nimg_max))
+   call check(error, size(wsc%tridx, 1), wsc%nimg_max)
    if (allocated(error)) return
 
    call check(error, size(wsc%tridx, 1), 2)
@@ -908,6 +910,30 @@ subroutine test_wsc_error_and_resource_limits(error)
    if (allocated(error)) return
 
    call check(error, .not. allocated(wsc%trans))
+   if (allocated(error)) return
+
+   ! 10. Small non-degenerate lattice vectors (1.0e-6 bohr > tol_deg) where
+   !     sqrt(tol / g11) > max_wsc_trans in 1D, 2D, and 3D
+   lat = 0.0_wp
+   lat(1, 1) = 1.0e-6_wp
+   lat(2, 2) = 1.0e-6_wp
+   lat(3, 3) = 1.0e-6_wp
+   xyz(:, 1) = 0.0_wp
+   xyz(:, 2) = 0.0_wp
+
+   call new(mol, [6], xyz(:, 1:1), lattice=lat, periodic=[.true., .false., .false.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call new(mol, [6], xyz(:, 1:1), lattice=lat, periodic=[.true., .true., .false.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
+   call check(error, allocated(wsc_err))
+   if (allocated(error)) return
+
+   call new(mol, [6], xyz(:, 1:1), lattice=lat, periodic=[.true., .true., .true.])
+   call new_wignerseitz_cell(wsc, mol, wsc_err)
+   call check(error, allocated(wsc_err))
    if (allocated(error)) return
 
 end subroutine test_wsc_error_and_resource_limits

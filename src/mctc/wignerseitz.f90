@@ -41,7 +41,7 @@ module mctc_wignerseitz
       integer :: nimg_max = 0
       !> Number of images for each atom pair (nat, nat)
       integer, allocatable :: nimg(:, :)
-      !> Translation indices for each atom pair (nimg_alloc, nat, nat)
+      !> Translation indices for each atom pair (nimg_max, nat, nat)
       integer, allocatable :: tridx(:, :, :)
       !> Flattened atom-pair image offsets used by CSR neighbor lists
       integer(i8), allocatable :: itr_list(:)
@@ -99,7 +99,7 @@ subroutine new_wignerseitz_cell(self, mol, error)
    type(error_type), allocatable, intent(out) :: error
 
    integer, parameter :: init_tridx_cap = 8
-   integer :: iat, jat, nimg, nkeep, nimg_alloc, rep(3)
+   integer :: iat, jat, nimg, nkeep, rep(3)
    integer :: tridx_buf(init_tridx_cap)
    integer, allocatable :: tridx_init(:, :, :)
    real(wp) :: vec(3), min_r2
@@ -142,17 +142,16 @@ subroutine new_wignerseitz_cell(self, mol, error)
    ! Compact self%tridx to the actual maximum image count across all pairs,
    ! re-evaluating pairs only if a high-symmetry pair exceeded init_tridx_cap.
    self%nimg_max = maxval(self%nimg)
-   nimg_alloc = max(1, self%nimg_max)
 
-   if (nimg_alloc == init_tridx_cap) then
+   if (self%nimg_max == init_tridx_cap) then
       call move_alloc(tridx_init, self%tridx)
-   else if (nimg_alloc < init_tridx_cap) then
-      allocate(self%tridx(nimg_alloc, mol%nat, mol%nat))
-      self%tridx(1:nimg_alloc, :, :) = tridx_init(1:nimg_alloc, :, :)
+   else if (self%nimg_max < init_tridx_cap) then
+      allocate(self%tridx(self%nimg_max, mol%nat, mol%nat))
+      self%tridx(1:self%nimg_max, :, :) = tridx_init(1:self%nimg_max, :, :)
       deallocate(tridx_init)
    else
       deallocate(tridx_init)
-      allocate(self%tridx(nimg_alloc, mol%nat, mol%nat))
+      allocate(self%tridx(self%nimg_max, mol%nat, mol%nat))
       self%tridx(:, :, :) = 0
       !$omp parallel do default(none) schedule(runtime) collapse(2) &
       !$omp& shared(mol, trans, self) private(iat, jat, vec, nimg, min_r2)
@@ -210,13 +209,7 @@ pure subroutine get_wsc_rep(mol, rep, error)
 
    rep(:) = 0
 
-   ! Validate basic molecular structure allocation and extents
-   if (mol%nat <= 0) then
-      call fatal_error(error, &
-         & "Invalid molecular structure in Wigner-Seitz construction")
-      return
-   end if
-   if (.not. allocated(mol%xyz)) then
+   if (mol%nat <= 0 .or. .not. allocated(mol%xyz)) then
       call fatal_error(error, &
          & "Invalid molecular structure in Wigner-Seitz construction")
       return
@@ -226,25 +219,15 @@ pure subroutine get_wsc_rep(mol, rep, error)
          & "Invalid molecular structure in Wigner-Seitz construction")
       return
    end if
-
-   ! Validate finiteness of atomic coordinates
    if (.not. all(ieee_is_finite(mol%xyz(1:3, 1:mol%nat)))) then
       call fatal_error(error, &
          & "Nonfinite atomic coordinates or lattice vectors in Wigner-Seitz construction")
       return
    end if
 
-   ! Handle non-periodic (0D) structures
    if (.not. allocated(mol%periodic)) return
    if (.not. any(mol%periodic)) return
-   if (size(mol%periodic) < 3) then
-      call fatal_error(error, &
-         & "Invalid molecular structure in Wigner-Seitz construction")
-      return
-   end if
-
-   ! Periodic structure requires an allocated 3x3 lattice
-   if (.not. allocated(mol%lattice)) then
+   if (size(mol%periodic) /= 3 .or. .not. allocated(mol%lattice)) then
       call fatal_error(error, &
          & "Invalid molecular structure in Wigner-Seitz construction")
       return
@@ -255,7 +238,6 @@ pure subroutine get_wsc_rep(mol, rep, error)
       return
    end if
 
-   ! Collect active periodic axes and validate finiteness of active lattice vectors
    call get_periodic_axes(mol%periodic, ndim, p_axes)
    do i = 1, ndim
       if (.not. all(ieee_is_finite(mol%lattice(:, p_axes(i))))) then
@@ -281,14 +263,12 @@ pure subroutine get_wsc_rep(mol, rep, error)
          & mol%lattice(:, 2), mol%lattice(:, 3), rep_i8, error)
 
    case default
-      call fatal_error(error, &
-         & "Invalid molecular structure in Wigner-Seitz construction")
+      continue
    end select
 
    if (allocated(error)) return
 
-   ! Bound each repetition count and accumulated product by max_wsc_trans in 64-bit
-   ! integer arithmetic so intermediate products and 32-bit conversion cannot overflow.
+   ! Use 64-bit arithmetic for the translation-count product.
    ntr_i8 = 1_i8
    do i = 1, 3
       if (rep_i8(i) > max_wsc_trans) then
@@ -332,11 +312,6 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
       return
    end if
    g11 = len1 * len1
-   if (sqrt(tol / g11) > real(max_wsc_trans, wp)) then
-      call fatal_error(error, &
-         & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
-      return
-   end if
 
    nat = size(xyz, 2)
    rep_max = 1_i8
@@ -344,8 +319,7 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
    do iat = 1, nat
       do jat = 1, iat
 
-         ! Coordinate transformation: decompose pair vector rij into parallel fractional
-         ! coordinate ds = (rij . a1) / |a1|^2 and perpendicular squared distance d_perp2
+         ! Decompose pair vector rij into parallel fractional coordinate ds and perpendicular distance
          rij = xyz(:, iat) - xyz(:, jat)
          ds = dot_product(rij, a1) / g11
          if (.not. (abs(ds) <= max_rep_real)) then
@@ -355,8 +329,7 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
          end if
          d_perp2 = sum((rij - ds * a1)**2)
 
-         ! Initial search bound: nearest integer shift n0 = nint(ds); if (n0) is a
-         ! self-image (total squared distance < thr), step to the closest non-self integer
+         ! Nearest integer shift n0 = nint(ds); step to closest non-self integer if < thr
          n0 = nint(ds, i8)
          xi = ds - real(n0, wp)
          d0_par2 = xi * xi * g11
@@ -366,7 +339,7 @@ pure subroutine get_wsc_rep_1d(xyz, a1, rep1, error)
             d0_par2 = (real(k_min, wp) - abs(xi))**2 * g11
          end if
 
-         ! Competing images: find all integer shifts n with (n - ds)^2 |a1|^2 <= d0_par2 + tol
+         ! Include all competing images within tol of d0_par2
          r_comp2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta_s = sqrt(r_comp2 / g11)
          n_lo = ceiling(ds - delta_s, i8)
@@ -416,22 +389,14 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
    rep2 = 0_i8
    len1 = norm2(a1)
    len2 = norm2(a2)
-   if (len1 <= tol_deg .or. len2 <= tol_deg) then
-      call fatal_error(error, &
-         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
-      return
-   end if
    area = norm2(crossprod(a1, a2))
-   if (area <= tol_deg * len1 * len2) then
+   if (len1 <= tol_deg .or. len2 <= tol_deg .or. area <= tol_deg * len1 * len2) then
       call fatal_error(error, &
          & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
 
-   ! Basis reduction: Lagrange-Gauss reduction [b1, b2] = [a1, a2] * U with
-   ! unimodular U in GL(2, Z) such that |b1| <= |b2| and |b1 . b2| <= |b1|^2 / 2.
-   ! Unlike Ewald summation (which sums directly in the reduced basis), Wigner-Seitz
-   ! cell construction must track U to map competing images back to the input basis.
+   ! Lagrange-Gauss reduction [b1, b2] = [a1, a2] * U with unimodular U in GL(2, Z)
    b1 = a1
    b2 = a2
    u_mat = reshape([1_i8, 0_i8, 0_i8, 1_i8], [2, 2])
@@ -458,7 +423,7 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
          exit
       end if
       mu = nint(mu_real, i8)
-      if (maxval(abs(u_mat)) > max_u_step_i8 / max(1_i8, abs(mu))) then
+      if (maxval(abs(u_mat)) > max_u_step_i8 / abs(mu)) then
          call fatal_error(error, &
             & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
          return
@@ -472,8 +437,7 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
       return
    end if
 
-   ! Metric tensor G = B^T B and Cholesky height h2^2 = det(G) / g11 of b2 orthogonal to b1
-   g11 = dot_product(b1, b1)
+   ! Reduced metric tensor G = B^T B and Cholesky height h2_sq = det(G) / g11
    g12 = dot_product(b1, b2)
    g22 = dot_product(b2, b2)
    det2 = g11 * g22 - g12 * g12
@@ -483,11 +447,6 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
       return
    end if
    h2_sq = det2 / g11
-   if (sqrt(tol / g11) > real(max_wsc_trans, wp) .or. sqrt(tol / h2_sq) > real(max_wsc_trans, wp)) then
-      call fatal_error(error, &
-         & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
-      return
-   end if
 
    nat = size(xyz, 2)
    rep1_max = 1_i8
@@ -496,9 +455,7 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
    do iat = 1, nat
       do jat = 1, iat
 
-         ! Coordinate transformation: express pair vector rij in the reduced basis
-         ! [b1, b2] via G^{-1} to obtain fractional coordinates (ds1, ds2) and the
-         ! out-of-plane perpendicular squared distance d_perp2
+         ! Fractional coordinates (ds1, ds2) in reduced basis [b1, b2] and out-of-plane distance
          rij = xyz(:, iat) - xyz(:, jat)
          proj1 = dot_product(rij, b1)
          proj2 = dot_product(rij, b2)
@@ -511,9 +468,7 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
          end if
          d_perp2 = sum((rij - ds1 * b1 - ds2 * b2)**2)
 
-         ! Initial search bound: Babai nearest-plane integer estimate (n1_0, n2_0) using
-         ! the Cholesky decomposition d_par^2 = g11 * (n1 - c1)^2 + h2_sq * (n2 - ds2)^2;
-         ! if this point is a self-image (< thr), step along b1 to a valid upper bound d0_par2
+         ! Babai nearest-plane integer estimate (n1_0, n2_0), stepping along b1 if self-image
          n2_0 = nint(ds2, i8)
          c1_0 = ds1 - (g12 / g11) * (real(n2_0, wp) - ds2)
          n1_0 = nint(c1_0, i8)
@@ -525,8 +480,7 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
                & + h2_sq * (real(n2_0, wp) - ds2)**2
          end if
 
-         ! Nearest-image search: enumerate all integer points (n1, n2) inside the
-         ! Cholesky ellipse d_par^2 <= d0_par2 + tol to find the exact minimum dmin_par2
+         ! Cholesky ellipse search for exact minimum squared distance dmin_par2
          r_max2 = (d0_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta2 = sqrt(r_max2 / h2_sq)
          if (2.0_wp * delta2 + 1.0_wp > real(max_wsc_trans, wp) &
@@ -553,8 +507,7 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
             end do
          end do
 
-         ! Competing images: enumerate all integer points within tol of dmin_par2
-         ! that receive non-zero weight in the smooth Wigner-Seitz switching window
+         ! Enumerate competing images within tol of dmin_par2 and map back via m = U * n
          r_comp2 = (dmin_par2 + tol) * (1.0_wp + 1.0e-12_wp)
          delta2 = sqrt(r_comp2 / h2_sq)
          n2_lo = ceiling(ds2 - delta2, i8)
@@ -572,8 +525,6 @@ pure subroutine get_wsc_rep_2d(xyz, a1, a2, rep1, rep2, error)
                if (d_perp2 + d_par2 < thr) cycle
                if (d_par2 > r_comp2) cycle
 
-               ! Return to the original basis: map reduced integer coordinates
-               ! (n1, n2) back to unreduced lattice indices m = U * n
                m1_orig = u_mat(1, 1) * n1 + u_mat(1, 2) * n2
                m2_orig = u_mat(2, 1) * n1 + u_mat(2, 2) * n2
                rep1_max = max(rep1_max, abs(m1_orig))
@@ -603,10 +554,6 @@ pure subroutine gs_ortho_3d(bmat, bstar, bnorm2, mu21, mu31, mu32, valid)
    logical, intent(out) :: valid
 
    valid = .false.
-   mu21 = 0.0_wp
-   mu31 = 0.0_wp
-   mu32 = 0.0_wp
-   bnorm2(:) = 0.0_wp
 
    bstar(:, 1) = bmat(:, 1)
    bnorm2(1) = dot_product(bstar(:, 1), bstar(:, 1))
@@ -661,7 +608,7 @@ pure subroutine size_reduce_pair_3d(i, j, mu_ij, bmat, u_mat, bstar, bnorm2, &
    if (abs(mu_ij) <= tol_mu) return
 
    q_red = nint(mu_ij, i8)
-   if (maxval(abs(u_mat)) > max_u_step_i8 / max(1_i8, abs(q_red))) then
+   if (maxval(abs(u_mat)) > max_u_step_i8 / abs(q_red)) then
       call fatal_error(error, &
          & "Integer overflow in Wigner-Seitz lattice repetition bound calculation")
       return
@@ -708,24 +655,15 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
    len1 = norm2(a1)
    len2 = norm2(a2)
    len3 = norm2(a3)
-   if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg) then
-      call fatal_error(error, &
-         & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
-      return
-   end if
    vol = abs(dot_product(a1, crossprod(a2, a3)))
-   if (vol <= tol_deg * len1 * len2 * len3) then
+   if (len1 <= tol_deg .or. len2 <= tol_deg .or. len3 <= tol_deg &
+      & .or. vol <= tol_deg * len1 * len2 * len3) then
       call fatal_error(error, &
          & "Invalid or degenerate active periodic lattice in Wigner-Seitz construction")
       return
    end if
 
-   ! Basis reduction: 3D LLL reduction B = A * U with unimodular U in GL(3, Z).
-   ! Size reduction enforces |mu_{i,j}| <= 1/2 for j < i, and the Lovasz condition
-   ! enforces |b_k^*|^2 >= (delta_lll - mu_{k,k-1}^2) |b_{k-1}^*|^2 so the Gram-Schmidt
-   ! heights |b_k^*|^2 cannot collapse on skewed cells. Unlike Ewald summation (which
-   ! sums directly in the reduced basis), WSC construction tracks U to map competing
-   ! integer shifts back to the original lattice vectors.
+   ! 3D LLL reduction B = A * U with unimodular U in GL(3, Z)
    bmat(:, 1) = a1
    bmat(:, 2) = a2
    bmat(:, 3) = a3
@@ -755,14 +693,13 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
          & mu21, mu31, mu32, error)
       if (allocated(error)) return
 
-      ! Lovasz condition between columns 1 and 2
+      ! Lovasz conditions between adjacent columns
       if (bnorm2(2) < (delta_lll - mu21 * mu21) * bnorm2(1)) then
          tmp_v = bmat(:, 1); bmat(:, 1) = bmat(:, 2); bmat(:, 2) = tmp_v
          tmp_u = u_mat(:, 1); u_mat(:, 1) = u_mat(:, 2); u_mat(:, 2) = tmp_u
          cycle
       end if
 
-      ! Lovasz condition between columns 2 and 3
       if (bnorm2(3) < (delta_lll - mu32 * mu32) * bnorm2(2)) then
          tmp_v = bmat(:, 2); bmat(:, 2) = bmat(:, 3); bmat(:, 3) = tmp_v
          tmp_u = u_mat(:, 2); u_mat(:, 2) = u_mat(:, 3); u_mat(:, 3) = tmp_u
@@ -778,21 +715,13 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
       return
    end if
 
-   if (any(sqrt(tol / bnorm2) > real(max_wsc_trans, wp))) then
-      call fatal_error(error, &
-         & "Wigner-Seitz candidate translation count exceeds maximum resource limit")
-      return
-   end if
-
    nat = size(xyz, 2)
    rep_max(:) = 1_i8
 
    do iat = 1, nat
       do jat = 1, iat
 
-         ! Coordinate transformation: project pair vector rij onto the orthogonal
-         ! Gram-Schmidt basis {b1^*, b2^*, b3^*}, giving upper-triangular Cholesky
-         ! coordinates ||B*n - rij||^2 = sum_k |b_k^*|^2 * (n_k - c_k)^2
+         ! Project pair vector rij onto the orthogonal Gram-Schmidt basis {b1^*, b2^*, b3^*}
          rij = xyz(:, iat) - xyz(:, jat)
          alpha1 = dot_product(rij, bstar(:, 1)) / bnorm2(1)
          alpha2 = dot_product(rij, bstar(:, 2)) / bnorm2(2)
@@ -804,9 +733,7 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
             return
          end if
 
-         ! Initial search bound: Babai nearest-plane integer estimate (n1_0, n2_0, n3_0)
-         ! by rounding from n3 down to n1; if this gives a self-image (< thr), step
-         ! along b1 to obtain a guaranteed positive distance bound d0_sq
+         ! Babai nearest-plane integer estimate (n1_0, n2_0, n3_0), stepping along b1 if self-image
          n3_0 = nint(alpha3, i8)
          c2_0 = alpha2 - mu32 * real(n3_0, wp)
          n2_0 = nint(c2_0, i8)
@@ -824,8 +751,7 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
                & + bnorm2(3) * (real(n3_0, wp) - alpha3)**2
          end if
 
-         ! Nearest-image search: enumerate all integer points (n1, n2, n3) inside the
-         ! Cholesky ellipsoid ||B*n - rij||^2 <= d0_sq + tol to find the exact minimum dmin_sq
+         ! Cholesky ellipsoid search for exact minimum squared distance dmin_sq
          r_max2 = (d0_sq + tol) * (1.0_wp + 1.0e-12_wp)
          if (any(2.0_wp * sqrt(r_max2 / bnorm2) + 1.0_wp > real(max_wsc_trans, wp))) then
             call fatal_error(error, &
@@ -860,8 +786,7 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
             end do
          end do
 
-         ! Competing images: enumerate all integer points within tol of dmin_sq
-         ! that receive non-zero weight in the smooth Wigner-Seitz switching window
+         ! Enumerate competing images within tol of dmin_sq and map back via m = U * n
          r_comp2 = (dmin_sq + tol) * (1.0_wp + 1.0e-12_wp)
          delta3 = sqrt(r_comp2 / bnorm2(3))
          n3_lo = ceiling(alpha3 - delta3, i8)
@@ -886,8 +811,6 @@ pure subroutine get_wsc_rep_3d(xyz, a1, a2, a3, rep, error)
                   if (d_sq < thr) cycle
                   if (d_sq > r_comp2) cycle
 
-                  ! Return to the original basis: map reduced integer coordinates
-                  ! (n1, n2, n3) back to unreduced lattice indices m = U * n
                   do k = 1, 3
                      m_orig(k) = u_mat(k, 1) * n1 + u_mat(k, 2) * n2 + u_mat(k, 3) * n3
                      rep_max(k) = max(rep_max(k), abs(m_orig(k)))
