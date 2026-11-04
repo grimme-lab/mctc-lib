@@ -269,13 +269,14 @@ pure subroutine reduce_basis(lat)
 end subroutine reduce_basis
 
 
-!> Find the nearest translation images of an interatomic vector.
+!> Find the competing nearest images of an interatomic vector.
 !>
-!> All images within the switching interval of the nearest image are counted
-!> in `nimg`, and the nearest `min(nimg, size(list))` of them are stored in
-!> `list` sorted by distance. A zero-length list only counts the images, a
-!> list with one entry per translation holds all of them. Entries of `list`
-!> beyond the stored images are left unchanged.
+!> Counts the images within the switching interval of the nearest image,
+!> excluding the atom itself, in `nimg` and returns the minimum squared
+!> distance in `min_r2`. If `list` is empty, the images are only counted.
+!> Otherwise, `list` must hold all images (size(list) >= nimg) and receives
+!> their translation indices sorted by distance. A list of size(trans, 2)
+!> is always sufficient.
 pure subroutine find_wsc_pairs(trans, rij, nimg, list, min_r2)
 
    !> Translation vectors
