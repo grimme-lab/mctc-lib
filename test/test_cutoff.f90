@@ -479,6 +479,20 @@ contains
       call check(error, size(trans, 2), 40001)
       if (allocated(error)) return
 
+      ! Exact boundary at max_cutoff_trans = 1000000 when origin = .false.
+      ! (2*500000 + 1 - 1 = 1000000 succeeds; origin = .true. gives 1000001 > 1000000 and fails)
+      call get_lattice_points(lat, [500000, 0, 0], .false., trans, error)
+      if (allocated(error)) return
+
+      call check(error, size(trans, 2), 1000000)
+      if (allocated(error)) return
+
+      call get_lattice_points(lat, [500000, 0, 0], .true., trans, call_err)
+      call check(error, allocated(call_err), .true.)
+      if (allocated(error)) return
+      call check(error, .not. allocated(trans), .true.)
+      if (allocated(error)) return
+
       ! 2D with zero inactive lattice column
       lat = 0.0_wp
       lat(:, 1) = [5.0_wp, 0.0_wp, 0.0_wp]

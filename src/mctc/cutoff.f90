@@ -62,8 +62,8 @@ pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans, error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: i, itr, ix, iy, iz, jx, jy, jz, ntr
-   integer(i8) :: ntot_i8
+   integer :: i, itr, ix, iy, iz, jx, jy, jz
+   integer(i8) :: ntrans
    real(wp) :: vec(3)
 
    if (size(lat, 1) < 3 .or. size(lat, 2) < 3 .or. size(rep) < 3) then
@@ -87,32 +87,19 @@ pure subroutine get_lattice_points_rep_3d(lat, rep, origin, trans, error)
       end if
    end do
 
-   ! Bound each repetition count and accumulated product by max_cutoff_trans in 64-bit
-   ! integer arithmetic so intermediate products and final 32-bit conversion cannot overflow.
-   ntot_i8 = 1_i8
+   ! Use 64-bit arithmetic for the translation-count product.
+   ntrans = 1_i8
    do i = 1, 3
-      if (int(rep(i), i8) > max_cutoff_trans) then
-         call fatal_error(error, &
-            & "Lattice translation count exceeds maximum resource limit")
-         return
-      end if
-      ntot_i8 = ntot_i8 * (2_i8 * int(rep(i), i8) + 1_i8)
-      if (ntot_i8 - 1_i8 > max_cutoff_trans) then
+      ntrans = ntrans * (2_i8 * int(rep(i), i8) + 1_i8)
+      if (merge(ntrans, ntrans - 1_i8, origin) > max_cutoff_trans) then
          call fatal_error(error, &
             & "Lattice translation count exceeds maximum resource limit")
          return
       end if
    end do
+   if (.not. origin) ntrans = ntrans - 1_i8
 
-   if (.not. origin) ntot_i8 = ntot_i8 - 1_i8
-   if (ntot_i8 > max_cutoff_trans) then
-      call fatal_error(error, &
-         & "Lattice translation count exceeds maximum resource limit")
-      return
-   end if
-
-   ntr = int(ntot_i8)
-   allocate(trans(3, ntr))
+   allocate(trans(3, ntrans))
 
    itr = 0
    if (origin) then
@@ -269,7 +256,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
    type(error_type), allocatable, intent(out) :: error
 
    integer :: i, ndim, p_axes(3)
-   integer(i8) :: rep_i8(3), ntot_i8
+   integer(i8) :: ntrans
    real(wp) :: a1(3), a2(3), a3(3)
    real(wp) :: normx(3), normy(3), normz(3)
    real(wp) :: len1, len2, len3, area, vol
@@ -303,7 +290,6 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
       end if
    end do
 
-   rep_i8(:) = 0_i8
    select case (ndim)
    case (1)
 
@@ -321,7 +307,7 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
             & "Lattice translation count exceeds maximum resource limit")
          return
       end if
-      rep_i8(p_axes(1)) = ceiling(ratio1, i8)
+      rep(p_axes(1)) = ceiling(ratio1)
 
    case (2)
 
@@ -349,8 +335,8 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
             & "Lattice translation count exceeds maximum resource limit")
          return
       end if
-      rep_i8(p_axes(1)) = ceiling(ratio1, i8)
-      rep_i8(p_axes(2)) = ceiling(ratio2, i8)
+      rep(p_axes(1)) = ceiling(ratio1)
+      rep(p_axes(2)) = ceiling(ratio2)
 
    case (3)
 
@@ -388,9 +374,9 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
             & "Lattice translation count exceeds maximum resource limit")
          return
       end if
-      rep_i8(1) = ceiling(ratio1, i8)
-      rep_i8(2) = ceiling(ratio2, i8)
-      rep_i8(3) = ceiling(ratio3, i8)
+      rep(1) = ceiling(ratio1)
+      rep(2) = ceiling(ratio2)
+      rep(3) = ceiling(ratio3)
 
    case default
       call fatal_error(error, &
@@ -398,18 +384,16 @@ pure subroutine get_translations(periodic, lat, rthr, rep, error)
       return
    end select
 
-   ! Each rep_i8(i) is in [0, max_cutoff_trans]; check the product at each step
-   ntot_i8 = 1_i8
+   ! Use 64-bit arithmetic for the translation-count product.
+   ntrans = 1_i8
    do i = 1, 3
-      ntot_i8 = ntot_i8 * (2_i8 * rep_i8(i) + 1_i8)
-      if (ntot_i8 > max_cutoff_trans) then
+      ntrans = ntrans * (2_i8 * int(rep(i), i8) + 1_i8)
+      if (ntrans > max_cutoff_trans) then
          call fatal_error(error, &
             & "Lattice translation count exceeds maximum resource limit")
          return
       end if
    end do
-
-   rep(:) = int(rep_i8)
 
 end subroutine get_translations
 
