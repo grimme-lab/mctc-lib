@@ -221,6 +221,18 @@ subroutine test_lattice_points_overflow_and_errors(error)
    call check(error, size(trans, 2), 1)
    if (allocated(error)) return
 
+   ! Negative and NaN cutoffs fail independently of the periodicity
+   call get_lattice_points([.false., .false., .false.], lat, -1.0_wp, trans, call_err)
+   call check(error, allocated(call_err) .and. .not. allocated(trans), &
+      & "Negative cutoff accepted for a nonperiodic structure")
+   if (allocated(error)) return
+
+   call get_lattice_points([.false.], lat, ieee_value(0.0_wp, ieee_quiet_nan), trans, &
+      & call_err)
+   call check(error, allocated(call_err) .and. .not. allocated(trans), &
+      & "NaN cutoff accepted for a nonperiodic structure")
+   if (allocated(error)) return
+
    ! Large valid 1D repetition count (rep = [20000, 0, 0] -> 40001 points)
    ! with zero inactive lattice columns
    lat = 0.0_wp

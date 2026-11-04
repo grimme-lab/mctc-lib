@@ -219,13 +219,13 @@ pure subroutine get_lattice_points_cutoff(periodic, lat, rthr, trans, error)
    integer :: k
    real(wp) :: lattice(3, 3), ginv(3, 3), extent(3)
 
-   if (.not. any(periodic)) then
-      allocate(trans(3, 1), source=0.0_wp)
+   if (.not. (rthr >= 0.0_wp)) then
+      call fatal_error(error, "Negative cutoff for lattice points")
       return
    end if
 
-   if (.not. (rthr >= 0.0_wp)) then
-      call fatal_error(error, "Negative cutoff for lattice points")
+   if (.not. any(periodic)) then
+      allocate(trans(3, 1), source=0.0_wp)
       return
    end if
 
