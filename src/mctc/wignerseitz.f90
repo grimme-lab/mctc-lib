@@ -295,17 +295,14 @@ pure subroutine find_wsc_pairs(trans, rij, nimg, list, min_r2)
    real(wp), intent(out) :: min_r2
 
    integer :: itr, pos, nkept
-   real(wp) :: dx, dy, dz, r2
+   real(wp) :: r2
 
    nimg = 0
    min_r2 = huge(1.0_wp)
 
    ! First pass, distance to the nearest image other than the atom itself
    do itr = 1, size(trans, 2)
-      dx = rij(1) - trans(1, itr)
-      dy = rij(2) - trans(2, itr)
-      dz = rij(3) - trans(3, itr)
-      r2 = dx*dx + dy*dy + dz*dz
+      r2 = sum((rij - trans(:, itr))**2)
       if (r2 < thr) cycle
       if (r2 < min_r2) min_r2 = r2
    end do
@@ -313,19 +310,13 @@ pure subroutine find_wsc_pairs(trans, rij, nimg, list, min_r2)
    ! Second pass, collect all images within the interval, sorted by insertion
    nkept = 0
    do itr = 1, size(trans, 2)
-      dx = rij(1) - trans(1, itr)
-      dy = rij(2) - trans(2, itr)
-      dz = rij(3) - trans(3, itr)
-      r2 = dx*dx + dy*dy + dz*dz
+      r2 = sum((rij - trans(:, itr))**2)
       if (r2 < thr .or. r2 - min_r2 > tol) cycle
       nimg = nimg + 1
 
       pos = nkept + 1
       do while (pos > 1)
-         dx = rij(1) - trans(1, list(pos - 1))
-         dy = rij(2) - trans(2, list(pos - 1))
-         dz = rij(3) - trans(3, list(pos - 1))
-         if (dx*dx + dy*dy + dz*dz <= r2) exit
+         if (sum((rij - trans(:, list(pos - 1)))**2) <= r2) exit
          if (pos <= size(list)) list(pos) = list(pos - 1)
          pos = pos - 1
       end do
