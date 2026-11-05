@@ -918,45 +918,25 @@ subroutine compute_grid(mol, cutoff, grid, det, lat_inv, cell_w, origin)
    !> Origin of the grid, fractional coordinates are taken relative to it
    real(wp), intent(out), optional :: origin(3)
 
-   real(wp) :: H(3), cross_ij(3), lattice(3, 3)
-   real(wp) :: max_xyz(3), min_xyz(3), shift(3)
-   integer  :: i, ndim, p_axes(3)
+   real(wp) :: height(3), normal(3), grid_basis(3, 3)
+   real(wp) :: min_xyz(3), max_xyz(3), grid_origin(3)
+   integer :: i, ndim, p_axes(3)
 
+   call get_periodic_axes(mol%periodic, ndim, p_axes)
+
+   grid%pbc(:) = .false.
+   grid%pbc(p_axes(:ndim)) = .true.
+
+   grid_origin(:) = 0.0_wp
    if (present(lat_inv)) lat_inv = 0.0_wp
-   shift(:) = 0.0_wp
 
-   if (any(mol%periodic)) then
-      call get_periodic_axes(mol%periodic, ndim, p_axes)
-      grid%pbc(p_axes(:ndim)) = .true.
-
-      ! Inverse Lattice Matrix, nonperiodic directions span the structure
-      lattice = mol%lattice
-      if (.not. all(grid%pbc)) call complete_lattice(mol, grid%pbc, lattice, shift)
-      det = matdet_3x3(lattice)
-
-      if (present(lat_inv)) lat_inv = matinv_3x3(lattice)
-
-      ! Perpendicular height H1 (normal to a2 x a3)
-      cross_ij(:) = crossprod(lattice(:,2), lattice(:,3))
-      H(1) = abs(det) / sqrt(sum(cross_ij**2))
-
-      ! Perpendicular height H2 (normal to a3 x a1)
-      cross_ij(:) = crossprod(lattice(:,3), lattice(:,1))
-      H(2) = abs(det) / sqrt(sum(cross_ij**2))
-
-      ! Perpendicular height H3 (normal to a1 x a2)
-      cross_ij(:) = crossprod(lattice(:,1), lattice(:,2))
-      H(3) = abs(det) / sqrt(sum(cross_ij**2))
-
-      ! Number of cells: must be at least 1, and linked cell height >= cutoff
-      do i = 1, 3
-         grid%n_xyz(i) = max(1, floor(H(i) / (cutoff + tiny(1.0_wp))))
-      end do
-
-      if (present(cell_w)) cell_w = H / real(grid%n_xyz, wp)
-   else
+   select case (ndim)
+   case (0)
+      ! Molecule: construct a Cartesian grid enclosing all atoms
       min_xyz = minval(mol%xyz, dim=2) - buffer
       max_xyz = maxval(mol%xyz, dim=2) + buffer
+
+      grid_origin = min_xyz
 
       ! Number of cells: must be at least 1, and cell width >= cutoff
       grid%n_xyz = max(1, floor((max_xyz - min_xyz) / (cutoff + tiny(1.0_wp))))
@@ -965,69 +945,126 @@ subroutine compute_grid(mol, cutoff, grid, det, lat_inv, cell_w, origin)
          cell_w = (max_xyz - min_xyz) / (real(grid%n_xyz, wp) + tiny(1.0_wp)) &
             & + tiny(1.0_wp)
       end if
+
       det = product(max_xyz - min_xyz)
-      shift(:) = min_xyz
+
+   case (1, 2)
+      ! Wire or slab: complete the missing grid basis vectors
+      grid_basis = mol%lattice
+      call complete_grid_basis(mol, ndim, p_axes, grid_basis, grid_origin)
+
+   case (3)
+      ! Fully periodic: use the physical lattice as the grid basis
+      grid_basis = mol%lattice
+
+   case default
+      return
+
+   end select
+
+   if (ndim > 0) then
+      ! Inverse Lattice Matrix, nonperiodic directions span the structure
+      det = matdet_3x3(grid_basis)
+
+      if (present(lat_inv)) lat_inv = matinv_3x3(grid_basis)
+
+      ! Perpendicular height H1 (normal to a2 x a3)
+      normal = crossprod(grid_basis(:, 2), grid_basis(:, 3))
+      height(1) = abs(det) / norm2(normal)
+
+      ! Perpendicular height H2 (normal to a3 x a1)
+      normal = crossprod(grid_basis(:, 3), grid_basis(:, 1))
+      height(2) = abs(det) / norm2(normal)
+
+      ! Perpendicular height H3 (normal to a1 x a2)
+      normal = crossprod(grid_basis(:, 1), grid_basis(:, 2))
+      height(3) = abs(det) / norm2(normal)
+
+      ! Number of cells: must be at least 1, and linked cell height >= cutoff
+      do i = 1, 3
+         grid%n_xyz(i) = max(1, floor(height(i) / (cutoff + tiny(1.0_wp))))
+      end do
+
+      if (present(cell_w)) cell_w = height / real(grid%n_xyz, wp)
    end if
 
-   grid%ncell = grid%n_xyz(1)*grid%n_xyz(2)*grid%n_xyz(3)
-   grid%periodic = any(mol%periodic)
-   if (present(origin)) origin = shift
+   grid%ncell = product(grid%n_xyz)
+   grid%periodic = ndim > 0
+
+   if (present(origin)) origin = grid_origin
 
 end subroutine compute_grid
 
 
-!> Replace the lattice vectors of nonperiodic directions by orthogonal vectors
-!> spanning the extent of the structure perpendicular to the periodic ones
-subroutine complete_lattice(mol, pbc, lattice, origin)
+!> Complete the grid basis for a wire or slab.
+!>
+!> Construct orthogonal vectors in the nonperiodic directions that span
+!> the atomic coordinates. These vectors are used only for spatial binning
+!> and do not introduce additional periodic boundary conditions.
+subroutine complete_grid_basis(mol, ndim, p_axes, grid_basis, origin)
 
-   !> Stucture type
+   !> Structure type
    type(structure_type), intent(in) :: mol
 
-   !> Periodic boundaries flag of each direction
-   logical, intent(in) :: pbc(3)
+   !> Number of periodic directions (1 or 2)
+   integer, intent(in) :: ndim
 
-   !> Lattice vectors, completed in the nonperiodic directions
-   real(wp), intent(inout) :: lattice(3, 3)
+   !> Indices of the periodic lattice vectors
+   integer, intent(in) :: p_axes(3)
+
+   !> Grid basis, completed in the nonperiodic directions
+   real(wp), intent(inout) :: grid_basis(3, 3)
 
    !> Origin of the grid along the nonperiodic directions
    real(wp), intent(out) :: origin(3)
 
-   integer :: i, k, np, iper(3)
-   real(wp) :: dir(3, 2), axis(3), unit(3), lower, upper
+   integer :: i, k
+   real(wp) :: dir(3, 2), axis(3), unit(3)
+   real(wp) :: lower, upper
 
-   np = 0
-   do i = 1, 3
-      if (pbc(i)) then
-         np = np + 1
-         iper(np) = i
-      end if
-   end do
+   select case (ndim)
+   case (1)
+      ! Wire: construct two directions perpendicular to the periodic axis
+      axis = grid_basis(:, p_axes(1)) / norm2(grid_basis(:, p_axes(1)))
 
-   ! Unit directions perpendicular to the periodic lattice vectors
-   if (np == 2) then
-      dir(:, 1) = crossprod(lattice(:, iper(1)), lattice(:, iper(2)))
-      dir(:, 1) = dir(:, 1) / norm2(dir(:, 1))
-   else
-      axis(:) = lattice(:, iper(1)) / norm2(lattice(:, iper(1)))
+      ! Choose a Cartesian axis that is not parallel to the wire
       unit(:) = 0.0_wp
       unit(minloc(abs(axis), dim=1)) = 1.0_wp
+
       dir(:, 1) = crossprod(axis, unit)
       dir(:, 1) = dir(:, 1) / norm2(dir(:, 1))
-      dir(:, 2) = crossprod(axis, dir(:, 1))
-   end if
 
+      dir(:, 2) = crossprod(axis, dir(:, 1))
+
+   case (2)
+      ! Slab: construct the normal to the periodic plane
+      dir(:, 1) = crossprod(grid_basis(:, p_axes(1)), grid_basis(:, p_axes(2)))
+      dir(:, 1) = dir(:, 1) / norm2(dir(:, 1))
+
+   case default
+      return
+
+   end select
+
+   ! Replace the nonperiodic basis vectors with the atomic extent
    origin(:) = 0.0_wp
    k = 0
+
    do i = 1, 3
-      if (pbc(i)) cycle
+      if (any(p_axes(:ndim) == i)) cycle
+
       k = k + 1
+
+      ! Determine the extent of the atoms along this direction
       lower = minval(matmul(dir(:, k), mol%xyz)) - buffer
       upper = maxval(matmul(dir(:, k), mol%xyz)) + buffer
-      lattice(:, i) = (upper - lower) * dir(:, k)
-      origin(:) = origin + lower * dir(:, k)
+
+      ! Construct the artificial grid vector and shift the origin
+      grid_basis(:, i) = (upper - lower) * dir(:, k)
+      origin = origin + lower * dir(:, k)
    end do
 
-end subroutine complete_lattice
+end subroutine complete_grid_basis
 
 !> Build a linked cell list. Returns the chain-ordered lists 'head' and 'nxt'.
 subroutine get_linked_cell(mol, n_xyz, head, nxt, lat_inv, cell_w)
