@@ -396,8 +396,8 @@ contains
                   dcndL_local(:, :, jat) = dcndL_local(:, :, jat) &
                      & + sigma * self%directed_factor
 
-                  ! Calculation of diagonal elements of `dcndr` is moved 
-                  ! outside the triangular loop, because they lead to race 
+                  ! Calculation of diagonal elements of `dcndr` is moved
+                  ! outside the triangular loop, because they lead to race
                   ! conditions. Off-diagonal pairs {iat, jat} are only
                   ! visited once and no local accumulation is needed.
                   dcndr(:, iat, jat) = dcndr(:, iat, jat) &
@@ -409,9 +409,9 @@ contains
          end do
       end do
       !$omp end do
-      
+
       ! Because of translational invariance, each column of `dcndr` must
-      ! sum to zero. Therefore, we can reconstruct the diagonal elements 
+      ! sum to zero. Therefore, we can reconstruct the diagonal elements
       ! as the negative sum of the off-diagonal elements.
       !$omp do schedule(static)
       do iat = 1, mol%nat
