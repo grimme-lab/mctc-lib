@@ -13,10 +13,10 @@
 ! limitations under the License.
 
 module test_cutoff
-   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
+   use mctc_cutoff, only : get_lattice_points, get_periodic_axes, wrap_to_central_cell
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
-   & test_failed
+      & check, test_failed
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
    implicit none
@@ -24,37 +24,42 @@ module test_cutoff
 
    public :: collect_cutoff
 
-   real(wp), parameter :: thr = 100*epsilon(1.0_wp)
+   real(wp), parameter :: thr = 100 * epsilon(1.0_wp)
    real(wp), parameter :: thr2 = sqrt(epsilon(1.0_wp))
+
 
 contains
 
 
-   !> Collect all exported unit tests
-   subroutine collect_cutoff(testsuite)
+!> Collect all exported unit tests
+subroutine collect_cutoff(testsuite)
 
-      !> Collection of tests
-      type(unittest_type), allocatable, intent(out) :: testsuite(:)
+   !> Collection of tests
+   type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
-      testsuite = [ &
+   testsuite = [ &
       & new_unittest("lattice-points-cutoff", test_lattice_points_cutoff), &
+      & new_unittest("lattice-points-errors", test_lattice_points_errors), &
+      & new_unittest("lattice-points-partial-pbc", test_lattice_points_partial_pbc), &
       & new_unittest("lattice-points-rep", test_lattice_points_rep), &
-      & new_unittest("wrap", test_wrap) &
+      & new_unittest("wrap", test_wrap), &
+      & new_unittest("wrap-partial-pbc", test_wrap_partial_pbc), &
+      & new_unittest("periodic-axes", test_periodic_axes) &
       & ]
 
-   end subroutine collect_cutoff
+end subroutine collect_cutoff
 
 
-   subroutine test_lattice_points_cutoff(error)
+subroutine test_lattice_points_cutoff(error)
 
-      !> Error handling
-      type(error_type), allocatable, intent(out) :: error
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
-      type(structure_type) :: mol
-      real(wp), allocatable :: lattr(:, :)
+   type(structure_type) :: mol
+   real(wp), allocatable :: lattr(:, :)
 
-      real(wp), parameter :: cutoff = 15.0_wp
-      real(wp), parameter :: ref(3, 125) = reshape([&
+   real(wp), parameter :: cutoff = 15.0_wp
+   real(wp), parameter :: ref(3, 125) = reshape([&
       &  0.00000000000E+0_wp,  0.00000000000E+0_wp,  0.00000000000E+0_wp, &
       &  0.00000000000E+0_wp,  0.00000000000E+0_wp,  9.47387737000E+0_wp, &
       &  0.00000000000E+0_wp,  0.00000000000E+0_wp, -9.47387737000E+0_wp, &
@@ -182,27 +187,121 @@ contains
       & -1.89477547400E+1_wp, -1.89477547400E+1_wp, -1.89477547400E+1_wp],&
       &  shape(ref))
 
-      call get_structure(mol, "x04")
+   call get_structure(mol, "x04")
 
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr, error)
+   if (allocated(error)) return
 
-      if (any(abs(lattr - ref) > thr)) then
-         call test_failed(error, "Structures do not match")
-         print"(3es21.14)", lattr
-      end if
+   if (any(abs(lattr - ref) > thr)) then
+      call test_failed(error, "Structures do not match")
+      print "(3es21.14)", lattr
+   end if
 
-   end subroutine test_lattice_points_cutoff
+end subroutine test_lattice_points_cutoff
 
-   subroutine test_lattice_points_rep(error)
 
-      !> Error handling
-      type(error_type), allocatable, intent(out) :: error
+!> Invalid cutoffs and repetitions, and a degenerate periodic basis
+subroutine test_lattice_points_errors(error)
 
-      type(structure_type) :: mol
-      real(wp), allocatable :: lattr(:, :)
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
-      integer, parameter :: rep(3) = [2, 1, 1]
-      real(wp), parameter :: ref(3, 44) = reshape([&
+   type(error_type), allocatable :: call_err
+   real(wp) :: lat(3, 3)
+   real(wp), allocatable :: trans(:, :)
+
+   lat = reshape([ &
+      & 5.0_wp, 0.0_wp, 0.0_wp, &
+      & 0.0_wp, 5.0_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 5.0_wp], [3, 3])
+
+   ! Negative cutoffs fail independently of the periodicity
+   call get_lattice_points([.false., .false., .false.], lat, -1.0_wp, trans, call_err)
+   call check(error, allocated(call_err), "Negative cutoff accepted")
+   if (allocated(error)) return
+
+   ! (2*650 + 1)^3 lattice points exceed the integer range
+   call get_lattice_points(lat, [650, 650, 650], .true., trans, call_err)
+   call check(error, allocated(call_err), "Too many lattice points accepted")
+   if (allocated(error)) return
+
+   ! Collinear periodic lattice vectors
+   lat(:, 2) = 2.0_wp * lat(:, 1)
+   call get_lattice_points([.true., .true., .false.], lat, 10.0_wp, trans, call_err)
+   call check(error, allocated(call_err), "Degenerate lattice accepted")
+
+end subroutine test_lattice_points_errors
+
+
+!> Lattice points of a wire and a slab only use the periodic lattice vectors
+subroutine test_lattice_points_partial_pbc(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: a1(3) = [5.0_wp, 0.0_wp, 0.0_wp]
+   real(wp), parameter :: a2(3) = [4.0_wp, 3.0_wp, 0.0_wp]
+   real(wp), parameter :: cutoff = 12.0_wp
+   real(wp), allocatable :: trans1(:, :), trans2(:, :)
+   real(wp) :: lat(3, 3)
+
+   ! Wire along the second lattice vector
+   lat = 0.0_wp
+   lat(:, 2) = a2
+   call get_lattice_points([.false., .true., .false.], lat, cutoff, trans1, error)
+   if (allocated(error)) return
+
+   call check(error, has_vector(trans1, 2.0_wp * a2), "Lattice point missing")
+   if (allocated(error)) return
+
+   lat(:, 1) = [100.0_wp, -50.0_wp, 250.0_wp]
+   lat(:, 3) = [0.0_wp, 0.0_wp, 1.0_wp]
+   call get_lattice_points([.false., .true., .false.], lat, cutoff, trans2, error)
+   if (allocated(error)) return
+
+   call check(error, same_points(trans1, trans2), "Nonperiodic lattice vectors used")
+   if (allocated(error)) return
+
+   ! Slab spanned by the first and third lattice vector
+   lat = 0.0_wp
+   lat(:, 1) = a1
+   lat(:, 3) = a2
+   call get_lattice_points([.true., .false., .true.], lat, cutoff, trans1, error)
+   if (allocated(error)) return
+
+   call check(error, has_vector(trans1, a1 - 2.0_wp * a2), "Lattice point missing")
+   if (allocated(error)) return
+
+   lat(:, 2) = [42.0_wp, -99.0_wp, 500.0_wp]
+   call get_lattice_points([.true., .false., .true.], lat, cutoff, trans2, error)
+   if (allocated(error)) return
+
+   call check(error, same_points(trans1, trans2), "Nonperiodic lattice vector used")
+   if (allocated(error)) return
+
+   ! A one-element mask applies to all three lattice vectors
+   lat(:, 2) = [1.0_wp, 1.0_wp, 6.0_wp]
+   call get_lattice_points([.true.], lat, cutoff, trans1, error)
+   if (allocated(error)) return
+
+   call get_lattice_points([.true., .true., .true.], lat, cutoff, trans2, error)
+   if (allocated(error)) return
+
+   call check(error, same_points(trans1, trans2), "One-element mask not applied")
+
+end subroutine test_lattice_points_partial_pbc
+
+
+subroutine test_lattice_points_rep(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   real(wp), allocatable :: lattr(:, :)
+
+   integer, parameter :: rep(3) = [2, 1, 1]
+   real(wp), parameter :: ref(3, 44) = reshape([&
       &  0.00000000000E+0_wp,  0.00000000000E+0_wp,  9.47387737000E+0_wp, &
       &  0.00000000000E+0_wp,  0.00000000000E+0_wp, -9.47387737000E+0_wp, &
       &  0.00000000000E+0_wp,  9.47387737000E+0_wp,  0.00000000000E+0_wp, &
@@ -249,27 +348,35 @@ contains
       & -1.89477547400E+1_wp, -9.47387737000E+0_wp, -9.47387737000E+0_wp],&
       &  shape(ref))
 
-      call get_structure(mol, "x04")
+   call get_structure(mol, "x04")
 
-      call get_lattice_points(mol%lattice, rep, .false., lattr)
+   call get_lattice_points(mol%lattice, rep, .false., lattr, error)
+   if (allocated(error)) return
 
-      if (any(abs(lattr - ref) > thr)) then
-         call test_failed(error, "Structures do not match")
-         print"(3es21.14)", lattr
-      end if
+   if (any(abs(lattr - ref) > thr)) then
+      call test_failed(error, "Structures do not match")
+      print "(3es21.14)", lattr
+   end if
 
-   end subroutine test_lattice_points_rep
+end subroutine test_lattice_points_rep
 
 
-   subroutine test_wrap(error)
+subroutine test_wrap(error)
 
-      !> Error handling
-      type(error_type), allocatable, intent(out) :: error
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
 
-      type(structure_type) :: mol
-      real(wp), allocatable :: xyz_shift(:,:)
+   type(structure_type) :: mol
+   real(wp), allocatable :: xyz_shift(:, :)
+   integer :: iat
 
-      real(wp), parameter :: ref(3, 32) = reshape([&
+   integer, parameter :: shifts(3, 4) = reshape([ &
+      & -1,  2, -1, &
+      &  2, -1,  3, &
+      & -2, -3,  1, &
+      &  1,  1, -2], &
+      & [3, 4])
+   real(wp), parameter :: ref(3, 32) = reshape([&
       &  8.66499304004865_wp,  9.33379706146984_wp,  7.91683397818847_wp, &
       & 11.12335640640559_wp,  2.15906103856442_wp, 12.28606540623589_wp, &
       &  2.69933763795316_wp,  8.69604933222823_wp,  5.94619038919326_wp, &
@@ -304,17 +411,118 @@ contains
       &  3.02585151643235_wp, 10.74223721977969_wp,  1.45047192019470_wp],&
       &  shape(ref))
 
-      call get_structure(mol, "x01")
+   call get_structure(mol, "x01")
 
-      xyz_shift = mol%xyz - mol%lattice(1, 1)
+   allocate(xyz_shift(3, mol%nat))
+   do iat = 1, mol%nat
+      xyz_shift(:, iat) = mol%xyz(:, iat) &
+         & + matmul(mol%lattice, real(shifts(:, mod(iat - 1, 4) + 1), wp))
+   end do
 
-      call wrap_to_central_cell(xyz_shift, mol%lattice, mol%periodic)
+   call wrap_to_central_cell(xyz_shift, mol%lattice, mol%periodic)
 
-      if (any(abs(mol%xyz - ref) > thr)) then
-         call test_failed(error, "Structures do not match")
-         print"(3es21.14)", mol%xyz
-      end if
+   if (any(abs(xyz_shift - ref) > thr)) then
+      call test_failed(error, "Structures do not match")
+      print "(3es21.14)", xyz_shift
+   end if
 
-   end subroutine test_wrap
+end subroutine test_wrap
+
+
+!> Wrapping into a skewed slab only shifts by the periodic lattice vectors
+subroutine test_wrap_partial_pbc(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: a1(3) = [4.0_wp, 3.0_wp, 0.0_wp]
+   real(wp), parameter :: a2(3) = [-3.0_wp, 4.0_wp, 5.0_wp]
+   real(wp), parameter :: normal(3) = [3.0_wp, -4.0_wp, 5.0_wp]
+   real(wp), parameter :: xyz_ref(3, 3) = reshape([ &
+      & 0.20_wp * a1 + 0.35_wp * a2 + 2.5_wp * normal, &
+      & 0.75_wp * a1 + 0.60_wp * a2 - 4.1_wp * normal, &
+      & 0.10_wp * a1 + 0.90_wp * a2], [3, 3])
+   logical, parameter :: periodic(3) = [.true., .false., .true.]
+   real(wp) :: lat(3, 3), xyz(3, 3)
+
+   lat = 0.0_wp
+   lat(:, 1) = a1
+   lat(:, 2) = [99.0_wp, -77.0_wp, 123.0_wp]
+   lat(:, 3) = a2
+   xyz(:, 1) = xyz_ref(:, 1) + 3.0_wp * a1 - 2.0_wp * a2
+   xyz(:, 2) = xyz_ref(:, 2) - 4.0_wp * a1 + 5.0_wp * a2
+   xyz(:, 3) = xyz_ref(:, 3) + 1.0_wp * a1 + 1.0_wp * a2
+   call wrap_to_central_cell(xyz, lat, periodic)
+
+   if (maxval(abs(xyz - xyz_ref)) > thr) then
+      call test_failed(error, "Slab coordinates not wrapped into the central cell")
+   end if
+
+end subroutine test_wrap_partial_pbc
+
+
+!> Periodic directions from full and one-element masks
+subroutine test_periodic_axes(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer :: ndim, p_axes(3)
+
+   call get_periodic_axes([.false., .true., .true.], ndim, p_axes)
+   call check(error, ndim == 2 .and. all(p_axes == [2, 3, 0]))
+   if (allocated(error)) return
+
+   call get_periodic_axes([.false., .false., .false.], ndim, p_axes)
+   call check(error, ndim == 0 .and. all(p_axes == 0))
+   if (allocated(error)) return
+
+   call get_periodic_axes([.true.], ndim, p_axes)
+   call check(error, ndim == 3 .and. all(p_axes == [1, 2, 3]))
+   if (allocated(error)) return
+
+   call get_periodic_axes([.false.], ndim, p_axes)
+   call check(error, ndim == 0)
+
+end subroutine test_periodic_axes
+
+
+!> Check whether a vector is among the lattice points
+pure function has_vector(trans, vec) result(found)
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Vector to look for
+   real(wp), intent(in) :: vec(3)
+
+   logical :: found
+
+   integer :: itr
+
+   found = .false.
+   do itr = 1, size(trans, 2)
+      found = found .or. all(abs(trans(:, itr) - vec) < thr)
+   end do
+
+end function has_vector
+
+
+!> Check whether two sets of lattice points are identical
+pure function same_points(trans1, trans2) result(same)
+
+   !> First set of lattice points
+   real(wp), intent(in) :: trans1(:, :)
+
+   !> Second set of lattice points
+   real(wp), intent(in) :: trans2(:, :)
+
+   logical :: same
+
+   same = size(trans1, 2) == size(trans2, 2)
+   if (same) same = all(abs(trans1 - trans2) < thr)
+
+end function same_points
+
 
 end module test_cutoff

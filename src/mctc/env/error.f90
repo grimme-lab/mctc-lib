@@ -52,7 +52,7 @@ contains
 
 
 !> A fatal error is encountered
-subroutine fatal_error(error, message, stat)
+pure subroutine fatal_error(error, message, stat)
 
    !> Instance of the error
    type(error_type), allocatable, intent(out) :: error

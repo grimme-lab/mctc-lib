@@ -150,7 +150,9 @@ contains
 
       allocate(cn(mol%nat))
 
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
+
       call ncoord%get_coordination_number(mol, lattr, cn)
 
       if (any(abs(cn - ref) > thr)) then
@@ -183,7 +185,8 @@ contains
       & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), &
       & numdr(3, mol%nat, mol%nat))
 
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
 
       do iat = 1, mol%nat
          do ic = 1, 3
@@ -231,7 +234,8 @@ contains
          dEdcn(iat) = 0.125_wp*real(iat, wp) - 0.375_wp
       end do
 
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
 
       ! The routine must add to, rather than overwrite, the caller's Hessian.
       hessian(:, :) = 0.125_wp
@@ -291,7 +295,9 @@ contains
       real(wp), allocatable :: cn(:), cnl(:), lattr(:, :)
 
       allocate(cn(mol%nat), cnl(mol%nat))
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
+
       call ncoord%get_coordination_number(mol, lattr, cn)
 
       call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.false.)
@@ -341,7 +347,9 @@ contains
          & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), &
          & dcndrl(3, mol%nat, mol%nat), dcndLl(3, 3, mol%nat))
 
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
+
       call ncoord%get_coordination_number(mol, lattr, cn, dcndr, dcndL)
 
       call new_csr_list(list, mol, error, cutoff=ncoord%cutoff, complete=.false.)
@@ -416,7 +424,9 @@ contains
          dEdcn(iat) = 0.125_wp*real(iat, wp) - 0.375_wp
       end do
 
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
+
       gradient(:, :) = 0.0_wp
       sigma(:, :) = 0.0_wp
       call ncoord%add_coordination_number_derivs(mol, lattr, dEdcn, gradient, sigma)
@@ -489,7 +499,9 @@ contains
          dEdcn(iat) = 0.125_wp*real(iat, wp) - 0.375_wp
       end do
 
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
+
       hessian(:, :) = 0.0_wp
       call ncoord%add_coordination_number_hessian(mol, lattr, dEdcn, hessian)
 
@@ -657,7 +669,8 @@ contains
       allocate(cn(mol%nat), cnr(mol%nat), cnl(mol%nat), &
       & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), xyz(3, mol%nat), &
       & numdL(3, 3, mol%nat))
-      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr)
+      call get_lattice_points(mol%periodic, mol%lattice, ncoord%cutoff, lattr, error)
+      if (allocated(error)) return
 
       eps(:, :) = unity
       xyz(:, :) = mol%xyz
@@ -718,7 +731,8 @@ contains
       call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, &
          & cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
-      call dexp_ncoord%get_cn(mol, cn)
+      call dexp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -751,7 +765,8 @@ contains
       ! Test also the external interface
       call new_ncoord(dexp_ncoord, mol, cn_count%dexp, error, cut=cut)
       if(allocated(error)) return
-      call dexp_ncoord%get_cn(mol, cn)
+      call dexp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1017,7 +1032,8 @@ contains
       call new_ncoord(exp_ncoord, mol, cn_count%exp, error, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
-      call exp_ncoord%get_cn(mol, cn)
+      call exp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1051,7 +1067,8 @@ contains
       ! Test also the external interface
       call new_ncoord(exp_ncoord, mol, cn_count%exp, error, cut=cut)
       if(allocated(error)) return
-      call exp_ncoord%get_cn(mol, cn)
+      call exp_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1318,7 +1335,8 @@ contains
       call new_ncoord(erf_ncoord, mol, cn_count%erf, error, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov)
       if(allocated(error)) return
-      call erf_ncoord%get_cn(mol, cn)
+      call erf_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1352,7 +1370,8 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_ncoord, mol, cn_count%erf, error, cut=cut)
       if(allocated(error)) return
-      call erf_ncoord%get_cn(mol, cn)
+      call erf_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1631,7 +1650,8 @@ contains
       call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, &
          & kcn=kcn, cutoff=cutoff, rcov=rcov, en=en)
       if(allocated(error)) return
-      call erf_en_ncoord%get_cn(mol, cn)
+      call erf_en_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1665,7 +1685,8 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_en_ncoord, mol, cn_count%erf_en, error, cut=cut)
       if(allocated(error)) return
-      call erf_en_ncoord%get_cn(mol, cn)
+      call erf_en_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1958,7 +1979,8 @@ contains
       call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
          & cutoff=cutoff, rcov=rcov, en=en)
       if(allocated(error)) return
-      call erf_dftd4_ncoord%get_cn(mol, cn)
+      call erf_dftd4_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -1992,7 +2014,8 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, cut=cut)
       if(allocated(error)) return
-      call erf_dftd4_ncoord%get_cn(mol, cn)
+      call erf_dftd4_ncoord%get_cn(mol, cn, error)
+      if(allocated(error)) return
 
       if (any(abs(cn - ref) > thr)) then
          call test_failed(error, "Coordination numbers do not match")
@@ -2053,8 +2076,9 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
          & cutoff=cutoff, rcov=rcov, en=en)
-      if(allocated(error)) return
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+      if (allocated(error)) return
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr, error)
+      if (allocated(error)) return
       call erf_dftd4_ncoord%add_coordination_number_derivs(mol, lattr, &
          & dEdcn, gradient, sigma)
 
@@ -2156,8 +2180,9 @@ contains
       ! Test also the external interface
       call new_ncoord(erf_dftd4_ncoord, mol, cn_count%dftd4, error, &
          & cutoff=cutoff, rcov=rcov, en=en)
-      if(allocated(error)) return
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
+      if (allocated(error)) return
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr, error)
+      if (allocated(error)) return
       call erf_dftd4_ncoord%add_coordination_number_derivs(mol, lattr, &
          & dEdcn, gradient, sigma)
 

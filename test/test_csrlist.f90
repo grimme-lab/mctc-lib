@@ -16,7 +16,7 @@
 module test_csrlist
    use mctc_csrlist, only : csr_list, new_csr_list, compute_grid, &
       & get_linked_cell, grid_type
-   use mctc_cutoff, only : get_lattice_points
+   use mctc_cutoff, only : get_lattice_points, wrap_to_central_cell
    use mctc_env, only : wp, i8, timer_type, format_time
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & test_failed, check
@@ -32,6 +32,9 @@ module test_csrlist
 
    !> Tolerance for floating-point comparisons
    real(wp), parameter :: thr = 100*epsilon(1.0_wp)
+
+   !> Tolerance for comparing image vectors built from different translations
+   real(wp), parameter :: thr2 = sqrt(epsilon(1.0_wp))
 
 
 contains
@@ -73,7 +76,14 @@ subroutine collect_csrlist(testsuite)
       & new_unittest("csr-vs-verlet-x04-complete", test_list_x04_complete), &
       & new_unittest("csr-vs-verlet-x05-complete", test_list_x05_complete), &
       & new_unittest("nacl-wsc", test_nacl_wsc), &
-      & new_unittest("feo2-wsc", test_feo2_wsc) &
+      & new_unittest("feo2-wsc", test_feo2_wsc), &
+      & new_unittest("wsc-parity-nacl", test_wsc_parity_nacl), &
+      & new_unittest("wsc-parity-skewed", test_wsc_parity_skewed), &
+      & new_unittest("wsc-parity-dense-images", test_wsc_parity_dense_images), &
+      & new_unittest("wsc-parity-slab-2d", test_wsc_parity_slab), &
+      & new_unittest("wsc-parity-wire-1d", test_wsc_parity_wire), &
+      & new_unittest("csr-vs-verlet-slab-2d", test_list_slab), &
+      & new_unittest("csr-vs-verlet-wire-1d", test_list_wire) &
       & ]
 
 end subroutine collect_csrlist
@@ -251,6 +261,7 @@ subroutine test_distance(error, mol, cutoff, trans, cmp)
 
    allocate(list)
    call new_csr_list(list, mol, error, cutoff=cutoff, trans=trans, complete=cmp)
+   if (allocated(error)) return
 
    do iat = 1, mol%nat
       do kat = list%inl(iat) + 1, list%inl(iat+1) - 1
@@ -297,6 +308,7 @@ subroutine test_mol_list_gen(error, mol, cutoff, trans, cmp)
 
    allocate(list)
    call new_csr_list(list, mol, error, cutoff=cutoff, trans=trans, complete=cmp)
+   if (allocated(error)) return
 
    allocate(ref_ptr(mol%nat + 1))
    call gen_verlet(mol, trans, cutoff, ref_ptr, ref_list, ref_nltr, cmp)
@@ -355,6 +367,7 @@ subroutine test_pbc_list_gen(error, mol, cutoff, trans, cmp)
 
    allocate(list)
    call new_csr_list(list, mol, error, cutoff=cutoff, trans=trans, complete=cmp)
+   if (allocated(error)) return
 
    allocate(ref_ptr(mol%nat + 1))
    call gen_verlet(mol, trans, cutoff, ref_ptr, ref_list, ref_nltr, cmp)
@@ -419,6 +432,7 @@ subroutine test_wsc(error, mol, cutoff, cmp, ref_list, ref_nimg)
 
    allocate(list)
    call new_csr_list(list, mol, error, wsc, cutoff=cutoff, complete=cmp)
+   if (allocated(error)) return
 
    do iat = 1, mol%nat
       do kat = list%inl(iat), list%inl(iat+1) - 1
@@ -553,7 +567,8 @@ subroutine test_grid_nacl(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "nacl")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_grid_gen(error, mol, cutoff, ref_nxyz)
 
@@ -572,7 +587,8 @@ subroutine test_grid_feo2(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_grid_gen(error, mol, cutoff, ref_nxyz)
 
@@ -593,7 +609,8 @@ subroutine test_grid_x02_114(error)
 
    call get_structure(mol, "x02")
    call make_supercell(mol, supercell)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_grid_gen(error, mol, cutoff, ref_nxyz)
 
@@ -627,7 +644,8 @@ subroutine test_distance_feo2_cut_5(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_distance(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -716,7 +734,8 @@ subroutine test_list_nacl(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "nacl")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -732,7 +751,8 @@ subroutine test_list_feo2(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -748,7 +768,8 @@ subroutine test_list_x01(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x01")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -765,7 +786,8 @@ subroutine test_list_x02(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x02")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -784,7 +806,8 @@ subroutine test_list_x02_114(error)
 
    call get_structure(mol, "x02")
    call make_supercell(mol, supercell)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
 
@@ -926,7 +949,8 @@ subroutine test_list_nacl_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "nacl")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
@@ -942,7 +966,8 @@ subroutine test_list_feo2_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "feo2")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
@@ -958,7 +983,8 @@ subroutine test_list_x04_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x04")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
@@ -974,7 +1000,8 @@ subroutine test_list_x05_complete(error)
    real(wp), allocatable :: trans(:, :)
 
    call get_structure(mol, "x05")
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
 
    call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
 
@@ -1012,5 +1039,286 @@ subroutine test_feo2_wsc(error)
    call test_wsc(error, mol, cutoff, .false., ref_list, ref_nimg)
 
 end subroutine test_feo2_wsc
+
+
+!> Compare the CSR Wigner-Seitz images with the dense Wigner-Seitz cell
+subroutine test_wsc_parity_gen(error, mol, cutoff)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Cutoff radius
+   real(wp), intent(in) :: cutoff
+
+   type(csr_list) :: list
+   type(wignerseitz_cell) :: dense, wsc
+   integer :: iat, jat, img, jmg, nimg, nref
+   integer(i8) :: kat, itr
+   real(wp) :: rij(3), vec(3), ref(3), r2
+   logical :: found
+
+   call new_wignerseitz_cell(dense, mol, error)
+   if (allocated(error)) return
+
+   call new_csr_list(list, mol, error, wsc, cutoff=cutoff, complete=.true.)
+   if (allocated(error)) return
+
+   do iat = 1, mol%nat
+      ! Every pair whose nearest image lies within the cutoff must be listed
+      nref = 0
+      do jat = 1, mol%nat
+         if (jat == iat .or. dense%nimg(jat, iat) == 0) cycle
+         rij = mol%xyz(:, iat) - mol%xyz(:, jat)
+         r2 = sum((rij - dense%trans(:, dense%tridx(1, jat, iat)))**2)
+         if (r2 <= cutoff**2) nref = nref + 1
+      end do
+      call check(error, int(list%inl(iat + 1) - list%inl(iat)) - 1, nref)
+      if (allocated(error)) return
+
+      do kat = list%inl(iat), list%inl(iat + 1) - 1
+         jat = list%nlat(kat)
+         nimg = wsc%nimg_list(kat)
+         ! Diagonal entries carry no images if the self images lie beyond the cutoff
+         if (jat == iat .and. nimg == 0) cycle
+
+         call check(error, nimg, dense%nimg(jat, iat))
+         if (allocated(error)) return
+
+         ! Compare the physical image vectors, which are independent of the
+         ! translation ordering
+         rij = mol%xyz(:, iat) - mol%xyz(:, jat)
+         do img = 0, nimg - 1
+            itr = wsc%itr_list(kat) + img
+            vec = rij - wsc%trans(:, wsc%tridx_list(itr))
+            found = .false.
+            do jmg = 1, dense%nimg(jat, iat)
+               ref = rij - dense%trans(:, dense%tridx(jmg, jat, iat))
+               found = found .or. maxval(abs(vec - ref)) < thr2
+            end do
+            if (.not. found) then
+               call test_failed(error, "CSR Wigner-Seitz image not selected by dense cell")
+               return
+            end if
+         end do
+      end do
+   end do
+
+end subroutine test_wsc_parity_gen
+
+
+subroutine test_wsc_parity_nacl(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   call get_structure(mol, "nacl")
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_nacl
+
+
+subroutine test_wsc_parity_skewed(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   integer, parameter :: nat = 3
+   integer, parameter :: num(nat) = [6, 8, 1]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      &  0.0_wp, 0.0_wp, 0.0_wp, &
+      & 12.5_wp, 0.5_wp, 0.0_wp, &
+      & -7.3_wp, 0.9_wp, 11.2_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      &  5.0_wp, 0.0_wp, 0.0_wp, &
+      & 25.0_wp, 1.0_wp, 0.0_wp, &
+      &  0.0_wp, 0.0_wp, 5.0_wp], &
+      & [3, 3])
+
+   ! Strongly skewed cell, nearest images lie several translations away
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .true.])
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_skewed
+
+
+subroutine test_wsc_parity_dense_images(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   integer, parameter :: nat = 2
+   integer, parameter :: num(nat) = [6, 8]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 0.125_wp, 0.125_wp, 0.05_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 0.25_wp, 0.0_wp, 0.0_wp, &
+      & 0.0_wp, 0.25_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.25_wp], &
+      & [3, 3])
+
+   ! Small cubic cell, more than 27 images compete within the switching interval
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .true.])
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_dense_images
+
+
+!> Slab periodic in two directions with unwrapped atoms spread perpendicular
+!> to the periodic plane, the nonperiodic lattice vector is zero. Atoms 1 and 3
+!> are neighbors across a periodic boundary of the central cell.
+subroutine get_slab(mol)
+
+   !> Molecular structure data
+   type(structure_type), intent(out) :: mol
+
+   integer, parameter :: nat = 8
+   integer, parameter :: num(nat) = [6, 8, 1, 1, 6, 8, 1, 7]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      &  0.5_wp,  0.3_wp,  0.0_wp, &
+      &  3.1_wp,  1.8_wp,  2.5_wp, &
+      & 23.3_wp,  0.8_wp, -1.2_wp, &
+      & -5.6_wp,  7.7_wp,  6.8_wp, &
+      &  8.0_wp, -9.5_wp, 12.3_wp, &
+      &  2.2_wp, 20.1_wp, 18.9_wp, &
+      & 10.1_wp,  5.5_wp, 25.0_wp, &
+      & -1.3_wp, -2.6_wp, 29.4_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 12.4_wp, 0.0_wp, 0.0_wp, &
+      & 6.2_wp, 10.7387_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 0.0_wp], &
+      & [3, 3])
+
+   call new(mol, num, xyz, lattice=lattice, periodic=[.true., .true., .false.])
+
+end subroutine get_slab
+
+
+!> Wire periodic along the second lattice vector with unwrapped atoms, the
+!> nonperiodic lattice vectors are zero and arbitrary. Atoms 1 and 7 are
+!> neighbors across a periodic boundary of the central cell.
+subroutine get_wire(mol)
+
+   !> Molecular structure data
+   type(structure_type), intent(out) :: mol
+
+   integer, parameter :: nat = 8
+   integer, parameter :: num(nat) = [6, 8, 1, 1, 6, 8, 1, 7]
+   real(wp), parameter :: xyz(3, nat) = reshape([ &
+      &  0.0_wp,  0.0_wp,  0.0_wp, &
+      &  1.5_wp, -0.5_wp,  2.0_wp, &
+      &  7.2_wp,  9.1_wp, -1.5_wp, &
+      & -4.0_wp, -7.5_wp,  3.3_wp, &
+      &  2.5_wp,  1.0_wp, -6.0_wp, &
+      & 13.0_wp, 15.5_wp,  4.4_wp, &
+      & -7.0_wp, -8.5_wp,  0.8_wp, &
+      &  5.5_wp, -2.2_wp, -3.7_wp], &
+      & [3, nat])
+   real(wp), parameter :: lattice(3, 3) = reshape([ &
+      & 0.0_wp, 0.0_wp, 0.0_wp, &
+      & 6.0_wp, 8.0_wp, 0.0_wp, &
+      & 0.0_wp, 0.0_wp, 60.0_wp], &
+      & [3, 3])
+
+   call new(mol, num, xyz, lattice=lattice, periodic=[.false., .true., .false.])
+
+end subroutine get_wire
+
+
+subroutine test_wsc_parity_slab(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   ! Cutoffs giving three, two, and one linked cells along the periodic directions
+   call get_slab(mol)
+   call test_wsc_parity_gen(error, mol, 3.5_wp)
+   if (allocated(error)) return
+
+   call test_wsc_parity_gen(error, mol, 5.0_wp)
+   if (allocated(error)) return
+
+   call test_wsc_parity_gen(error, mol, 29.0_wp)
+
+end subroutine test_wsc_parity_slab
+
+
+subroutine test_wsc_parity_wire(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   call get_wire(mol)
+   call test_wsc_parity_gen(error, mol, 6.0_wp)
+
+end subroutine test_wsc_parity_wire
+
+
+subroutine test_list_slab(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   real(wp), parameter :: cutoff = 3.5_wp
+   real(wp), allocatable :: trans(:, :)
+
+   call get_slab(mol)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
+
+   call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
+   if (allocated(error)) return
+
+   ! Wrapped atoms and three cells along the periodic directions use the
+   ! direct translation lookup of the linked cells
+   call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
+   call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.true.)
+
+end subroutine test_list_slab
+
+
+subroutine test_list_wire(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   real(wp), parameter :: cutoff = 6.0_wp
+   real(wp), allocatable :: trans(:, :)
+
+   call get_wire(mol)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, trans, error)
+   if (allocated(error)) return
+
+   call test_pbc_list_gen(error, mol, cutoff, trans=trans, cmp=.false.)
+   if (allocated(error)) return
+
+   ! Wrapped atoms and three cells along the periodic direction use the
+   ! direct translation lookup of the linked cells
+   call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
+   call get_lattice_points(mol%periodic, mol%lattice, 3.3_wp, trans, error)
+   if (allocated(error)) return
+
+   call test_pbc_list_gen(error, mol, 3.3_wp, trans=trans, cmp=.true.)
+
+end subroutine test_list_wire
+
 
 end module test_csrlist
