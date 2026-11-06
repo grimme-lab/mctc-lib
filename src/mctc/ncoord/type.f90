@@ -354,21 +354,24 @@ contains
       real(wp), allocatable :: cn_local(:)
       real(wp), allocatable :: dcndL_local(:, :, :)
 
-      cn(:) = 0.0_wp
-      dcndL(:, :, :) = 0.0_wp
       cutoff2 = self%cutoff**2
 
       !$omp parallel default(none) &
       !$omp shared(self, mol, trans, cutoff2, cn, dcndr, dcndL) &
       !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, den, countf, countd) &
       !$omp private(sigma, cn_local, dcndL_local)
-      allocate(cn_local, source=cn)
-      allocate(dcndL_local, source=dcndL)
+
+      allocate(cn_local(mol%nat), source=0.0_wp)
+      allocate(dcndL_local(3, 3, mol%nat), source=0.0_wp)
+
       !$omp do schedule(static)
       do iat = 1, mol%nat
+         cn(iat) = 0.0_wp
+         dcndL(:, :, iat) = 0.0_wp
          dcndr(:, :, iat) = 0.0_wp
       end do
       !$omp end do
+
       !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
@@ -388,11 +391,15 @@ contains
 
                cn_local(iat) = cn_local(iat) + countf
                dcndL_local(:, :, iat) = dcndL_local(:, :, iat) + sigma
-               ! Write off-diagonal derivatives directly; each unordered pair is unique
                if (iat /= jat) then
                   cn_local(jat) = cn_local(jat) + countf * self%directed_factor
                   dcndL_local(:, :, jat) = dcndL_local(:, :, jat) &
                      & + sigma * self%directed_factor
+
+                  ! Calculation of diagonal elements of `dcndr` is moved 
+                  ! outside the triangular loop, because they lead to race 
+                  ! conditions. Off-diagonal pairs {iat, jat} are only
+                  ! visited once and no local accumulation is needed.
                   dcndr(:, iat, jat) = dcndr(:, iat, jat) &
                      & + countd * self%directed_factor
                   dcndr(:, jat, iat) = dcndr(:, jat, iat) - countd
@@ -402,12 +409,16 @@ contains
          end do
       end do
       !$omp end do
-      ! Reconstruct diagonal derivatives from translational invariance
+      
+      ! Because of translational invariance, each column of `dcndr` must
+      ! sum to zero. Therefore, we can reconstruct the diagonal elements 
+      ! as the negative sum of the off-diagonal elements.
       !$omp do schedule(static)
       do iat = 1, mol%nat
          dcndr(:, iat, iat) = -sum(dcndr(:, :, iat), dim=2)
       end do
       !$omp end do
+
       !$omp critical (ncoord_d_)
       cn(:) = cn(:) + cn_local(:)
       dcndL(:, :, :) = dcndL(:, :, :) + dcndL_local(:, :, :)
