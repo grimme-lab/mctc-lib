@@ -479,8 +479,8 @@ contains
       !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
-         dcndrlist(:, list%inl(iat):list%inl(iat + 1) - 1) = 0.0_wp
          do kat = list%inl(iat), list%inl(iat + 1) - 1
+            dcndrlist(:, kat) = 0.0_wp
             jat = list%nlat(kat)
             jzp = mol%id(jat)
             den = self%get_en_factor(izp, jzp)
