@@ -350,22 +350,25 @@ contains
       integer :: iat, jat, izp, jzp, itr
       real(wp) :: r2, r1, rij(3), countf, countd(3), sigma(3, 3), cutoff2, den
 
-      ! Thread-private arrays for reduction
+      ! Thread-private arrays for per-atom reductions
       real(wp), allocatable :: cn_local(:)
-      real(wp), allocatable :: dcndr_local(:, :, :), dcndL_local(:, :, :)
+      real(wp), allocatable :: dcndL_local(:, :, :)
 
       cn(:) = 0.0_wp
-      dcndr(:, :, :) = 0.0_wp
       dcndL(:, :, :) = 0.0_wp
       cutoff2 = self%cutoff**2
 
       !$omp parallel default(none) &
       !$omp shared(self, mol, trans, cutoff2, cn, dcndr, dcndL) &
-      !$omp private(jat, itr, izp, jzp, r2, rij, r1, den, countf, countd) &
-      !$omp private(sigma, cn_local, dcndr_local, dcndL_local)
+      !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, den, countf, countd) &
+      !$omp private(sigma, cn_local, dcndL_local)
       allocate(cn_local, source=cn)
-      allocate(dcndr_local, source=dcndr)
       allocate(dcndL_local, source=dcndL)
+      !$omp do schedule(static)
+      do iat = 1, mol%nat
+         dcndr(:, :, iat) = 0.0_wp
+      end do
+      !$omp end do
       !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
@@ -381,37 +384,35 @@ contains
 
                countf = den * self%ncoord_count(izp, jzp, r1)
                countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
-
-               cn_local(iat) = cn_local(iat) + countf
-               if (iat /= jat) then
-                  cn_local(jat) = cn_local(jat) + countf * self%directed_factor
-               end if
-
-               dcndr_local(:, iat, iat) = dcndr_local(:, iat, iat) + countd
-               dcndr_local(:, jat, jat) = dcndr_local(:, jat, jat) &
-                  & - countd * self%directed_factor
-               dcndr_local(:, iat, jat) = dcndr_local(:, iat, jat) &
-                  & + countd * self%directed_factor
-               dcndr_local(:, jat, iat) = dcndr_local(:, jat, iat) - countd
-
                sigma = outerprod(rij, countd)
 
+               cn_local(iat) = cn_local(iat) + countf
                dcndL_local(:, :, iat) = dcndL_local(:, :, iat) + sigma
+               ! Write off-diagonal derivatives directly; each unordered pair is unique
                if (iat /= jat) then
+                  cn_local(jat) = cn_local(jat) + countf * self%directed_factor
                   dcndL_local(:, :, jat) = dcndL_local(:, :, jat) &
                      & + sigma * self%directed_factor
+                  dcndr(:, iat, jat) = dcndr(:, iat, jat) &
+                     & + countd * self%directed_factor
+                  dcndr(:, jat, iat) = dcndr(:, jat, iat) - countd
                end if
 
             end do
          end do
       end do
       !$omp end do
+      ! Reconstruct diagonal derivatives from translational invariance
+      !$omp do schedule(static)
+      do iat = 1, mol%nat
+         dcndr(:, iat, iat) = -sum(dcndr(:, :, iat), dim=2)
+      end do
+      !$omp end do
       !$omp critical (ncoord_d_)
       cn(:) = cn(:) + cn_local(:)
-      dcndr(:, :, :) = dcndr(:, :, :) + dcndr_local(:, :, :)
       dcndL(:, :, :) = dcndL(:, :, :) + dcndL_local(:, :, :)
       !$omp end critical (ncoord_d_)
-      deallocate(cn_local, dcndr_local, dcndL_local)
+      deallocate(cn_local, dcndL_local)
       !$omp end parallel
 
    end subroutine ncoord_d
@@ -443,7 +444,6 @@ contains
       real(wp), allocatable :: dcndrdiag_local(:, :), dcndL_local(:, :, :)
 
       cn(:) = 0.0_wp
-      dcndrlist(:, :) = 0.0_wp
       dcndL(:, :, :) = 0.0_wp
       cutoff2 = self%cutoff**2
       half = .not. list%complete
@@ -457,7 +457,8 @@ contains
       end if
 
       !$omp parallel default(none) &
-      !$omp shared(self, mol, list, lattr, cutoff2, cn, dcndrlist, dcndL, trlist, half) &
+      !$omp shared(self, mol, list, lattr, cutoff2, cn, dcndrlist, dcndL) &
+      !$omp shared(trlist, half) &
       !$omp private(iat, jat, kat, itr, itrst, itrfin, izp, jzp, r2, rij, r1) &
       !$omp private(den, countf, countd, sigma) &
       !$omp private(cn_local, dcndrdiag_local, dcndL_local)
@@ -467,6 +468,7 @@ contains
       !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
+         dcndrlist(:, list%inl(iat):list%inl(iat + 1) - 1) = 0.0_wp
          do kat = list%inl(iat), list%inl(iat + 1) - 1
             jat = list%nlat(kat)
             jzp = mol%id(jat)
