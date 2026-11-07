@@ -51,6 +51,7 @@ subroutine get_structure(self, name)
    case("feo2"); call feo2(self)
    case("pyrazole"); call pyrazole(self)
    case ("ice-ii"); call ice_ii(self)
+   case ("chiral"); call chiral(self)
    case default
       continue
    end select
@@ -892,6 +893,28 @@ subroutine ice_ii(self)
       & shape(lattice))
    call new(self, sym, xyz, lattice=lattice)
 end subroutine ice_ii
+
+
+!> Chiral CHFClBr molecule in a left-handed lattice
+subroutine chiral(self)
+   type(structure_type), intent(out) :: self
+   integer, parameter :: nat = 5
+   character(len=*), parameter :: sym(nat) = [character(len=4) :: &
+      & "C", "H", "F", "Cl", "Br"]
+   real(wp), parameter :: xyz(3, nat) = reshape([&
+      &  5.75_wp,  6.00_wp, -6.00_wp, &
+      &  6.95_wp,  7.20_wp, -4.80_wp, &
+      &  4.55_wp,  4.80_wp, -4.80_wp, &
+      &  4.55_wp,  7.20_wp, -7.20_wp, &
+      &  6.95_wp,  4.80_wp, -7.20_wp],&
+      & shape(xyz))
+   real(wp), parameter :: lattice(3, 3) = reshape([&
+      & 10.00_wp,  0.00_wp,   0.00_wp, &
+      &  1.00_wp, 11.00_wp,   0.00_wp, &
+      &  0.50_wp,  1.00_wp, -12.00_wp],&
+      & shape(lattice))
+   call new(self, sym, xyz, lattice=lattice)
+end subroutine chiral
 
 
 end module testsuite_structure

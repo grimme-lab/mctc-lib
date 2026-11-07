@@ -17,6 +17,7 @@ module mctc_io_write
    use mctc_io_filetype, only : filetype, get_filetype
    use mctc_io_structure, only : structure_type, new_structure
    use mctc_io_write_aims, only : write_aims
+   use mctc_io_write_cif, only : write_cif
    use mctc_io_write_cjson, only : write_cjson
    use mctc_io_write_ctfile, only : write_molfile, write_sdf
    use mctc_io_write_gaussian, only : write_gaussian_external
@@ -147,6 +148,9 @@ subroutine write_structure_to_unit(self, unit, ftype, error)
 
    case(filetype%aims)
       call write_aims(self, unit)
+
+   case(filetype%cif)
+      call write_cif(self, unit, error)
 
    case(filetype%qchem)
       call write_qchem(self, unit)

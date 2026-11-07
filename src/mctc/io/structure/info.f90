@@ -85,6 +85,9 @@ module mctc_io_structure_info
       !> Unit of the atomic coordinates should be in Angstrom if possible
       logical :: angs_coord = .false.
 
+      !> Magnetic moments or magnetic symmetry present in input but not retained
+      logical :: magnetic = .false.
+
    end type structure_info
 
 
