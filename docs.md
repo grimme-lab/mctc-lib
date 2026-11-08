@@ -223,7 +223,8 @@ call new_ncoord(ncoord, mol, cn_count%exp, error)
 if (allocated(error)) stop error%message
 
 allocate(cn(mol%nat))
-call ncoord%get_cn(mol, cn)
+call ncoord%get_cn(mol, cn, error)
+if (allocated(error)) stop error%message
 ```
 
 
