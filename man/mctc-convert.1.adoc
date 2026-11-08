@@ -81,6 +81,10 @@ The following geometry formats are supported for both reading and writing:
 |qchem
 |Q-Chem molecule block
 |.qchem
+
+|cif, mcif
+|Crystallographic Information File; magnetic CIF is read without moments
+|.cif, .mcif
 |===
 
 The `.xyz` extension is used for both ordinary and Extended XYZ. When writing,

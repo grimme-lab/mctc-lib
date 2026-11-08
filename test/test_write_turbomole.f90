@@ -13,8 +13,10 @@
 ! limitations under the License.
 
 module test_write_turbomole
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_convert, only : autoaa
+   use mctc_io_math, only : matdet_3x3
    use mctc_io_read_turbomole, only : read_coord
    use mctc_io_structure, only : structure_type
    use mctc_io_write_turbomole, only : write_coord
@@ -38,7 +40,8 @@ subroutine collect_write_turbomole(testsuite)
       & new_unittest("valid1-coord", test_valid1_coord), &
       & new_unittest("valid2-coord", test_valid2_coord), &
       & new_unittest("valid1-coord-angs", test_valid1_coord_angs), &
-      & new_unittest("valid2-coord-angs", test_valid2_coord_angs) &
+      & new_unittest("valid2-coord-angs", test_valid2_coord_angs), &
+      & new_unittest("valid3-coord", test_valid3_coord) &
       & ]
 
 end subroutine collect_write_turbomole
@@ -163,5 +166,32 @@ subroutine test_valid2_coord_angs(error)
    if (allocated(error)) return
 
 end subroutine test_valid2_coord_angs
+
+subroutine test_valid3_coord(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+   real(wp) :: chirality
+
+   call get_structure(struc, "chiral")
+   chirality = matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3))
+
+   open(status="scratch", newunit=unit)
+   call write_coord(struc, unit)
+   rewind(unit)
+
+   call read_coord(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3)), &
+      & chirality, thr=1.0e-8_wp, message="Handedness of the structure is not preserved")
+   if (allocated(error)) return
+
+end subroutine test_valid3_coord
+
 
 end module test_write_turbomole
