@@ -20,7 +20,7 @@
 !>   **2020**, 22, 8499-8512. DOI: [10.1039/D0CP00502A](https://doi.org/10.1039/D0CP00502A)
 module mctc_wignerseitz
    use, intrinsic :: iso_fortran_env, only : error_unit
-   use mctc_cutoff, only : get_lattice_points, get_inverse_metric
+   use mctc_cutoff, only : get_inverse_metric, get_lattice_points, reduce_basis
    use mctc_env, only : wp, i8, error_type, fatal_error
    use mctc_io, only : structure_type
    use mctc_io_math, only : outerprod
@@ -235,38 +235,6 @@ subroutine get_wignerseitz_translations(mol, trans, error)
    call get_lattice_points(lat, int(bound), .true., trans, error)
 
 end subroutine get_wignerseitz_translations
-
-
-!> Pairwise size reduction of the lattice vectors, which gives a shorter and
-!> more orthogonal basis of the same lattice
-pure subroutine reduce_basis(lat)
-
-   !> Lattice vectors, zero for nonperiodic directions
-   real(wp), intent(inout) :: lat(3, 3)
-
-   integer :: i, j
-   real(wp) :: vec(3)
-   logical :: reduced
-
-   reduced = .false.
-   do while (.not. reduced)
-      reduced = .true.
-      do i = 1, 3
-         do j = 1, 3
-            ! Nonperiodic directions are exactly zero
-            if (i == j .or. .not. sum(lat(:, j)**2) > 0.0_wp) cycle
-            vec(:) = lat(:, i) - anint(dot_product(lat(:, i), lat(:, j)) &
-               & / dot_product(lat(:, j), lat(:, j))) * lat(:, j)
-            ! Only accept strictly shorter vectors, ties would cycle forever
-            if (sum(vec**2) < (1.0_wp - 1.0e-12_wp) * sum(lat(:, i)**2)) then
-               lat(:, i) = vec
-               reduced = .false.
-            end if
-         end do
-      end do
-   end do
-
-end subroutine reduce_basis
 
 
 !> Find the competing nearest images of an interatomic vector.

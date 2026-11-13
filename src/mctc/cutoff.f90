@@ -28,7 +28,7 @@ module mctc_cutoff
    private
 
    public :: get_lattice_points, get_periodic_axes, get_inverse_metric, &
-      & wrap_to_central_cell
+      & reduce_basis, wrap_to_central_cell
 
 
    interface get_lattice_points
@@ -138,6 +138,40 @@ pure subroutine get_inverse_metric(periodic, lattice, lat, ginv, error)
    end do
 
 end subroutine get_inverse_metric
+
+
+!> Pairwise size reduction of the lattice vectors, which gives a shorter and
+!> more orthogonal basis of the same lattice
+pure subroutine reduce_basis(lat)
+
+   !> Lattice vectors, zero for nonperiodic directions
+   real(wp), intent(inout) :: lat(3, 3)
+
+   integer :: i, j
+   real(wp) :: vec(3), norm2
+   logical :: reduced
+
+   reduced = .false.
+   do while (.not. reduced)
+      reduced = .true.
+      do i = 1, 3
+         do j = 1, 3
+            norm2 = dot_product(lat(:, j), lat(:, j))
+            ! Nonperiodic directions are exactly zero
+            if (i == j .or. .not. norm2 > 0.0_wp) cycle
+
+            vec(:) = lat(:, i) - anint(dot_product(lat(:, i), lat(:, j)) &
+               & / norm2) * lat(:, j)
+            ! Only accept strictly shorter vectors, ties would cycle forever
+            if (sum(vec**2) < (1.0_wp - 1.0e-12_wp) * sum(lat(:, i)**2)) then
+               lat(:, i) = vec
+               reduced = .false.
+            end if
+         end do
+      end do
+   end do
+
+end subroutine reduce_basis
 
 
 !> Generate lattice points from repetitions
