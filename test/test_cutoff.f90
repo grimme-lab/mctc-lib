@@ -540,7 +540,7 @@ subroutine test_reduce_basis(error)
       & "3D lattice changed by basis reduction")
    if (allocated(error)) return
 
-   ! Nonperiodic zero columns in 2D and 0D cells must remain zero
+   ! Nonperiodic zero columns in 2D, 1D, and 0D cells must remain zero
    ref = 0.0_wp
    ref(:, 1) = a1
    ref(:, 3) = a3
@@ -562,6 +562,14 @@ subroutine test_reduce_basis(error)
 
    call check(error, same_cutoff_points(trans1, trans2, rcut), &
       & "2D lattice changed by basis reduction")
+   if (allocated(error)) return
+
+   ref = 0.0_wp
+   ref(:, 2) = a2
+   lat = ref
+   call reduce_basis(lat)
+   call check(error, maxval(abs(lat - ref)) <= thr, &
+      & "1D basis changed by basis reduction")
    if (allocated(error)) return
 
    lat = 0.0_wp
