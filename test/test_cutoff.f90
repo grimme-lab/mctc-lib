@@ -499,10 +499,10 @@ subroutine test_reduce_basis(error)
    real(wp), parameter :: a1(3) = [4.0_wp, 1.0_wp, 0.0_wp]
    real(wp), parameter :: a2(3) = [0.5_wp, 5.0_wp, 0.5_wp]
    real(wp), parameter :: a3(3) = [-0.5_wp, 0.5_wp, 6.0_wp]
-   real(wp), parameter :: rcut = 10.0_wp
-   real(wp) :: ref(3, 3), lat(3, 3)
+   real(wp), parameter :: rcut = 10.1_wp
+   real(wp) :: ref(3, 3), lat(3, 3), ref_vol
    real(wp), allocatable :: trans1(:, :), trans2(:, :)
-   integer :: i, j, itr
+   integer :: i, j
 
    ref(:, 1) = a1
    ref(:, 2) = a2
@@ -516,8 +516,8 @@ subroutine test_reduce_basis(error)
 
    call reduce_basis(lat)
 
-   call check(error, abs(matdet_3x3(lat)) - abs(matdet_3x3(ref)), 0.0_wp, &
-      & thr=thr * abs(matdet_3x3(ref)))
+   ref_vol = abs(matdet_3x3(ref))
+   call check(error, abs(matdet_3x3(lat)), ref_vol, thr=thr * ref_vol)
    if (allocated(error)) return
 
    do i = 1, 3
@@ -536,22 +536,32 @@ subroutine test_reduce_basis(error)
    call get_lattice_points([.true.], lat, rcut, trans2, error)
    if (allocated(error)) return
 
-   do itr = 1, size(trans1, 2)
-      if (norm2(trans1(:, itr)) <= rcut) then
-         call check(error, has_vector(trans2, trans1(:, itr)), &
-            & "Lattice point lost by basis reduction")
-         if (allocated(error)) return
-      end if
-   end do
+   call check(error, same_cutoff_points(trans1, trans2, rcut), &
+      & "3D lattice changed by basis reduction")
+   if (allocated(error)) return
 
    ! Nonperiodic zero columns in 2D and 0D cells must remain zero
-   lat = 0.0_wp
-   lat(:, 1) = a1
-   lat(:, 3) = a3 + 7.0_wp * a1
+   ref = 0.0_wp
+   ref(:, 1) = a1
+   ref(:, 3) = a3
+   lat = ref
+   lat(:, 3) = lat(:, 3) + 7.0_wp * lat(:, 1)
    call reduce_basis(lat)
    call check(error, maxval(abs(lat(:, 2))) <= thr &
-      & .and. maxval(abs(lat(:, 3) - a3)) <= thr, &
+      & .and. norm2(lat(:, 3)) < norm2(a3 + 7.0_wp * a1) &
+      & .and. abs(dot_product(lat(:, 1), lat(:, 3))) &
+      & <= (0.5_wp + thr2) * min(sum(lat(:, 1)**2), sum(lat(:, 3)**2)), &
       & "Partial-PBC basis reduction failed")
+   if (allocated(error)) return
+
+   call get_lattice_points([.true., .false., .true.], ref, rcut, trans1, error)
+   if (allocated(error)) return
+
+   call get_lattice_points([.true., .false., .true.], lat, rcut, trans2, error)
+   if (allocated(error)) return
+
+   call check(error, same_cutoff_points(trans1, trans2, rcut), &
+      & "2D lattice changed by basis reduction")
    if (allocated(error)) return
 
    lat = 0.0_wp
@@ -597,6 +607,37 @@ pure function same_points(trans1, trans2) result(same)
    if (same) same = all(abs(trans1 - trans2) < thr)
 
 end function same_points
+
+
+!> Check whether two translation boxes contain the same points inside rcut
+pure function same_cutoff_points(trans1, trans2, rcut) result(same)
+
+   !> First set of lattice points
+   real(wp), intent(in) :: trans1(:, :)
+
+   !> Second set of lattice points
+   real(wp), intent(in) :: trans2(:, :)
+
+   !> Spherical cutoff radius
+   real(wp), intent(in) :: rcut
+
+   logical :: same
+
+   integer :: itr
+
+   same = .true.
+   do itr = 1, size(trans1, 2)
+      if (norm2(trans1(:, itr)) <= rcut) then
+         same = same .and. has_vector(trans2, trans1(:, itr))
+      end if
+   end do
+   do itr = 1, size(trans2, 2)
+      if (norm2(trans2(:, itr)) <= rcut) then
+         same = same .and. has_vector(trans1, trans2(:, itr))
+      end if
+   end do
+
+end function same_cutoff_points
 
 
 end module test_cutoff
