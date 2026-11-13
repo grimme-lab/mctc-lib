@@ -148,30 +148,23 @@ pure subroutine reduce_basis(lat)
    real(wp), intent(inout) :: lat(3, 3)
 
    integer :: i, j
-   real(wp) :: norm2_col(3), vec(3), step, vnorm2
+   real(wp) :: vec(3), norm2
    logical :: reduced
-
-   norm2_col(:) = sum(lat**2, dim=1)
 
    reduced = .false.
    do while (.not. reduced)
       reduced = .true.
       do i = 1, 3
-         if (.not. norm2_col(i) > 0.0_wp) cycle
-
          do j = 1, 3
+            norm2 = dot_product(lat(:, j), lat(:, j))
             ! Nonperiodic directions are exactly zero
-            if (i == j .or. .not. norm2_col(j) > 0.0_wp) cycle
+            if (i == j .or. .not. norm2 > 0.0_wp) cycle
 
-            step = anint(dot_product(lat(:, i), lat(:, j)) / norm2_col(j))
-            if (.not. abs(step) >= 1.0_wp) cycle
-
-            vec(:) = lat(:, i) - step * lat(:, j)
-            vnorm2 = sum(vec**2)
+            vec(:) = lat(:, i) - anint(dot_product(lat(:, i), lat(:, j)) &
+               & / norm2) * lat(:, j)
             ! Only accept strictly shorter vectors, ties would cycle forever
-            if (vnorm2 < (1.0_wp - 1.0e-12_wp) * norm2_col(i)) then
+            if (sum(vec**2) < (1.0_wp - 1.0e-12_wp) * sum(lat(:, i)**2)) then
                lat(:, i) = vec
-               norm2_col(i) = vnorm2
                reduced = .false.
             end if
          end do
