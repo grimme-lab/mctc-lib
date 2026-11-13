@@ -477,7 +477,7 @@ contains
 
                call self%ncoord_count_dcount(izp, jzp, r1, countf, df)
                countf = den * countf
-               countd = den * df * rij/r1
+               countd = (den * df / r1) * rij
                sigma = outerprod(rij, countd)
 
                cn_local(iat) = cn_local(iat) + countf
@@ -591,7 +591,7 @@ contains
 
                call self%ncoord_count_dcount(izp, jzp, r1, countf, df)
                countf = den * countf
-               countd = den * df * rij/r1
+               countd = (den * df / r1) * rij
                sigma = outerprod(rij, countd)
 
                cn_local(iat) = cn_local(iat) + countf
@@ -694,7 +694,7 @@ contains
                if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
                r1 = sqrt(r2)
 
-               countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
+               countd = (den * self%ncoord_dcount(izp, jzp, r1) / r1) * rij
 
                gradient_local(:, iat) = gradient_local(:, iat) + countd * dEdcnij
                gradient_local(:, jat) = gradient_local(:, jat) - countd * dEdcnij
@@ -814,7 +814,7 @@ contains
                if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
                r1 = sqrt(r2)
 
-               countd = den * self%ncoord_dcount(izp, jzp, r1) * rij/r1
+               countd = (den * self%ncoord_dcount(izp, jzp, r1) / r1) * rij
 
                ds = outerprod(rij, countd)
                sigma_local(:, :) = sigma_local(:, :) + ds * dEdcns
