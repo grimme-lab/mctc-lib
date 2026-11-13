@@ -129,17 +129,27 @@ pure subroutine eigval_3x3(a, w)
    !> Contains eigenvalues on exit
    real(wp), intent(out) :: w(3)
 
-   real(wp) :: q, p, r
+   real(wp), parameter :: eps = epsilon(1.0_wp)
+   real(wp) :: q, p, p2, r
 
    r = a(1, 2) * a(1, 2) + a(1, 3) * a(1, 3) + a(2, 3) * a(2, 3)
    q = (a(1, 1) + a(2, 2) + a(3, 3)) / 3.0_wp
    w(1) = a(1, 1) - q
    w(2) = a(2, 2) - q
    w(3) = a(3, 3) - q
-   p = sqrt((w(1) * w(1) + w(2) * w(2) + w(3) * w(3) + 2*r) / 6.0_wp)
+   p2 = (w(1) * w(1) + w(2) * w(2) + w(3) * w(3) + 2*r) / 6.0_wp
+
+   if (p2 <= max(tiny(1.0_wp), (eps * q)**2)) then
+      w(1) = q
+      w(2) = q
+      w(3) = q
+      return
+   end if
+
+   p = sqrt(p2)
    r = (w(1) * (w(2) * w(3) - a(2, 3) * a(2, 3)) &
       & - a(1, 2) * (a(1, 2) * w(3) - a(2, 3) * a(1, 3)) &
-      & + a(1, 3) * (a(1, 2) * a(2, 3) - w(2) * a(1, 3))) / (p*p*p) * 0.5_wp
+      & + a(1, 3) * (a(1, 2) * a(2, 3) - w(2) * a(1, 3))) / (p * p2) * 0.5_wp
 
    if (r <= -1.0_wp) then
       r = 0.5_wp * twothirdpi
@@ -164,7 +174,9 @@ pure subroutine eigvec_3x3(a, w, q)
    real(wp), intent(out) :: q(3,3)
 
    real(wp), parameter :: eps = epsilon(1.0_wp)
-   real(wp) :: norm, n1, n2, n3, precon
+   real(wp), parameter :: deg_tol2 = (256.0_wp * eps)**2
+   real(wp) :: norm, n1, n2, n3, precon, c1, c2, c3, bmax, v(3)
+   logical :: use_rank1
    integer :: i
 
    w(1) = max(abs(a(1, 1)), abs(a(1, 2)))
@@ -223,27 +235,76 @@ pure subroutine eigvec_3x3(a, w, q)
    i = 1
    if (n2 > norm) then
       i = 2
-      norm = n1
+      norm = n2
    end if
    if (n3 > norm) then
       i = 3
+      norm = n3
    end if
 
-   if (i == 1) then
-      norm = sqrt(1.0_wp / n1)
-      q(1, 1) = q(1, 1) * norm
-      q(2, 1) = q(2, 1) * norm
-      q(3, 1) = q(3, 1) * norm
-   else if (i == 2) then
-      norm = sqrt(1.0_wp / n2)
-      q(1, 1) = q(1, 2) * norm
-      q(2, 1) = q(2, 2) * norm
-      q(3, 1) = q(3, 2) * norm
-   else
-      norm = sqrt(1.0_wp / n3)
-      q(1, 1) = q(1, 3) * norm
-      q(2, 1) = q(2, 3) * norm
-      q(3, 1) = q(3, 3) * norm
+   use_rank1 = .false.
+   if (norm <= deg_tol2) then
+      c1 = a(1, 1) * a(1, 1) + a(1, 2) * a(1, 2) + a(1, 3) * a(1, 3)
+      c2 = a(1, 2) * a(1, 2) + a(2, 2) * a(2, 2) + a(2, 3) * a(2, 3)
+      c3 = a(1, 3) * a(1, 3) + a(2, 3) * a(2, 3) + a(3, 3) * a(3, 3)
+      bmax = max(c1, max(c2, c3))
+      if (bmax <= (64.0_wp * eps)**2) then
+         ! 3-fold degenerate eigenvalue: any orthonormal frame is an eigenbasis
+         q(1, 1) = 1.0_wp
+         q(2, 2) = 1.0_wp
+         q(3, 3) = 1.0_wp
+         q(1, 2) = 0.0_wp
+         q(1, 3) = 0.0_wp
+         q(2, 3) = 0.0_wp
+         q(2, 1) = 0.0_wp
+         q(3, 1) = 0.0_wp
+         q(3, 2) = 0.0_wp
+         w(1) = w(1) * precon
+         w(2) = w(2) * precon
+         w(3) = w(3) * precon
+         return
+      else if (norm <= (64.0_wp * eps)**2 * bmax) then
+         ! 2-fold degenerate bottom eigenvalue: A - w(1)*I has rank 1, so any
+         ! unit vector orthogonal to its largest column spans the w(1) eigenspace
+         use_rank1 = .true.
+         if (c1 >= c2 .and. c1 >= c3) then
+            v = [a(1, 1), a(1, 2), a(1, 3)]
+         else if (c2 >= c3) then
+            v = [a(1, 2), a(2, 2), a(2, 3)]
+         else
+            v = [a(1, 3), a(2, 3), a(3, 3)]
+         end if
+         if (abs(v(1)) > abs(v(2))) then
+            norm = sqrt(1.0_wp / (v(1) * v(1) + v(3) * v(3)))
+            q(1, 1) = -v(3) * norm
+            q(2, 1) = 0.0_wp
+            q(3, 1) = +v(1) * norm
+         else
+            norm = sqrt(1.0_wp / (v(2) * v(2) + v(3) * v(3)))
+            q(1, 1) = 0.0_wp
+            q(2, 1) = +v(3) * norm
+            q(3, 1) = -v(2) * norm
+         end if
+      end if
+   end if
+
+   if (.not. use_rank1) then
+      if (i == 1) then
+         norm = sqrt(1.0_wp / n1)
+         q(1, 1) = q(1, 1) * norm
+         q(2, 1) = q(2, 1) * norm
+         q(3, 1) = q(3, 1) * norm
+      else if (i == 2) then
+         norm = sqrt(1.0_wp / n2)
+         q(1, 1) = q(1, 2) * norm
+         q(2, 1) = q(2, 2) * norm
+         q(3, 1) = q(3, 2) * norm
+      else
+         norm = sqrt(1.0_wp / n3)
+         q(1, 1) = q(1, 3) * norm
+         q(2, 1) = q(2, 3) * norm
+         q(3, 1) = q(3, 3) * norm
+      end if
    end if
 
    ! Robustly compute a right-hand orthonormal set (ev1, u, v)
