@@ -13,10 +13,12 @@
 ! limitations under the License.
 
 module test_cutoff
-   use mctc_cutoff, only : get_lattice_points, get_periodic_axes, wrap_to_central_cell
+   use mctc_cutoff, only : get_lattice_points, get_periodic_axes, reduce_basis, &
+      & wrap_to_central_cell
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
       & check, test_failed
+   use mctc_io_math, only : matdet_3x3
    use mctc_io_structure, only : structure_type
    use testsuite_structure, only : get_structure
    implicit none
@@ -44,7 +46,8 @@ subroutine collect_cutoff(testsuite)
       & new_unittest("lattice-points-rep", test_lattice_points_rep), &
       & new_unittest("wrap", test_wrap), &
       & new_unittest("wrap-partial-pbc", test_wrap_partial_pbc), &
-      & new_unittest("periodic-axes", test_periodic_axes) &
+      & new_unittest("periodic-axes", test_periodic_axes), &
+      & new_unittest("reduce-basis", test_reduce_basis) &
       & ]
 
 end subroutine collect_cutoff
@@ -485,6 +488,77 @@ subroutine test_periodic_axes(error)
    call check(error, ndim == 0)
 
 end subroutine test_periodic_axes
+
+
+!> Pairwise size reduction preserves the lattice and leaves zero columns intact
+subroutine test_reduce_basis(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   real(wp), parameter :: a1(3) = [4.0_wp, 1.0_wp, 0.0_wp]
+   real(wp), parameter :: a2(3) = [0.5_wp, 5.0_wp, 0.5_wp]
+   real(wp), parameter :: a3(3) = [-0.5_wp, 0.5_wp, 6.0_wp]
+   real(wp), parameter :: rcut = 10.0_wp
+   real(wp) :: ref(3, 3), lat(3, 3)
+   real(wp), allocatable :: trans1(:, :), trans2(:, :)
+   integer :: i, j, itr
+
+   ref(:, 1) = a1
+   ref(:, 2) = a2
+   ref(:, 3) = a3
+
+   ! Unimodular integer shears of the reference triclinic basis
+   lat = ref
+   lat(:, 2) = lat(:, 2) + 5.0_wp * lat(:, 1)
+   lat(:, 3) = lat(:, 3) - 4.0_wp * lat(:, 1) + 3.0_wp * lat(:, 2)
+   lat(:, 1) = lat(:, 1) - 2.0_wp * lat(:, 3)
+
+   call reduce_basis(lat)
+
+   call check(error, abs(matdet_3x3(lat)) - abs(matdet_3x3(ref)), 0.0_wp, &
+      & thr=thr * abs(matdet_3x3(ref)))
+   if (allocated(error)) return
+
+   do i = 1, 3
+      do j = 1, 3
+         if (i == j) cycle
+         call check(error, abs(dot_product(lat(:, i), lat(:, j))) &
+            & <= (0.5_wp + thr2) * dot_product(lat(:, j), lat(:, j)), &
+            & "Reduced basis is not pairwise size-reduced")
+         if (allocated(error)) return
+      end do
+   end do
+
+   call get_lattice_points([.true.], ref, rcut, trans1, error)
+   if (allocated(error)) return
+
+   call get_lattice_points([.true.], lat, rcut, trans2, error)
+   if (allocated(error)) return
+
+   do itr = 1, size(trans1, 2)
+      if (norm2(trans1(:, itr)) <= rcut) then
+         call check(error, has_vector(trans2, trans1(:, itr)), &
+            & "Lattice point lost by basis reduction")
+         if (allocated(error)) return
+      end if
+   end do
+
+   ! Nonperiodic zero columns in 2D and 0D cells must remain zero
+   lat = 0.0_wp
+   lat(:, 1) = a1
+   lat(:, 3) = a3 + 7.0_wp * a1
+   call reduce_basis(lat)
+   call check(error, maxval(abs(lat(:, 2))) <= thr &
+      & .and. maxval(abs(lat(:, 3) - a3)) <= thr, &
+      & "Partial-PBC basis reduction failed")
+   if (allocated(error)) return
+
+   lat = 0.0_wp
+   call reduce_basis(lat)
+   call check(error, maxval(abs(lat)) <= thr)
+
+end subroutine test_reduce_basis
 
 
 !> Check whether a vector is among the lattice points
