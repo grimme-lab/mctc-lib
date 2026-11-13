@@ -18,7 +18,7 @@ module mctc_ncoord_erf_en
    use mctc_data_paulingen, only : get_pauling_en
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use mctc_ncoord_erf, only : erf_ncoord_type
+   use mctc_ncoord_erf, only : erf_ncoord_type, init_erf_tables
    implicit none
    private
 
@@ -103,6 +103,8 @@ contains
       else
          self%norm_exp = default_norm_exp
       end if
+
+      call init_erf_tables(self)
 
    end subroutine new_erf_en_ncoord
 

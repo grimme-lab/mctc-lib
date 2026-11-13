@@ -22,7 +22,7 @@ module mctc_ncoord_erf
    implicit none
    private
 
-   public :: new_erf_ncoord
+   public :: new_erf_ncoord, init_erf_tables
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: erf_ncoord_type
@@ -30,6 +30,10 @@ module mctc_ncoord_erf
       real(wp), allocatable :: rcov(:)
       !> Exponent of the distance normalization
       real(wp)  :: norm_exp
+      !> Precomputed pairwise covalent radii sum (nid, nid)
+      real(wp), allocatable :: rc_mat(:, :)
+      !> Precomputed inverse normalized pairwise covalent radii (nid, nid)
+      real(wp), allocatable :: inv_rcn_mat(:, :)
    contains
       !> Evaluates the error counting function
       procedure :: ncoord_count
@@ -99,7 +103,41 @@ contains
          self%norm_exp = default_norm_exp
       end if
 
+      call init_erf_tables(self)
+
    end subroutine new_erf_ncoord
+
+
+   !> Precompute pairwise covalent radii sum and normalized inverse radii tables.
+   !> Must be called again after changing rcov or norm_exp of a constructed instance.
+   pure subroutine init_erf_tables(self)
+      !> Coordination number container
+      class(erf_ncoord_type), intent(inout) :: self
+
+      !> Inverse radius used for non-positive radii sums, keeps the tables finite
+      real(wp), parameter :: inv_rc_zero = 1.0e30_wp
+
+      integer :: nid, izp, jzp
+      real(wp) :: rc
+
+      nid = size(self%rcov)
+      if (allocated(self%rc_mat)) deallocate(self%rc_mat)
+      if (allocated(self%inv_rcn_mat)) deallocate(self%inv_rcn_mat)
+      allocate(self%rc_mat(nid, nid), self%inv_rcn_mat(nid, nid))
+
+      do jzp = 1, nid
+         do izp = 1, nid
+            rc = self%rcov(izp) + self%rcov(jzp)
+            self%rc_mat(izp, jzp) = rc
+            if (rc > 0.0_wp) then
+               self%inv_rcn_mat(izp, jzp) = 1.0_wp / rc**self%norm_exp
+            else
+               self%inv_rcn_mat(izp, jzp) = inv_rc_zero
+            end if
+         end do
+      end do
+
+   end subroutine init_erf_tables
 
 
    !> Error counting function for coordination number contributions.
@@ -113,11 +151,12 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp) :: rc, count
+      real(wp) :: rc, inv_rcn, count
 
-      rc = (self%rcov(izp) + self%rcov(jzp))
+      rc = self%rc_mat(izp, jzp)
+      inv_rcn = self%inv_rcn_mat(izp, jzp)
 
-      count = 0.5_wp * (1.0_wp + erf(-self%kcn*(r-rc)/rc**self%norm_exp))
+      count = 0.5_wp * (1.0_wp + erf(-self%kcn * (r - rc) * inv_rcn))
 
    end function ncoord_count
 
@@ -132,14 +171,16 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp), parameter :: sqrtpi = sqrt(pi)
-      real(wp) :: rc, exponent, expterm, count
+      real(wp), parameter :: inv_sqrtpi = 1.0_wp / sqrt(pi)
+      real(wp) :: rc, inv_rcn, alpha, exponent, expterm, count
 
-      rc = self%rcov(izp) + self%rcov(jzp)
+      rc = self%rc_mat(izp, jzp)
+      inv_rcn = self%inv_rcn_mat(izp, jzp)
 
-      exponent = self%kcn*(r-rc)/rc**self%norm_exp
-      expterm = exp(-exponent**2.0_wp)
-      count = -(self%kcn*expterm)/(sqrtpi*rc**self%norm_exp)
+      alpha = self%kcn * inv_rcn
+      exponent = alpha * (r - rc)
+      expterm = exp(-exponent * exponent)
+      count = -inv_sqrtpi * alpha * expterm
 
    end function ncoord_dcount
 
@@ -155,15 +196,16 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp), parameter :: sqrtpi = sqrt(pi)
-      real(wp) :: rc, exponent, expterm, count, rcn
+      real(wp), parameter :: two_inv_sqrtpi = 2.0_wp / sqrt(pi)
+      real(wp) :: rc, inv_rcn, alpha, exponent, expterm, count
 
-      rc = self%rcov(izp) + self%rcov(jzp)
-      rcn = rc**self%norm_exp
+      rc = self%rc_mat(izp, jzp)
+      inv_rcn = self%inv_rcn_mat(izp, jzp)
 
-      exponent = self%kcn*(r - rc)/rcn
-      expterm = exp(-exponent**2)
-      count = 2.0_wp*self%kcn**2*exponent*expterm/(sqrtpi*rcn**2)
+      alpha = self%kcn * inv_rcn
+      exponent = alpha * (r - rc)
+      expterm = exp(-exponent * exponent)
+      count = two_inv_sqrtpi * alpha * alpha * exponent * expterm
 
    end function ncoord_d2count
 

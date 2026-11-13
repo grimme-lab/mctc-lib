@@ -18,7 +18,7 @@ module mctc_ncoord_erf_dftd4
    use mctc_data_paulingen, only : get_pauling_en
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use mctc_ncoord_erf, only : erf_ncoord_type
+   use mctc_ncoord_erf, only : erf_ncoord_type, init_erf_tables
    implicit none
    private
 
@@ -28,6 +28,8 @@ module mctc_ncoord_erf_dftd4
    type, public, extends(erf_ncoord_type) :: erf_dftd4_ncoord_type
       !> Electronegativity
       real(wp), allocatable :: en(:)
+      !> Precomputed pairwise electronegativity scaling factor (nid, nid)
+      real(wp), allocatable :: en_mat(:, :)
    contains
       !> Evaluates pairwise electronegativity factor
       procedure :: get_en_factor
@@ -45,7 +47,9 @@ module mctc_ncoord_erf_dftd4
    !> Parameter for electronegativity scaling
    real(wp), parameter :: k5 = 19.08857_wp
    !> Parameter for electronegativity scaling
-   real(wp), parameter :: k6 = 2*11.28174_wp**2.0_wp
+   real(wp), parameter :: k6 = 2.0_wp * 11.28174_wp * 11.28174_wp
+   !> Inverse parameter for electronegativity scaling
+   real(wp), parameter :: inv_k6 = 1.0_wp / k6
 
 contains
 
@@ -109,7 +113,31 @@ contains
          self%norm_exp = default_norm_exp
       end if
 
+      call init_erf_tables(self)
+      call build_en_table(self)
+
    end subroutine new_erf_dftd4_ncoord
+
+
+   !> Precompute pairwise electronegativity scaling factor table
+   pure subroutine build_en_table(self)
+      !> Coordination number container
+      class(erf_dftd4_ncoord_type), intent(inout) :: self
+
+      integer :: nid, izp, jzp
+      real(wp) :: tmp
+
+      nid = size(self%en)
+      if (allocated(self%en_mat)) deallocate(self%en_mat)
+      allocate(self%en_mat(nid, nid))
+      do jzp = 1, nid
+         do izp = 1, nid
+            tmp = abs(self%en(izp) - self%en(jzp)) + k5
+            self%en_mat(izp, jzp) = k4 * exp(-tmp * tmp * inv_k6)
+         end do
+      end do
+
+   end subroutine build_en_table
 
 
    !> Evaluates pairwise electronegativity factor if non applies
@@ -123,7 +151,7 @@ contains
 
       real(wp) :: en_factor
 
-      en_factor = k4*exp(-(abs(self%en(izp)-self%en(jzp)) + k5)**2.0_wp/k6)
+      en_factor = self%en_mat(izp, jzp)
 
    end function get_en_factor
 
