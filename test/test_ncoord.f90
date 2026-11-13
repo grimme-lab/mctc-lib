@@ -126,7 +126,8 @@ contains
       & new_unittest("hessian-list-feo2_dexp", test_hessian_list_feo2_dexp), &
       & new_unittest("cn_unknown", test_cn_unknown, should_fail=.true.), &
       & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
-      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string) &
+      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string), &
+      & new_unittest("fused_count_dcount", test_fused_count_dcount) &
       & ]
 
    end subroutine collect_ncoord
@@ -2664,6 +2665,68 @@ contains
       if (allocated(error)) return
 
    end subroutine test_cn_count_id_to_string
+
+
+   !> Verify consistency of fused ncoord_count_dcount and ncoord_dcount_d2count
+   subroutine test_fused_count_dcount(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      type(structure_type) :: mol
+      class(ncoord_type), allocatable :: nc
+      type(exp_ncoord_type) :: exp_nc
+      integer, parameter :: counts(5) = [ &
+         & cn_count%exp, cn_count%dexp, cn_count%erf, cn_count%erf_en, cn_count%dftd4]
+      real(wp), parameter :: dists(6) = [0.6_wp, 1.5_wp, 2.5_wp, 4.0_wp, 8.0_wp, 15.0_wp]
+      integer :: ic, ir, izp, jzp
+      real(wp) :: r, rc, expterm, ref_d1
+      real(wp) :: cf_sep, d1_sep, d2_sep, cf_fus, d1_fus, d1_fus2, d2_fus
+
+      call get_structure(mol, "mindless04")
+
+      do ic = 1, size(counts)
+         call new_ncoord(nc, mol, counts(ic), error, cutoff=25.0_wp)
+         if (allocated(error)) return
+         do ir = 1, size(dists)
+            r = dists(ir)
+            do jzp = 1, mol%nid
+               do izp = 1, mol%nid
+                  cf_sep = nc%ncoord_count(izp, jzp, r)
+                  d1_sep = nc%ncoord_dcount(izp, jzp, r)
+                  d2_sep = nc%ncoord_d2count(izp, jzp, r)
+                  call nc%ncoord_count_dcount(izp, jzp, r, cf_fus, d1_fus)
+                  call nc%ncoord_dcount_d2count(izp, jzp, r, d1_fus2, d2_fus)
+
+                  call check(error, cf_fus, cf_sep, thr=thr*max(1.0_wp, abs(cf_sep)))
+                  if (allocated(error)) return
+                  call check(error, d1_fus, d1_sep, thr=thr*max(1.0_wp, abs(d1_sep)))
+                  if (allocated(error)) return
+                  call check(error, d1_fus2, d1_sep, thr=thr*max(1.0_wp, abs(d1_sep)))
+                  if (allocated(error)) return
+                  call check(error, d2_fus, d2_sep, thr=thr*max(1.0_wp, abs(d2_sep)))
+                  if (allocated(error)) return
+               end do
+            end do
+         end do
+         deallocate(nc)
+      end do
+
+      ! Compressed short-range precision check where 1 - cf underflows epsilon(1.0_wp)
+      call new_exp_ncoord(exp_nc, mol, cutoff=25.0_wp)
+      r = 0.6_wp
+      rc = 2.0_wp * exp_nc%rcov(1)
+      expterm = exp(-exp_nc%kcn * (rc / r - 1.0_wp))
+      ref_d1 = (-exp_nc%kcn * rc * expterm) / ((r * r) * ((1.0_wp + expterm)**2))
+      call exp_nc%ncoord_count_dcount(1, 1, r, cf_fus, d1_fus)
+      call check(error, d1_fus, ref_d1, thr=10.0_wp*epsilon(1.0_wp)*abs(ref_d1))
+      if (allocated(error)) return
+      call exp_nc%ncoord_dcount_d2count(1, 1, r, d1_fus2, d2_fus)
+      if (d2_fus == 0.0_wp .and. expterm > 0.0_wp) then
+         call test_failed(error, "Compressed short-distance underflow in exp d2count")
+      end if
+
+   end subroutine test_fused_count_dcount
 
 
 end module test_ncoord

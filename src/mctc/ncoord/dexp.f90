@@ -35,6 +35,10 @@ module mctc_ncoord_dexp
       procedure :: ncoord_dcount
       !> Evaluates the second derivative of the dexp counting function
       procedure :: ncoord_d2count
+      !> Evaluates both the counting function and its first derivative
+      procedure :: ncoord_count_dcount
+      !> Evaluates both the first and second derivatives of the counting function
+      procedure :: ncoord_dcount_d2count
    end type dexp_ncoord_type
 
    !> Steepness of first counting function
@@ -98,11 +102,14 @@ elemental function ncoord_count(self, izp, jzp, r) result(count)
    !> Current distance.
    real(wp), intent(in) :: r
 
-   real(wp) :: rc, count
+   real(wp) :: rc, inv_r, ea, eb, count
 
    rc = self%rcov(izp) + self%rcov(jzp)
+   inv_r = 1.0_wp / r
 
-   count = exp_count(ka, r, rc) * exp_count(kb, r, rc + r_shift)
+   ea = exp(-ka * (rc * inv_r - 1.0_wp))
+   eb = exp(-kb * ((rc + r_shift) * inv_r - 1.0_wp))
+   count = (1.0_wp / (1.0_wp + ea)) * (1.0_wp / (1.0_wp + eb))
 
 end function ncoord_count
 
@@ -117,12 +124,22 @@ elemental function ncoord_dcount(self, izp, jzp, r) result(count)
    !> Current distance.
    real(wp), intent(in) :: r
 
-   real(wp) :: rc, count
+   real(wp) :: rc, rcb, inv_r, inv_r2, ea, eb, fa, fb, dfa, dfb, count
 
    rc = self%rcov(izp) + self%rcov(jzp)
+   rcb = rc + r_shift
+   inv_r = 1.0_wp / r
+   inv_r2 = inv_r * inv_r
 
-   count = (exp_dcount(ka, r, rc) * exp_count(kb, r, rc + r_shift) &
-               & + exp_count(ka, r, rc) * exp_dcount(kb, r, rc + r_shift))
+   ea = exp(-ka * (rc * inv_r - 1.0_wp))
+   fa = 1.0_wp / (1.0_wp + ea)
+   dfa = -ka * rc * (ea * fa * fa) * inv_r2
+
+   eb = exp(-kb * (rcb * inv_r - 1.0_wp))
+   fb = 1.0_wp / (1.0_wp + eb)
+   dfb = -kb * rcb * (eb * fb * fb) * inv_r2
+
+   count = dfa * fb + fa * dfb
 
 end function ncoord_dcount
 
@@ -137,66 +154,109 @@ elemental function ncoord_d2count(self, izp, jzp, r) result(count)
    !> Current distance.
    real(wp), intent(in) :: r
 
-   real(wp) :: rc, count
+   real(wp) :: rc, rcb, inv_r, inv_r2, krc_a, krc_b
+   real(wp) :: ea, fa, tmp_a, dfa, d2fa
+   real(wp) :: eb, fb, tmp_b, dfb, d2fb, count
 
    rc = self%rcov(izp) + self%rcov(jzp)
+   rcb = rc + r_shift
+   inv_r = 1.0_wp / r
+   inv_r2 = inv_r * inv_r
 
-   count = exp_d2count(ka, r, rc)*exp_count(kb, r, rc + r_shift) &
-      & + 2.0_wp*exp_dcount(ka, r, rc)*exp_dcount(kb, r, rc + r_shift) &
-      & + exp_count(ka, r, rc)*exp_d2count(kb, r, rc + r_shift)
+   krc_a = ka * rc
+   ea = exp(-ka * (rc * inv_r - 1.0_wp))
+   fa = 1.0_wp / (1.0_wp + ea)
+   tmp_a = ea * fa * fa
+   dfa = -krc_a * tmp_a * inv_r2
+   d2fa = tmp_a * krc_a * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * fa) * krc_a * inv_r + 2.0_wp)
+
+   krc_b = kb * rcb
+   eb = exp(-kb * (rcb * inv_r - 1.0_wp))
+   fb = 1.0_wp / (1.0_wp + eb)
+   tmp_b = eb * fb * fb
+   dfb = -krc_b * tmp_b * inv_r2
+   d2fb = tmp_b * krc_b * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * fb) * krc_b * inv_r + 2.0_wp)
+
+   count = d2fa * fb + 2.0_wp * dfa * dfb + fa * d2fb
 
 end function ncoord_d2count
 
-
-!> Mono-exponential counting function for coordination number contributions.
-elemental function exp_count(k, r, r0) result(count)
-   !> Steepness of the counting function.
-   real(wp), intent(in) :: k
-   !> Current distance.
+!> Fused evaluation of double-exponential counting function and its first derivative.
+elemental subroutine ncoord_count_dcount(self, izp, jzp, r, countf, countd)
+   !> Coordination number container
+   class(dexp_ncoord_type), intent(in) :: self
+   !> Atom i index
+   integer, intent(in) :: izp
+   !> Atom j index
+   integer, intent(in) :: jzp
+   !> Current distance
    real(wp), intent(in) :: r
-   !> Cutoff radius.
-   real(wp), intent(in) :: r0
+   !> Counting function value
+   real(wp), intent(out) :: countf
+   !> First derivative of counting function w.r.t. distance
+   real(wp), intent(out) :: countd
 
-   real(wp) :: count
+   real(wp) :: rc, rcb, inv_r, inv_r2, ea, eb, fa, fb, dfa, dfb
 
-   count = 1.0_wp/(1.0_wp+exp(-k*(r0/r-1.0_wp)))
+   rc = self%rcov(izp) + self%rcov(jzp)
+   rcb = rc + r_shift
+   inv_r = 1.0_wp / r
+   inv_r2 = inv_r * inv_r
 
-end function exp_count
+   ea = exp(-ka * (rc * inv_r - 1.0_wp))
+   fa = 1.0_wp / (1.0_wp + ea)
+   dfa = -ka * rc * (ea * fa * fa) * inv_r2
 
-!> Derivative of the mono-exponential counting function w.r.t. the distance.
-elemental function exp_dcount(k, r, r0) result(count)
-   !> Steepness of the counting function.
-   real(wp), intent(in) :: k
-   !> Current distance.
+   eb = exp(-kb * (rcb * inv_r - 1.0_wp))
+   fb = 1.0_wp / (1.0_wp + eb)
+   dfb = -kb * rcb * (eb * fb * fb) * inv_r2
+
+   countf = fa * fb
+   countd = dfa * fb + fa * dfb
+
+end subroutine ncoord_count_dcount
+
+!> Fused evaluation of first and second derivatives of double-exponential counting function.
+elemental subroutine ncoord_dcount_d2count(self, izp, jzp, r, countd, countd2)
+   !> Coordination number container
+   class(dexp_ncoord_type), intent(in) :: self
+   !> Atom i index
+   integer, intent(in) :: izp
+   !> Atom j index
+   integer, intent(in) :: jzp
+   !> Current distance
    real(wp), intent(in) :: r
-   !> Cutoff radius.
-   real(wp), intent(in) :: r0
+   !> First derivative of counting function w.r.t. distance
+   real(wp), intent(out) :: countd
+   !> Second derivative of counting function w.r.t. distance
+   real(wp), intent(out) :: countd2
 
-   real(wp) :: count
-   real(wp) :: expterm
+   real(wp) :: rc, rcb, inv_r, inv_r2, krc_a, krc_b
+   real(wp) :: ea, fa, tmp_a, dfa, d2fa
+   real(wp) :: eb, fb, tmp_b, dfb, d2fb
 
-   expterm = exp(-k*(r0/r-1.0_wp))
-   count = (-k*r0*expterm)/(r**2.0_wp*((expterm+1.0_wp)**2.0_wp))
+   rc = self%rcov(izp) + self%rcov(jzp)
+   rcb = rc + r_shift
+   inv_r = 1.0_wp / r
+   inv_r2 = inv_r * inv_r
 
-end function exp_dcount
+   krc_a = ka * rc
+   ea = exp(-ka * (rc * inv_r - 1.0_wp))
+   fa = 1.0_wp / (1.0_wp + ea)
+   tmp_a = ea * fa * fa
+   dfa = -krc_a * tmp_a * inv_r2
+   d2fa = tmp_a * krc_a * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * fa) * krc_a * inv_r + 2.0_wp)
 
-!> Second derivative of the mono-exponential counting function w.r.t. the distance.
-elemental function exp_d2count(k, r, r0) result(count)
-   !> Steepness of the counting function.
-   real(wp), intent(in) :: k
-   !> Current distance.
-   real(wp), intent(in) :: r
-   !> Cutoff radius.
-   real(wp), intent(in) :: r0
+   krc_b = kb * rcb
+   eb = exp(-kb * (rcb * inv_r - 1.0_wp))
+   fb = 1.0_wp / (1.0_wp + eb)
+   tmp_b = eb * fb * fb
+   dfb = -krc_b * tmp_b * inv_r2
+   d2fb = tmp_b * krc_b * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * fb) * krc_b * inv_r + 2.0_wp)
 
-   real(wp) :: count, cf, tmp
+   countd = dfa * fb + fa * dfb
+   countd2 = d2fa * fb + 2.0_wp * dfa * dfb + fa * d2fb
 
-   cf = exp_count(k, r, r0)
-   tmp = cf*(1.0_wp - cf)
-
-   count = tmp*(1.0_wp - 2.0_wp*cf)*(k*r0)**2/r**4 &
-      & + 2.0_wp*tmp*k*r0/r**3
-
-end function exp_d2count
+end subroutine ncoord_dcount_d2count
 
 end module mctc_ncoord_dexp
