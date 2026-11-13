@@ -23,7 +23,9 @@ module mctc_io_math
       & eigval_3x3, eigvec_3x3
 
 
-   real(wp), parameter :: twothirdpi = 2.0_wp * pi / 3.0_wp
+   real(wp), parameter :: third = 1.0_wp / 3.0_wp
+   real(wp), parameter :: sixth = 1.0_wp / 6.0_wp
+   real(wp), parameter :: twothirdpi = 2.0_wp * pi * third
 
 
 contains
@@ -129,15 +131,29 @@ pure subroutine eigval_3x3(a, w)
    !> Contains eigenvalues on exit
    real(wp), intent(out) :: w(3)
 
+   call eigval_3x3_kernel(a, w)
+
+end subroutine eigval_3x3
+
+
+!> Internal eigenvalue kernel, allowing inlining inside eigvec_3x3 under -fPIC
+pure subroutine eigval_3x3_kernel(a, w)
+
+   !> The symmetric input matrix
+   real(wp), intent(in) :: a(3, 3)
+
+   !> Contains eigenvalues on exit
+   real(wp), intent(out) :: w(3)
+
    real(wp), parameter :: eps = epsilon(1.0_wp)
    real(wp) :: q, p, p2, r
 
    r = a(1, 2) * a(1, 2) + a(1, 3) * a(1, 3) + a(2, 3) * a(2, 3)
-   q = (a(1, 1) + a(2, 2) + a(3, 3)) / 3.0_wp
+   q = (a(1, 1) + a(2, 2) + a(3, 3)) * third
    w(1) = a(1, 1) - q
    w(2) = a(2, 2) - q
    w(3) = a(3, 3) - q
-   p2 = (w(1) * w(1) + w(2) * w(2) + w(3) * w(3) + 2*r) / 6.0_wp
+   p2 = (w(1) * w(1) + w(2) * w(2) + w(3) * w(3) + 2.0_wp * r) * sixth
 
    if (p2 <= max(tiny(1.0_wp), (eps * q)**2)) then
       w(1) = q
@@ -147,23 +163,23 @@ pure subroutine eigval_3x3(a, w)
    end if
 
    p = sqrt(p2)
-   r = (w(1) * (w(2) * w(3) - a(2, 3) * a(2, 3)) &
+   r = 0.5_wp * (w(1) * (w(2) * w(3) - a(2, 3) * a(2, 3)) &
       & - a(1, 2) * (a(1, 2) * w(3) - a(2, 3) * a(1, 3)) &
-      & + a(1, 3) * (a(1, 2) * a(2, 3) - w(2) * a(1, 3))) / (p * p2) * 0.5_wp
+      & + a(1, 3) * (a(1, 2) * a(2, 3) - w(2) * a(1, 3))) / (p * p2)
 
    if (r <= -1.0_wp) then
       r = 0.5_wp * twothirdpi
    else if (r >= 1.0_wp) then
       r = 0.0_wp
    else
-      r = acos(r) / 3.0_wp
+      r = acos(r) * third
    end if
 
-   w(3) = q + 2 * p * cos(r)
-   w(1) = q + 2 * p * cos(r + twothirdpi)
-   w(2) = 3 * q - w(1) - w(3)
+   w(3) = q + 2.0_wp * p * cos(r)
+   w(1) = q + 2.0_wp * p * cos(r + twothirdpi)
+   w(2) = 3.0_wp * q - w(1) - w(3)
 
-end subroutine eigval_3x3
+end subroutine eigval_3x3_kernel
 
 
 !> Calculates eigenvector using an analytical method based on vector cross
@@ -175,9 +191,9 @@ pure subroutine eigvec_3x3(a, w, q)
 
    real(wp), parameter :: eps = epsilon(1.0_wp)
    real(wp), parameter :: deg_tol2 = (256.0_wp * eps)**2
-   real(wp) :: norm, n1, n2, n3, precon, c1, c2, c3, bmax, v(3)
-   logical :: use_rank1
+   real(wp) :: norm, n1, n2, n3, precon, c1, c2, c3, bmax, cu, cv, inv_r, v(3)
    integer :: i
+   logical :: use_rank1
 
    w(1) = max(abs(a(1, 1)), abs(a(1, 2)))
    w(2) = max(abs(a(1, 3)), abs(a(2, 2)))
@@ -211,7 +227,7 @@ pure subroutine eigvec_3x3(a, w, q)
    a(3, 3) = a(3, 3) * norm
 
    ! Calculate eigenvalues
-   call eigval_3x3(a, w)
+   call eigval_3x3_kernel(a, w)
 
    ! Compute first eigenvector
    a(1, 1) = a(1, 1) - w(1)
@@ -275,50 +291,52 @@ pure subroutine eigvec_3x3(a, w, q)
             v = [a(1, 3), a(2, 3), a(3, 3)]
          end if
          if (abs(v(1)) > abs(v(2))) then
-            norm = sqrt(1.0_wp / (v(1) * v(1) + v(3) * v(3)))
-            q(1, 1) = -v(3) * norm
+            norm = v(1) * v(1) + v(3) * v(3)
+            q(1, 1) = -v(3)
             q(2, 1) = 0.0_wp
-            q(3, 1) = +v(1) * norm
+            q(3, 1) = +v(1)
          else
-            norm = sqrt(1.0_wp / (v(2) * v(2) + v(3) * v(3)))
+            norm = v(2) * v(2) + v(3) * v(3)
             q(1, 1) = 0.0_wp
-            q(2, 1) = +v(3) * norm
-            q(3, 1) = -v(2) * norm
+            q(2, 1) = +v(3)
+            q(3, 1) = -v(2)
          end if
       end if
    end if
 
    if (.not. use_rank1) then
-      if (i == 1) then
-         norm = sqrt(1.0_wp / n1)
-         q(1, 1) = q(1, 1) * norm
-         q(2, 1) = q(2, 1) * norm
-         q(3, 1) = q(3, 1) * norm
-      else if (i == 2) then
-         norm = sqrt(1.0_wp / n2)
-         q(1, 1) = q(1, 2) * norm
-         q(2, 1) = q(2, 2) * norm
-         q(3, 1) = q(3, 2) * norm
-      else
-         norm = sqrt(1.0_wp / n3)
-         q(1, 1) = q(1, 3) * norm
-         q(2, 1) = q(2, 3) * norm
-         q(3, 1) = q(3, 3) * norm
+      if (i == 2) then
+         q(1, 1) = q(1, 2)
+         q(2, 1) = q(2, 2)
+         q(3, 1) = q(3, 2)
+      else if (i == 3) then
+         q(1, 1) = q(1, 3)
+         q(2, 1) = q(2, 3)
+         q(3, 1) = q(3, 3)
       end if
    end if
+   norm = 1.0_wp / sqrt(norm)
+   q(1, 1) = q(1, 1) * norm
+   q(2, 1) = q(2, 1) * norm
+   q(3, 1) = q(3, 1) * norm
 
    ! Robustly compute a right-hand orthonormal set (ev1, u, v)
    if (abs(q(1, 1)) > abs(q(2, 1))) then
-      norm = sqrt(1.0_wp / (q(1, 1) * q(1, 1) + q(3, 1) * q(3, 1)))
-      q(1, 2) = -q(3, 1) * norm
+      norm = q(1, 1) * q(1, 1) + q(3, 1) * q(3, 1)
+      q(1, 2) = -q(3, 1)
       q(2, 2) = 0.0_wp
-      q(3, 2) = +q(1, 1) * norm
+      q(3, 2) = +q(1, 1)
    else
-      norm = sqrt(1.0_wp / (q(2, 1) * q(2, 1) + q(3, 1) * q(3, 1)))
+      norm = q(2, 1) * q(2, 1) + q(3, 1) * q(3, 1)
       q(1, 2) = 0.0_wp
-      q(2, 2) = +q(3, 1) * norm
-      q(3, 2) = -q(2, 1) * norm
+      q(2, 2) = +q(3, 1)
+      q(3, 2) = -q(2, 1)
    end if
+   norm = 1.0_wp / sqrt(norm)
+   q(1, 2) = q(1, 2) * norm
+   q(2, 2) = q(2, 2) * norm
+   q(3, 2) = q(3, 2) * norm
+
    q(1, 3) = q(2, 1) * q(3, 2) - q(3, 1) * q(2, 2)
    q(2, 3) = q(3, 1) * q(1, 2) - q(1, 1) * q(3, 2)
    q(3, 3) = q(1, 1) * q(2, 2) - q(2, 1) * q(1, 2)
@@ -346,37 +364,29 @@ pure subroutine eigvec_3x3(a, w, q)
    n3 = q(1, 3) * a(1, 3) + q(2, 3) * a(2, 3) + q(3, 3) * a(3, 3) - w(2)
 
    if (abs(n1) >= abs(n3)) then
-      norm = max(abs(n1), abs(n2))
-      if (norm > eps) then
-         if (abs(n1) >= abs(n2)) then
-            n2 = n2 / n1
-            n1 = sqrt(1.0_wp / (1.0_wp + n2 * n2))
-            n2 = n2 * n1
-         else
-            n1 = n1 / n2
-            n2 = sqrt(1.0_wp / (1.0_wp + n1 * n1))
-            n1 = n1 * n2
-         end if
-         q(1, 2) = n2 * q(1, 2) - n1 * q(1, 3)
-         q(2, 2) = n2 * q(2, 2) - n1 * q(2, 3)
-         q(3, 2) = n2 * q(3, 2) - n1 * q(3, 3)
+      cu = n2
+      cv = n1
+      if (abs(cv) >= abs(cu)) then
+         inv_r = sign(1.0_wp, cv)
+      else
+         inv_r = sign(1.0_wp, cu)
       end if
    else
-      norm = max(abs(n3), abs(n2))
-      if (norm > eps) then
-         if (abs(n3) >= abs(n2)) then
-            n2 = n2 / n3
-            n3 = sqrt(1.0_wp / (1.0_wp + n2 * n2))
-            n2 = n2 * n3
-         else
-            n3 = n3 / n2
-            n2 = sqrt(1.0_wp / (1.0_wp + n3 * n3))
-            n3 = n3 * n2
-         end if
-         q(1, 2) = n3 * q(1, 2) - n2 * q(1, 3)
-         q(2, 2) = n3 * q(2, 2) - n2 * q(2, 3)
-         q(3, 2) = n3 * q(3, 2) - n2 * q(3, 3)
+      cu = n3
+      cv = n2
+      if (abs(cv) > abs(cu)) then
+         inv_r = sign(1.0_wp, cv)
+      else
+         inv_r = sign(1.0_wp, cu)
       end if
+   end if
+   if (max(abs(cu), abs(cv)) > eps) then
+      inv_r = inv_r / sqrt(cu * cu + cv * cv)
+      cu = cu * inv_r
+      cv = cv * inv_r
+      q(1, 2) = cu * q(1, 2) - cv * q(1, 3)
+      q(2, 2) = cu * q(2, 2) - cv * q(2, 3)
+      q(3, 2) = cu * q(3, 2) - cv * q(3, 3)
    end if
 
    ! Calculate third eigenvector from cross product
