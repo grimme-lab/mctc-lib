@@ -508,7 +508,7 @@ subroutine test_reduce_basis(error)
    ref(:, 2) = a2
    ref(:, 3) = a3
 
-   ! Unimodular integer shears of the reference triclinic basis
+   ! 3D triclinic cell under unimodular integer shears
    lat = ref
    lat(:, 2) = lat(:, 2) + 5.0_wp * lat(:, 1)
    lat(:, 3) = lat(:, 3) - 4.0_wp * lat(:, 1) + 3.0_wp * lat(:, 2)
@@ -516,6 +516,7 @@ subroutine test_reduce_basis(error)
 
    call reduce_basis(lat)
 
+   ! Cell volume and pairwise size-reduction invariant
    ref_vol = abs(matdet_3x3(ref))
    call check(error, abs(matdet_3x3(lat)), ref_vol, thr=thr * ref_vol)
    if (allocated(error)) return
@@ -530,6 +531,7 @@ subroutine test_reduce_basis(error)
       end do
    end do
 
+   ! Symmetric lattice-point equivalence inside rcut
    call get_lattice_points([.true.], ref, rcut, trans1, error)
    if (allocated(error)) return
 
@@ -540,7 +542,7 @@ subroutine test_reduce_basis(error)
       & "3D lattice changed by basis reduction")
    if (allocated(error)) return
 
-   ! Nonperiodic zero columns in 2D, 1D, and 0D cells must remain zero
+   ! 2D sheared slab: keep nonperiodic zero column and preserve 2D lattice
    ref = 0.0_wp
    ref(:, 1) = a1
    ref(:, 3) = a3
@@ -564,6 +566,7 @@ subroutine test_reduce_basis(error)
       & "2D lattice changed by basis reduction")
    if (allocated(error)) return
 
+   ! 1D wire: single periodic vector and zero columns remain unchanged
    ref = 0.0_wp
    ref(:, 2) = a2
    lat = ref
@@ -572,6 +575,7 @@ subroutine test_reduce_basis(error)
       & "1D basis changed by basis reduction")
    if (allocated(error)) return
 
+   ! 0D all-zero matrix: guard against division by zero
    lat = 0.0_wp
    call reduce_basis(lat)
    call check(error, maxval(abs(lat)) <= thr)
