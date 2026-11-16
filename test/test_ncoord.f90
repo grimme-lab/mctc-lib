@@ -2692,12 +2692,12 @@ contains
 
       call new_exp_ncoord(exp_nc, mol, kcn=16.0_wp, rcov=rcov)
       d2 = exp_nc%ncoord_d2count(1, 1, 0.5_wp)
-      call check(error, d2, ref_exp, thr=1.0e-10_wp*abs(ref_exp))
+      call check(error, d2, ref_exp, thr=thr, rel=.true.)
       if (allocated(error)) return
 
       call new_dexp_ncoord(dexp_nc, mol, rcov=rcov)
       d2 = dexp_nc%ncoord_d2count(1, 1, 0.25_wp)
-      call check(error, d2, ref_dexp, thr=1.0e-10_wp*abs(ref_dexp))
+      call check(error, d2, ref_dexp, thr=thr, rel=.true.)
       if (allocated(error)) return
 
    end subroutine test_d2count_short_range
