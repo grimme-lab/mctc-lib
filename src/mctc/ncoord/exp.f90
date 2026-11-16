@@ -100,11 +100,12 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp) :: rc, count
+      real(wp) :: rc, inv_r, count
 
       rc = self%rcov(izp) + self%rcov(jzp)
+      inv_r = 1.0_wp / r
 
-      count =1.0_wp/(1.0_wp+exp(-self%kcn*(rc/r-1.0_wp)))
+      count = 1.0_wp / (1.0_wp + exp(-self%kcn * (rc * inv_r - 1.0_wp)))
 
    end function ncoord_count
 
@@ -119,12 +120,14 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp) :: rc, expterm, count
+      real(wp) :: rc, inv_r, expterm, cf, count
 
       rc = self%rcov(izp) + self%rcov(jzp)
+      inv_r = 1.0_wp / r
 
-      expterm = exp(-self%kcn*(rc/r-1.0_wp))
-      count = (-self%kcn*rc*expterm)/(r**2.0_wp*((expterm+1.0_wp)**2.0_wp))
+      expterm = exp(-self%kcn * (rc * inv_r - 1.0_wp))
+      cf = 1.0_wp / (1.0_wp + expterm)
+      count = -self%kcn * rc * (expterm * cf * cf) * (inv_r * inv_r)
 
    end function ncoord_dcount
 
@@ -140,14 +143,17 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp) :: rc, cf, tmp, count
+      real(wp) :: rc, inv_r, inv_r2, krc, expterm, cf, tmp, count
 
       rc = self%rcov(izp) + self%rcov(jzp)
-      cf = 1.0_wp/(1.0_wp + exp(-self%kcn*(rc/r - 1.0_wp)))
-      tmp = cf*(1.0_wp - cf)
+      inv_r = 1.0_wp / r
+      inv_r2 = inv_r * inv_r
+      krc = self%kcn * rc
+      expterm = exp(-self%kcn * (rc * inv_r - 1.0_wp))
+      cf = 1.0_wp / (1.0_wp + expterm)
+      tmp = expterm * cf * cf
 
-      count = tmp*(1.0_wp - 2.0_wp*cf)*(self%kcn*rc)**2/r**4 &
-         & + 2.0_wp*tmp*self%kcn*rc/r**3
+      count = tmp * krc * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * cf) * krc * inv_r + 2.0_wp)
 
    end function ncoord_d2count
 

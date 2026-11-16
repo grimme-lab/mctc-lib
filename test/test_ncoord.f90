@@ -126,7 +126,8 @@ contains
       & new_unittest("hessian-list-feo2_dexp", test_hessian_list_feo2_dexp), &
       & new_unittest("cn_unknown", test_cn_unknown, should_fail=.true.), &
       & new_unittest("cn_count_string_to_id", test_cn_count_string_to_id), &
-      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string) &
+      & new_unittest("cn_count_id_to_string", test_cn_count_id_to_string), &
+      & new_unittest("d2count-short-range", test_d2count_short_range) &
       & ]
 
    end subroutine collect_ncoord
@@ -2664,6 +2665,42 @@ contains
       if (allocated(error)) return
 
    end subroutine test_cn_count_id_to_string
+
+
+   !> Second derivative of the exp and dexp counting functions at distances
+   !> where 1 - f underflows, against references from high-precision
+   !> numerical differentiation of the counting functions
+   subroutine test_d2count_short_range(error)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      ! d2f/dr2 of 1/(1 + exp(-16 (2/r - 1))) at r = 0.5
+      real(wp), parameter :: ref_exp = -2.2620204321264122e-17_wp
+      ! d2f/dr2 of the product of 1/(1 + exp(-10 (2/r - 1))) and
+      ! 1/(1 + exp(-20 (4/r - 1))) at r = 0.25
+      real(wp), parameter :: ref_dexp = -3.9690890163311930e-26_wp
+
+      type(structure_type) :: mol
+      type(exp_ncoord_type) :: exp_nc
+      type(dexp_ncoord_type) :: dexp_nc
+      real(wp), allocatable :: rcov(:)
+      real(wp) :: d2
+
+      call get_structure(mol, "mindless04")
+      allocate(rcov(mol%nid), source=1.0_wp)
+
+      call new_exp_ncoord(exp_nc, mol, kcn=16.0_wp, rcov=rcov)
+      d2 = exp_nc%ncoord_d2count(1, 1, 0.5_wp)
+      call check(error, d2, ref_exp, thr=thr2, rel=.true.)
+      if (allocated(error)) return
+
+      call new_dexp_ncoord(dexp_nc, mol, rcov=rcov)
+      d2 = dexp_nc%ncoord_d2count(1, 1, 0.25_wp)
+      call check(error, d2, ref_dexp, thr=thr2, rel=.true.)
+      if (allocated(error)) return
+
+   end subroutine test_d2count_short_range
 
 
 end module test_ncoord

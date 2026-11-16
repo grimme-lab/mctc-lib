@@ -22,14 +22,21 @@ module mctc_ncoord_erf
    implicit none
    private
 
-   public :: new_erf_ncoord
+   public :: new_erf_ncoord, init_erf_ncoord
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: erf_ncoord_type
-      !> Covalent radii
-      real(wp), allocatable :: rcov(:)
-      !> Exponent of the distance normalization
-      real(wp)  :: norm_exp
+      ! The pair tables are derived from rcov and norm_exp. All four are private
+      ! so they cannot be changed from outside without rebuilding the tables,
+      ! use init_erf_ncoord to set them.
+      !> Covalent radii, set together with the pair tables by init_erf_ncoord
+      real(wp), allocatable, private :: rcov(:)
+      !> Exponent of the distance normalization, set by init_erf_ncoord
+      real(wp), private :: norm_exp
+      !> Precomputed pairwise covalent radii sum (nid, nid)
+      real(wp), allocatable, private :: rc_mat(:, :)
+      !> Precomputed inverse normalized pairwise covalent radii (nid, nid)
+      real(wp), allocatable, private :: inv_rcn_mat(:, :)
    contains
       !> Evaluates the error counting function
       procedure :: ncoord_count
@@ -77,13 +84,6 @@ contains
          self%cutoff = default_cutoff
       end if
 
-      allocate(self%rcov(mol%nid))
-      if (present(rcov)) then
-         self%rcov(:) = rcov
-      else
-         self%rcov(:) = get_covalent_rad(mol%num)
-      end if
-
       self%directed_factor = 1.0_wp
 
       if (present(cut)) then
@@ -94,12 +94,67 @@ contains
       end if
 
       if (present(norm_exp)) then
-         self%norm_exp = norm_exp
+         call init_erf_ncoord(self, mol, norm_exp, rcov)
       else
-         self%norm_exp = default_norm_exp
+         call init_erf_ncoord(self, mol, default_norm_exp, rcov)
       end if
 
    end subroutine new_erf_ncoord
+
+
+   !> Set the covalent radii and the distance normalization of an erf-type
+   !> coordination number and build the pair tables derived from them.
+   !> The radii and exponent are only accessible through this routine,
+   !> which keeps them consistent with the tables.
+   subroutine init_erf_ncoord(self, mol, norm_exp, rcov)
+
+      !> Coordination number container
+      class(erf_ncoord_type), intent(inout) :: self
+
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+
+      !> Exponent of the distance normalization
+      real(wp), intent(in) :: norm_exp
+
+      !> Covalent radii, absent selects the default covalent radii
+      real(wp), intent(in), optional :: rcov(:)
+
+      ! Avoid the 0/0 in the derivative expressions for a non-positive radius
+      ! sum, the large finite inverse makes the exponentially damped
+      ! derivatives evaluate to zero
+      real(wp), parameter :: inv_rc_zero = 1.0e30_wp
+
+      integer :: izp, jzp
+      real(wp) :: rc
+
+      if (allocated(self%rcov)) deallocate(self%rcov)
+      allocate(self%rcov(mol%nid))
+      if (present(rcov)) then
+         self%rcov(:) = rcov
+      else
+         self%rcov(:) = get_covalent_rad(mol%num)
+      end if
+
+      self%norm_exp = norm_exp
+
+      if (allocated(self%rc_mat)) deallocate(self%rc_mat)
+      if (allocated(self%inv_rcn_mat)) deallocate(self%inv_rcn_mat)
+      allocate(self%rc_mat(mol%nid, mol%nid), self%inv_rcn_mat(mol%nid, mol%nid))
+
+      do jzp = 1, mol%nid
+         do izp = 1, mol%nid
+            rc = self%rcov(izp) + self%rcov(jzp)
+            self%rc_mat(izp, jzp) = rc
+            if (rc > 0.0_wp) then
+               self%inv_rcn_mat(izp, jzp) = 1.0_wp / rc**self%norm_exp
+            else
+               self%inv_rcn_mat(izp, jzp) = inv_rc_zero
+            end if
+         end do
+      end do
+
+   end subroutine init_erf_ncoord
 
 
    !> Error counting function for coordination number contributions.
@@ -113,11 +168,12 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp) :: rc, count
+      real(wp) :: rc, inv_rcn, count
 
-      rc = (self%rcov(izp) + self%rcov(jzp))
+      rc = self%rc_mat(izp, jzp)
+      inv_rcn = self%inv_rcn_mat(izp, jzp)
 
-      count = 0.5_wp * (1.0_wp + erf(-self%kcn*(r-rc)/rc**self%norm_exp))
+      count = 0.5_wp * (1.0_wp + erf(-self%kcn * (r - rc) * inv_rcn))
 
    end function ncoord_count
 
@@ -132,14 +188,16 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp), parameter :: sqrtpi = sqrt(pi)
-      real(wp) :: rc, exponent, expterm, count
+      real(wp), parameter :: inv_sqrtpi = 1.0_wp / sqrt(pi)
+      real(wp) :: rc, inv_rcn, alpha, exponent, expterm, count
 
-      rc = self%rcov(izp) + self%rcov(jzp)
+      rc = self%rc_mat(izp, jzp)
+      inv_rcn = self%inv_rcn_mat(izp, jzp)
 
-      exponent = self%kcn*(r-rc)/rc**self%norm_exp
-      expterm = exp(-exponent**2.0_wp)
-      count = -(self%kcn*expterm)/(sqrtpi*rc**self%norm_exp)
+      alpha = self%kcn * inv_rcn
+      exponent = alpha * (r - rc)
+      expterm = exp(-exponent * exponent)
+      count = -inv_sqrtpi * alpha * expterm
 
    end function ncoord_dcount
 
@@ -155,15 +213,16 @@ contains
       !> Current distance.
       real(wp), intent(in) :: r
 
-      real(wp), parameter :: sqrtpi = sqrt(pi)
-      real(wp) :: rc, exponent, expterm, count, rcn
+      real(wp), parameter :: two_inv_sqrtpi = 2.0_wp / sqrt(pi)
+      real(wp) :: rc, inv_rcn, alpha, exponent, expterm, count
 
-      rc = self%rcov(izp) + self%rcov(jzp)
-      rcn = rc**self%norm_exp
+      rc = self%rc_mat(izp, jzp)
+      inv_rcn = self%inv_rcn_mat(izp, jzp)
 
-      exponent = self%kcn*(r - rc)/rcn
-      expterm = exp(-exponent**2)
-      count = 2.0_wp*self%kcn**2*exponent*expterm/(sqrtpi*rcn**2)
+      alpha = self%kcn * inv_rcn
+      exponent = alpha * (r - rc)
+      expterm = exp(-exponent * exponent)
+      count = two_inv_sqrtpi * alpha * alpha * exponent * expterm
 
    end function ncoord_d2count
 

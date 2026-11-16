@@ -157,9 +157,10 @@ elemental function exp_count(k, r, r0) result(count)
    !> Cutoff radius.
    real(wp), intent(in) :: r0
 
-   real(wp) :: count
+   real(wp) :: count, inv_r
 
-   count = 1.0_wp/(1.0_wp+exp(-k*(r0/r-1.0_wp)))
+   inv_r = 1.0_wp / r
+   count = 1.0_wp / (1.0_wp + exp(-k * (r0 * inv_r - 1.0_wp)))
 
 end function exp_count
 
@@ -172,11 +173,12 @@ elemental function exp_dcount(k, r, r0) result(count)
    !> Cutoff radius.
    real(wp), intent(in) :: r0
 
-   real(wp) :: count
-   real(wp) :: expterm
+   real(wp) :: count, inv_r, expterm, cf
 
-   expterm = exp(-k*(r0/r-1.0_wp))
-   count = (-k*r0*expterm)/(r**2.0_wp*((expterm+1.0_wp)**2.0_wp))
+   inv_r = 1.0_wp / r
+   expterm = exp(-k * (r0 * inv_r - 1.0_wp))
+   cf = 1.0_wp / (1.0_wp + expterm)
+   count = -k * r0 * (expterm * cf * cf) * (inv_r * inv_r)
 
 end function exp_dcount
 
@@ -189,13 +191,17 @@ elemental function exp_d2count(k, r, r0) result(count)
    !> Cutoff radius.
    real(wp), intent(in) :: r0
 
-   real(wp) :: count, cf, tmp
+   real(wp) :: count, inv_r, inv_r2, krc, expterm, cf, tmp
 
-   cf = exp_count(k, r, r0)
-   tmp = cf*(1.0_wp - cf)
+   inv_r = 1.0_wp / r
+   inv_r2 = inv_r * inv_r
+   krc = k * r0
+   expterm = exp(-k * (r0 * inv_r - 1.0_wp))
+   cf = 1.0_wp / (1.0_wp + expterm)
+   ! cf*(1 - cf) written without the cancellation once cf rounds to 1
+   tmp = expterm * cf * cf
 
-   count = tmp*(1.0_wp - 2.0_wp*cf)*(k*r0)**2/r**4 &
-      & + 2.0_wp*tmp*k*r0/r**3
+   count = tmp * krc * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * cf) * krc * inv_r + 2.0_wp)
 
 end function exp_d2count
 

@@ -14,11 +14,10 @@
 
 !> Coordination number implementation with single error function and EN-weighting.
 module mctc_ncoord_erf_en
-   use mctc_data_covrad, only : get_covalent_rad
    use mctc_data_paulingen, only : get_pauling_en
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use mctc_ncoord_erf, only : erf_ncoord_type
+   use mctc_ncoord_erf, only : erf_ncoord_type, init_erf_ncoord
    implicit none
    private
 
@@ -73,13 +72,6 @@ contains
          self%cutoff = default_cutoff
       end if
 
-      allocate(self%rcov(mol%nid))
-      if (present(rcov)) then
-         self%rcov(:) = rcov
-      else
-         self%rcov(:) = get_covalent_rad(mol%num)
-      end if
-
       allocate(self%en(mol%nid))
       if (present(en)) then
          self%en(:) = en
@@ -99,9 +91,9 @@ contains
       end if
 
       if (present(norm_exp)) then
-         self%norm_exp = norm_exp
+         call init_erf_ncoord(self, mol, norm_exp, rcov)
       else
-         self%norm_exp = default_norm_exp
+         call init_erf_ncoord(self, mol, default_norm_exp, rcov)
       end if
 
    end subroutine new_erf_en_ncoord

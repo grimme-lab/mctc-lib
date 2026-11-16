@@ -14,11 +14,10 @@
 
 !> Coordination number implementation with single error function and EN-weighting for dftd4
 module mctc_ncoord_erf_dftd4
-   use mctc_data_covrad, only : get_covalent_rad
    use mctc_data_paulingen, only : get_pauling_en
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use mctc_ncoord_erf, only : erf_ncoord_type
+   use mctc_ncoord_erf, only : erf_ncoord_type, init_erf_ncoord
    implicit none
    private
 
@@ -26,8 +25,13 @@ module mctc_ncoord_erf_dftd4
 
    !> Coordination number evaluator
    type, public, extends(erf_ncoord_type) :: erf_dftd4_ncoord_type
-      !> Electronegativity
-      real(wp), allocatable :: en(:)
+      ! The EN factor table is derived from en. Both are private so they cannot
+      ! be changed from outside without rebuilding the table, they are set by
+      ! new_erf_dftd4_ncoord.
+      !> Electronegativity, set on construction together with en_mat
+      real(wp), allocatable, private :: en(:)
+      !> Precomputed pairwise electronegativity scaling factor (nid, nid)
+      real(wp), allocatable, private :: en_mat(:, :)
    contains
       !> Evaluates pairwise electronegativity factor
       procedure :: get_en_factor
@@ -80,13 +84,6 @@ contains
          self%cutoff = default_cutoff
       end if
 
-      allocate(self%rcov(mol%nid))
-      if (present(rcov)) then
-         self%rcov(:) = rcov
-      else
-         self%rcov(:) = get_covalent_rad(mol%num)
-      end if
-
       allocate(self%en(mol%nid))
       if (present(en)) then
          self%en(:) = en
@@ -104,12 +101,33 @@ contains
       end if
 
       if (present(norm_exp)) then
-         self%norm_exp = norm_exp
+         call init_erf_ncoord(self, mol, norm_exp, rcov)
       else
-         self%norm_exp = default_norm_exp
+         call init_erf_ncoord(self, mol, default_norm_exp, rcov)
       end if
 
+      call init_en_table(self)
+
    end subroutine new_erf_dftd4_ncoord
+
+
+   !> Precompute pairwise electronegativity scaling factor table
+   pure subroutine init_en_table(self)
+      !> Coordination number container
+      class(erf_dftd4_ncoord_type), intent(inout) :: self
+
+      integer :: nid, izp, jzp
+
+      nid = size(self%en)
+      allocate(self%en_mat(nid, nid))
+      do jzp = 1, nid
+         do izp = 1, nid
+            self%en_mat(izp, jzp) = &
+               & k4*exp(-(abs(self%en(izp)-self%en(jzp)) + k5)**2.0_wp/k6)
+         end do
+      end do
+
+   end subroutine init_en_table
 
 
    !> Evaluates pairwise electronegativity factor if non applies
@@ -123,7 +141,7 @@ contains
 
       real(wp) :: en_factor
 
-      en_factor = k4*exp(-(abs(self%en(izp)-self%en(jzp)) + k5)**2.0_wp/k6)
+      en_factor = self%en_mat(izp, jzp)
 
    end function get_en_factor
 
