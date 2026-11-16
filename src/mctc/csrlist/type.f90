@@ -491,7 +491,7 @@ subroutine neighbor_pass(self, grid, lstore, cnt, icnt, nself, &
             if (use_wsc) then
                itp = tridx(iat)
                wsc%nimg_list(pos) = nself
-               wsc%itr_list(pos) = int(itp)
+               wsc%itr_list(pos) = itp
                if (nself > 0) then
                   wsc%tridx_list(itp:itp + nself - 1) = self_tridx(1:nself)
                   itp = itp + nself
@@ -528,7 +528,7 @@ subroutine neighbor_pass(self, grid, lstore, cnt, icnt, nself, &
                   if (lstore) then
                      self%nlat(pos + nn) = grid%cellatidx(checkat)
                      wsc%nimg_list(pos + nn) = nimg_count
-                     wsc%itr_list(pos + nn) = int(itp)
+                     wsc%itr_list(pos + nn) = itp
                      wsc%tridx_list(itp:itp + nimg_count - 1) = &
                         & tridx_arr(1:nimg_count)
                      itp = itp + nimg_count
