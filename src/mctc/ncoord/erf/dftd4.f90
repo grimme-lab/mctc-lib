@@ -46,9 +46,7 @@ module mctc_ncoord_erf_dftd4
    !> Parameter for electronegativity scaling
    real(wp), parameter :: k5 = 19.08857_wp
    !> Parameter for electronegativity scaling
-   real(wp), parameter :: k6 = 2.0_wp * 11.28174_wp * 11.28174_wp
-   !> Inverse parameter for electronegativity scaling
-   real(wp), parameter :: inv_k6 = 1.0_wp / k6
+   real(wp), parameter :: k6 = 2*11.28174_wp**2.0_wp
 
 contains
 
@@ -116,14 +114,13 @@ contains
       class(erf_dftd4_ncoord_type), intent(inout) :: self
 
       integer :: nid, izp, jzp
-      real(wp) :: tmp
 
       nid = size(self%en)
       allocate(self%en_mat(nid, nid))
       do jzp = 1, nid
          do izp = 1, nid
-            tmp = abs(self%en(izp) - self%en(jzp)) + k5
-            self%en_mat(izp, jzp) = k4 * exp(-tmp * tmp * inv_k6)
+            self%en_mat(izp, jzp) = &
+               & k4*exp(-(abs(self%en(izp)-self%en(jzp)) + k5)**2.0_wp/k6)
          end do
       end do
 
