@@ -179,7 +179,7 @@ subroutine new_csr_list(self, mol, error, wsc, cutoff, trans, complete)
    type(error_type), allocatable, intent(out) :: error
 
    !> Wigner-Seitz cell type, enables the Wigner-Seitz image search
-   type(wignerseitz_cell), intent(inout), optional :: wsc
+   type(wignerseitz_cell), intent(out), optional :: wsc
 
    !> Realspace cutoff for neighborlist generation
    real(wp), intent(in), optional :: cutoff
@@ -221,7 +221,7 @@ subroutine new_csr_list_legacy(self, mol, wsc, cutoff, trans, complete)
    type(structure_type), intent(in) :: mol
 
    !> Wigner-Seitz cell type, enables the Wigner-Seitz image search
-   type(wignerseitz_cell), intent(inout), optional :: wsc
+   type(wignerseitz_cell), intent(out), optional :: wsc
 
    !> Realspace cutoff for neighborlist generation
    real(wp), intent(in), optional :: cutoff
@@ -255,7 +255,7 @@ subroutine build_list(self, mol, error, wsc)
    type(error_type), allocatable, intent(out) :: error
 
    !> Wigner-Seitz cell type
-   type(wignerseitz_cell), intent(inout), optional :: wsc
+   type(wignerseitz_cell), intent(out), optional :: wsc
 
    type(grid_type) :: grid
 
@@ -282,8 +282,7 @@ subroutine build_list(self, mol, error, wsc)
       if (allocated(error)) return
 
       self%trans = trans
-      wsc%trans = trans
-      wsc%nimg_max = 0
+      call move_alloc(trans, wsc%trans)
    else if (.not. allocated(self%trans)) then
       if (periodic) then
          call get_lattice_points(mol%periodic, mol%lattice, self%cutoff, trans, error)
@@ -297,7 +296,14 @@ subroutine build_list(self, mol, error, wsc)
 
    if (allocated(self%inl)) deallocate(self%inl)
    allocate(self%inl(nat + 1), source=1_i8)
-   if (nat <= 0) return
+   if (nat <= 0) then
+      if (use_wsc) then
+         allocate(wsc%nimg_list(0))
+         allocate(wsc%itr_list(1), source=1_i8)
+         allocate(wsc%tridx_list(0))
+      end if
+      return
+   end if
 
    ! 2. Linked cell grid. Each orthogonal height of the linked-cell is larger
    ! or equal to the cutoff distance.
