@@ -34,10 +34,6 @@ module mctc_ncoord_exp
       procedure :: ncoord_dcount
       !> Evaluates the second derivative of the exponential counting function
       procedure :: ncoord_d2count
-      !> Evaluates both the counting function and its first derivative
-      procedure :: ncoord_count_dcount
-      !> Evaluates both the first and second derivatives of the counting function
-      procedure :: ncoord_dcount_d2count
    end type exp_ncoord_type
 
    !> Steepness of counting function
@@ -160,62 +156,5 @@ contains
       count = tmp * krc * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * cf) * krc * inv_r + 2.0_wp)
 
    end function ncoord_d2count
-
-
-   !> Fused evaluation of exponential counting function and its first derivative.
-   elemental subroutine ncoord_count_dcount(self, izp, jzp, r, countf, countd)
-      !> Coordination number container
-      class(exp_ncoord_type), intent(in) :: self
-      !> Atom i index
-      integer, intent(in) :: izp
-      !> Atom j index
-      integer, intent(in) :: jzp
-      !> Current distance
-      real(wp), intent(in) :: r
-      !> Counting function value
-      real(wp), intent(out) :: countf
-      !> First derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd
-
-      real(wp) :: rc, inv_r, expterm
-
-      rc = self%rcov(izp) + self%rcov(jzp)
-      inv_r = 1.0_wp / r
-      expterm = exp(-self%kcn * (rc * inv_r - 1.0_wp))
-      countf = 1.0_wp / (1.0_wp + expterm)
-      countd = -self%kcn * rc * (expterm * countf * countf) * (inv_r * inv_r)
-
-   end subroutine ncoord_count_dcount
-
-
-   !> Fused evaluation of first and second derivatives of exponential counting function.
-   elemental subroutine ncoord_dcount_d2count(self, izp, jzp, r, countd, countd2)
-      !> Coordination number container
-      class(exp_ncoord_type), intent(in) :: self
-      !> Atom i index
-      integer, intent(in) :: izp
-      !> Atom j index
-      integer, intent(in) :: jzp
-      !> Current distance
-      real(wp), intent(in) :: r
-      !> First derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd
-      !> Second derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd2
-
-      real(wp) :: rc, inv_r, inv_r2, krc, expterm, cf, tmp
-
-      rc = self%rcov(izp) + self%rcov(jzp)
-      inv_r = 1.0_wp / r
-      inv_r2 = inv_r * inv_r
-      krc = self%kcn * rc
-      expterm = exp(-self%kcn * (rc * inv_r - 1.0_wp))
-      cf = 1.0_wp / (1.0_wp + expterm)
-      tmp = expterm * cf * cf
-
-      countd = -krc * tmp * inv_r2
-      countd2 = tmp * krc * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * cf) * krc * inv_r + 2.0_wp)
-
-   end subroutine ncoord_dcount_d2count
 
 end module mctc_ncoord_exp

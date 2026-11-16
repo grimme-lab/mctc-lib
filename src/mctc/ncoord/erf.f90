@@ -41,10 +41,6 @@ module mctc_ncoord_erf
       procedure :: ncoord_dcount
       !> Evaluates the second derivative of the error counting function
       procedure :: ncoord_d2count
-      !> Evaluates both the counting function and its first derivative
-      procedure :: ncoord_count_dcount
-      !> Evaluates both the first and second derivatives of the counting function
-      procedure :: ncoord_dcount_d2count
    end type erf_ncoord_type
 
    !> Steepness of counting function
@@ -212,64 +208,5 @@ contains
       count = two_inv_sqrtpi * alpha * alpha * exponent * expterm
 
    end function ncoord_d2count
-
-
-   !> Fused evaluation of error counting function and its first derivative.
-   elemental subroutine ncoord_count_dcount(self, izp, jzp, r, countf, countd)
-      !> Coordination number container
-      class(erf_ncoord_type), intent(in) :: self
-      !> Atom i index
-      integer, intent(in) :: izp
-      !> Atom j index
-      integer, intent(in) :: jzp
-      !> Current distance
-      real(wp), intent(in) :: r
-      !> Counting function value
-      real(wp), intent(out) :: countf
-      !> First derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd
-
-      real(wp), parameter :: inv_sqrtpi = 1.0_wp / sqrt(pi)
-      real(wp) :: rc, inv_rcn, alpha, exponent
-
-      rc = self%rc_mat(izp, jzp)
-      inv_rcn = self%inv_rcn_mat(izp, jzp)
-
-      alpha = self%kcn * inv_rcn
-      exponent = alpha * (r - rc)
-      countf = 0.5_wp * (1.0_wp + erf(-exponent))
-      countd = -inv_sqrtpi * alpha * exp(-exponent * exponent)
-
-   end subroutine ncoord_count_dcount
-
-
-   !> Fused evaluation of first and second derivatives of error counting function.
-   elemental subroutine ncoord_dcount_d2count(self, izp, jzp, r, countd, countd2)
-      !> Coordination number container
-      class(erf_ncoord_type), intent(in) :: self
-      !> Atom i index
-      integer, intent(in) :: izp
-      !> Atom j index
-      integer, intent(in) :: jzp
-      !> Current distance
-      real(wp), intent(in) :: r
-      !> First derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd
-      !> Second derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd2
-
-      real(wp), parameter :: inv_sqrtpi = 1.0_wp / sqrt(pi)
-      real(wp) :: rc, inv_rcn, alpha, exponent, dtmp
-
-      rc = self%rc_mat(izp, jzp)
-      inv_rcn = self%inv_rcn_mat(izp, jzp)
-
-      alpha = self%kcn * inv_rcn
-      exponent = alpha * (r - rc)
-      dtmp = -inv_sqrtpi * alpha * exp(-exponent * exponent)
-      countd = dtmp
-      countd2 = -2.0_wp * alpha * exponent * dtmp
-
-   end subroutine ncoord_dcount_d2count
 
 end module mctc_ncoord_erf

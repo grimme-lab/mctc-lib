@@ -65,14 +65,6 @@ module mctc_ncoord_type
       !> Evaluates the second derivative of the counting function
       !> Analytic implementations can override the numerical fallback.
       procedure :: ncoord_d2count
-      !> Evaluates both the counting function and its first derivative.
-      !> Used by the derivative kernels, extensions overriding ncoord_count or
-      !> ncoord_dcount of a type that provides a fused version must override it too.
-      procedure :: ncoord_count_dcount
-      !> Evaluates both the first and second derivatives of the counting function.
-      !> Used by the Hessian kernels, extensions overriding ncoord_dcount or
-      !> ncoord_d2count of a type that provides a fused version must override it too.
-      procedure :: ncoord_dcount_d2count
    end type ncoord_type
 
    abstract interface
@@ -132,52 +124,6 @@ contains
          & - self%ncoord_dcount(izp, jzp, r - step))/(2.0_wp*step)
 
    end function ncoord_d2count
-
-
-   !> Evaluates both the counting function and its first derivative w.r.t. distance.
-   !> Default implementation delegates to ncoord_count and ncoord_dcount for
-   !> backwards compatibility with external subclasses.
-   elemental subroutine ncoord_count_dcount(self, izp, jzp, r, countf, countd)
-      !> Instance of coordination number container
-      class(ncoord_type), intent(in) :: self
-      !> Atom i index
-      integer, intent(in) :: izp
-      !> Atom j index
-      integer, intent(in) :: jzp
-      !> Current distance
-      real(wp), intent(in) :: r
-      !> Counting function value
-      real(wp), intent(out) :: countf
-      !> First derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd
-
-      countf = self%ncoord_count(izp, jzp, r)
-      countd = self%ncoord_dcount(izp, jzp, r)
-
-   end subroutine ncoord_count_dcount
-
-
-   !> Evaluates both the first and second derivatives of the counting function
-   !> w.r.t. distance. Default implementation delegates to ncoord_dcount and
-   !> ncoord_d2count for backwards compatibility with external subclasses.
-   elemental subroutine ncoord_dcount_d2count(self, izp, jzp, r, countd, countd2)
-      !> Instance of coordination number container
-      class(ncoord_type), intent(in) :: self
-      !> Atom i index
-      integer, intent(in) :: izp
-      !> Atom j index
-      integer, intent(in) :: jzp
-      !> Current distance
-      real(wp), intent(in) :: r
-      !> First derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd
-      !> Second derivative of counting function w.r.t. distance
-      real(wp), intent(out) :: countd2
-
-      countd = self%ncoord_dcount(izp, jzp, r)
-      countd2 = self%ncoord_d2count(izp, jzp, r)
-
-   end subroutine ncoord_dcount_d2count
 
 
    !> Wrapper for CN using the CN cutoff for the lattice
@@ -438,7 +384,7 @@ contains
       real(wp), intent(out) :: dcndL(:, :, :)
 
       integer :: iat, jat, izp, jzp, itr
-      real(wp) :: r2, r1, rij(3), countf, df, countd(3), sigma(3, 3), cutoff2, den
+      real(wp) :: r2, r1, rij(3), countf, countd(3), sigma(3, 3), cutoff2, den
 
       ! Thread-private arrays for per-atom reductions
       real(wp), allocatable :: cn_local(:)
@@ -448,7 +394,7 @@ contains
 
       !$omp parallel default(none) &
       !$omp shared(self, mol, trans, cutoff2, cn, dcndr, dcndL) &
-      !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, den, countf, df, countd) &
+      !$omp private(iat, jat, itr, izp, jzp, r2, rij, r1, den, countf, countd) &
       !$omp private(sigma, cn_local, dcndL_local)
 
       allocate(cn_local(mol%nat), source=0.0_wp)
@@ -475,9 +421,8 @@ contains
                if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
                r1 = sqrt(r2)
 
-               call self%ncoord_count_dcount(izp, jzp, r1, countf, df)
-               countf = den * countf
-               countd = (den * df / r1) * rij
+               countf = den * self%ncoord_count(izp, jzp, r1)
+               countd = (den * self%ncoord_dcount(izp, jzp, r1) / r1) * rij
                sigma = outerprod(rij, countd)
 
                cn_local(iat) = cn_local(iat) + countf
@@ -538,7 +483,7 @@ contains
 
       integer :: iat, jat, izp, jzp, itr, itrst, itrfin
       integer(i8) :: kat
-      real(wp) :: r2, r1, rij(3), countf, df, countd(3), sigma(3, 3), cutoff2, den
+      real(wp) :: r2, r1, rij(3), countf, countd(3), sigma(3, 3), cutoff2, den
       logical :: trlist, half
       real(wp), allocatable :: lattr(:, :)
 
@@ -562,7 +507,7 @@ contains
       !$omp shared(self, mol, list, lattr, cutoff2, cn, dcndrlist, dcndL) &
       !$omp shared(trlist, half) &
       !$omp private(iat, jat, kat, itr, itrst, itrfin, izp, jzp, r2, rij, r1) &
-      !$omp private(den, countf, df, countd, sigma) &
+      !$omp private(den, countf, countd, sigma) &
       !$omp private(cn_local, dcndrdiag_local, dcndL_local)
       allocate(cn_local, source=cn)
       allocate(dcndrdiag_local(3, mol%nat), source=0.0_wp)
@@ -589,9 +534,8 @@ contains
                if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
                r1 = sqrt(r2)
 
-               call self%ncoord_count_dcount(izp, jzp, r1, countf, df)
-               countf = den * countf
-               countd = (den * df / r1) * rij
+               countf = den * self%ncoord_count(izp, jzp, r1)
+               countd = (den * self%ncoord_dcount(izp, jzp, r1) / r1) * rij
                sigma = outerprod(rij, countd)
 
                cn_local(iat) = cn_local(iat) + countf
@@ -915,9 +859,8 @@ contains
             if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
             r1 = sqrt(r2)
 
-            call self%ncoord_dcount_d2count(izp, jzp, r1, countd, countd2)
-            countd = den * countd
-            countd2 = den * countd2
+            countd = den*self%ncoord_dcount(izp, jzp, r1)
+            countd2 = den*self%ncoord_d2count(izp, jzp, r1)
 
             do ic = 1, 3
                do jc = 1, 3
@@ -1067,9 +1010,8 @@ contains
                if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
                r1 = sqrt(r2)
 
-               call self%ncoord_dcount_d2count(izp, jzp, r1, countd, countd2)
-               countd = den * countd
-               countd2 = den * countd2
+               countd = den*self%ncoord_dcount(izp, jzp, r1)
+               countd2 = den*self%ncoord_d2count(izp, jzp, r1)
 
                do ic = 1, 3
                   do jc = 1, 3
