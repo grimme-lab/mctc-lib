@@ -1063,18 +1063,29 @@ contains
    subroutine add_cn_cut_hessian(cnmax, cn, dcndr, dEdcn, hessian)
       !> Maximum coordination number
       real(wp), intent(in) :: cnmax
-      !> Unmodified coordination numbers and Cartesian derivatives
-      real(wp), intent(in) :: cn(:), dcndr(:, :, :)
+      !> Unmodified coordination numbers
+      real(wp), intent(in) :: cn(:)
+      !> Cartesian derivatives of the unmodified coordination numbers,
+      !> entries below sqrt(tiny) are set to zero
+      real(wp), intent(inout) :: dcndr(:, :, :)
       !> Derivative with respect to the capped coordination numbers
       real(wp), intent(in) :: dEdcn(:)
       !> Cartesian Hessian in flattened (3*nat, 3*nat) representation
       real(wp), intent(inout) :: hessian(:, :)
 
+      real(wp), parameter :: small = sqrt(tiny(1.0_wp))
       integer :: iat, jat, kat, ic, jc, ii, jj
       real(wp) :: factor
       real(wp), allocatable :: weights(:)
 
       weights = dEdcn*d2log_cn_cut(cn, cnmax)
+
+      ! Entries below sqrt(tiny) change the Hessian by about sqrt(tiny) relative
+      ! to the other contributions, far below machine precision. Zeroing them
+      ! lets the loop skip them and avoids slow arithmetic on subnormal numbers.
+      ! Hardware flush-to-zero only covers values below tiny, it is enabled with
+      ! -ffast-math in gfortran and by default from -O1 in Intel compilers.
+      where (abs(dcndr) < small) dcndr = 0.0_wp
 
       ! Each thread owns complete Hessian columns, avoiding a matrix reduction.
       !$omp parallel do collapse(2) schedule(runtime) default(none) &
