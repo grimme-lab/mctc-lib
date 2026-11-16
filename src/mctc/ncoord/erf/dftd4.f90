@@ -114,13 +114,13 @@ contains
       end if
 
       call init_erf_tables(self)
-      call build_en_table(self)
+      call init_en_table(self)
 
    end subroutine new_erf_dftd4_ncoord
 
 
    !> Precompute pairwise electronegativity scaling factor table
-   pure subroutine build_en_table(self)
+   pure subroutine init_en_table(self)
       !> Coordination number container
       class(erf_dftd4_ncoord_type), intent(inout) :: self
 
@@ -128,7 +128,6 @@ contains
       real(wp) :: tmp
 
       nid = size(self%en)
-      if (allocated(self%en_mat)) deallocate(self%en_mat)
       allocate(self%en_mat(nid, nid))
       do jzp = 1, nid
          do izp = 1, nid
@@ -137,7 +136,7 @@ contains
          end do
       end do
 
-   end subroutine build_en_table
+   end subroutine init_en_table
 
 
    !> Evaluates pairwise electronegativity factor if non applies
