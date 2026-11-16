@@ -22,18 +22,18 @@ module mctc_ncoord_erf
    implicit none
    private
 
-   public :: new_erf_ncoord, init_erf_tables
+   public :: new_erf_ncoord, init_erf_ncoord
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: erf_ncoord_type
-      !> Covalent radii
-      real(wp), allocatable :: rcov(:)
-      !> Exponent of the distance normalization
-      real(wp)  :: norm_exp
+      !> Covalent radii, set together with the pair tables by init_erf_ncoord
+      real(wp), allocatable, private :: rcov(:)
+      !> Exponent of the distance normalization, set by init_erf_ncoord
+      real(wp), private :: norm_exp
       !> Precomputed pairwise covalent radii sum (nid, nid)
-      real(wp), allocatable :: rc_mat(:, :)
+      real(wp), allocatable, private :: rc_mat(:, :)
       !> Precomputed inverse normalized pairwise covalent radii (nid, nid)
-      real(wp), allocatable :: inv_rcn_mat(:, :)
+      real(wp), allocatable, private :: inv_rcn_mat(:, :)
    contains
       !> Evaluates the error counting function
       procedure :: ncoord_count
@@ -81,13 +81,6 @@ contains
          self%cutoff = default_cutoff
       end if
 
-      allocate(self%rcov(mol%nid))
-      if (present(rcov)) then
-         self%rcov(:) = rcov
-      else
-         self%rcov(:) = get_covalent_rad(mol%num)
-      end if
-
       self%directed_factor = 1.0_wp
 
       if (present(cut)) then
@@ -98,35 +91,56 @@ contains
       end if
 
       if (present(norm_exp)) then
-         self%norm_exp = norm_exp
+         call init_erf_ncoord(self, mol, norm_exp, rcov)
       else
-         self%norm_exp = default_norm_exp
+         call init_erf_ncoord(self, mol, default_norm_exp, rcov)
       end if
-
-      call init_erf_tables(self)
 
    end subroutine new_erf_ncoord
 
 
-   !> Precompute pairwise covalent radii sum and normalized inverse radii tables.
-   !> Must be called again after changing rcov or norm_exp of a constructed instance.
-   pure subroutine init_erf_tables(self)
+   !> Set the covalent radii and the distance normalization of an erf-type
+   !> coordination number and build the pair tables derived from them.
+   !> The radii and exponent are only accessible through this routine,
+   !> which keeps them consistent with the tables.
+   subroutine init_erf_ncoord(self, mol, norm_exp, rcov)
+
       !> Coordination number container
       class(erf_ncoord_type), intent(inout) :: self
 
-      !> Inverse radius used for non-positive radii sums, keeps the tables finite
+      !> Molecular structure data
+      type(structure_type), intent(in) :: mol
+
+      !> Exponent of the distance normalization
+      real(wp), intent(in) :: norm_exp
+
+      !> Covalent radii, absent selects the default covalent radii
+      real(wp), intent(in), optional :: rcov(:)
+
+      ! Avoid the 0/0 in the derivative expressions for a non-positive radius
+      ! sum, the large finite inverse makes the exponentially damped
+      ! derivatives evaluate to zero
       real(wp), parameter :: inv_rc_zero = 1.0e30_wp
 
-      integer :: nid, izp, jzp
+      integer :: izp, jzp
       real(wp) :: rc
 
-      nid = size(self%rcov)
+      if (allocated(self%rcov)) deallocate(self%rcov)
+      allocate(self%rcov(mol%nid))
+      if (present(rcov)) then
+         self%rcov(:) = rcov
+      else
+         self%rcov(:) = get_covalent_rad(mol%num)
+      end if
+
+      self%norm_exp = norm_exp
+
       if (allocated(self%rc_mat)) deallocate(self%rc_mat)
       if (allocated(self%inv_rcn_mat)) deallocate(self%inv_rcn_mat)
-      allocate(self%rc_mat(nid, nid), self%inv_rcn_mat(nid, nid))
+      allocate(self%rc_mat(mol%nid, mol%nid), self%inv_rcn_mat(mol%nid, mol%nid))
 
-      do jzp = 1, nid
-         do izp = 1, nid
+      do jzp = 1, mol%nid
+         do izp = 1, mol%nid
             rc = self%rcov(izp) + self%rcov(jzp)
             self%rc_mat(izp, jzp) = rc
             if (rc > 0.0_wp) then
@@ -137,7 +151,7 @@ contains
          end do
       end do
 
-   end subroutine init_erf_tables
+   end subroutine init_erf_ncoord
 
 
    !> Error counting function for coordination number contributions.
