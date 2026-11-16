@@ -1082,7 +1082,9 @@ contains
 
       ! Entries below sqrt(tiny) change the Hessian by about sqrt(tiny) relative
       ! to the other contributions, far below machine precision. Zeroing them
-      ! avoids slow arithmetic on subnormal numbers and lets the loop skip them.
+      ! lets the loop skip them and avoids slow arithmetic on subnormal numbers.
+      ! Hardware flush-to-zero only covers values below tiny, it is enabled with
+      ! -ffast-math in gfortran and by default from -O1 in Intel compilers.
       where (abs(dcndr) < small) dcndr = 0.0_wp
 
       ! Each thread owns complete Hessian columns, avoiding a matrix reduction.
