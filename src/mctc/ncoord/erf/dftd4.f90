@@ -25,6 +25,9 @@ module mctc_ncoord_erf_dftd4
 
    !> Coordination number evaluator
    type, public, extends(erf_ncoord_type) :: erf_dftd4_ncoord_type
+      ! The EN factor table is derived from en. Both are private so they cannot
+      ! be changed from outside without rebuilding the table, they are set by
+      ! new_erf_dftd4_ncoord.
       !> Electronegativity, set on construction together with en_mat
       real(wp), allocatable, private :: en(:)
       !> Precomputed pairwise electronegativity scaling factor (nid, nid)

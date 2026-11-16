@@ -26,6 +26,9 @@ module mctc_ncoord_erf
 
    !> Coordination number evaluator
    type, public, extends(ncoord_type) :: erf_ncoord_type
+      ! The pair tables are derived from rcov and norm_exp. All four are private
+      ! so they cannot be changed from outside without rebuilding the tables,
+      ! use init_erf_ncoord to set them.
       !> Covalent radii, set together with the pair tables by init_erf_ncoord
       real(wp), allocatable, private :: rcov(:)
       !> Exponent of the distance normalization, set by init_erf_ncoord
