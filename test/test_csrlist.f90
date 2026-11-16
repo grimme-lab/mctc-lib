@@ -82,6 +82,7 @@ subroutine collect_csrlist(testsuite)
       & new_unittest("wsc-parity-dense-images", test_wsc_parity_dense_images), &
       & new_unittest("wsc-parity-slab-2d", test_wsc_parity_slab), &
       & new_unittest("wsc-parity-wire-1d", test_wsc_parity_wire), &
+      & new_unittest("wsc-reuse", test_wsc_reuse), &
       & new_unittest("csr-vs-verlet-slab-2d", test_list_slab), &
       & new_unittest("csr-vs-verlet-wire-1d", test_list_wire) &
       & ]
@@ -1319,6 +1320,31 @@ subroutine test_list_wire(error)
    call test_pbc_list_gen(error, mol, 3.3_wp, trans=trans, cmp=.true.)
 
 end subroutine test_list_wire
+
+
+!> Regression test for reusing a wignerseitz_cell across new_csr_list calls
+subroutine test_wsc_reuse(error)
+   type(error_type), allocatable, intent(out) :: error
+   type(structure_type) :: mol
+   type(csr_list) :: list
+   type(wignerseitz_cell) :: wsc
+
+   call get_structure(mol, "nacl")
+   call new_csr_list(list, mol, error, wsc=wsc, cutoff=5.0_wp)
+   if (allocated(error)) return
+   call new_csr_list(list, mol, error, wsc=wsc, cutoff=29.0_wp)
+   if (allocated(error)) return
+   if (any(wsc%nimg_list /= [12, 6, 12])) then
+      call test_failed(error, "Unexpected image counts after reusing wignerseitz_cell")
+      return
+   end if
+
+   mol%nat = 0
+   call new_csr_list(list, mol, error, wsc=wsc, cutoff=5.0_wp)
+   if (allocated(error)) return
+   call check(error, size(wsc%nimg_list), 0)
+
+end subroutine test_wsc_reuse
 
 
 end module test_csrlist
