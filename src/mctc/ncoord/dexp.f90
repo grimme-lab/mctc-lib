@@ -164,14 +164,16 @@ elemental function ncoord_d2count(self, izp, jzp, r) result(count)
    fa = 1.0_wp / (1.0_wp + ea)
    tmp_a = ea * fa * fa
    dfa = -krc_a * tmp_a * inv_r2
-   d2fa = tmp_a * krc_a * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * fa) * krc_a * inv_r + 2.0_wp)
+   d2fa = tmp_a * krc_a * inv_r2 * inv_r &
+      & * ((1.0_wp - 2.0_wp * fa) * krc_a * inv_r + 2.0_wp)
 
    krc_b = kb * rcb
    eb = exp(-kb * (rcb * inv_r - 1.0_wp))
    fb = 1.0_wp / (1.0_wp + eb)
    tmp_b = eb * fb * fb
    dfb = -krc_b * tmp_b * inv_r2
-   d2fb = tmp_b * krc_b * inv_r2 * inv_r * ((1.0_wp - 2.0_wp * fb) * krc_b * inv_r + 2.0_wp)
+   d2fb = tmp_b * krc_b * inv_r2 * inv_r &
+      & * ((1.0_wp - 2.0_wp * fb) * krc_b * inv_r + 2.0_wp)
 
    count = d2fa * fb + 2.0_wp * dfa * dfb + fa * d2fb
 
