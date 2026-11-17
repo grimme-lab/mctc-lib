@@ -8,7 +8,6 @@ env:
     meson!=1.8.0
     cmake
     ninja
-    gcovr
   LINUX_INTEL_COMPONENTS: >-
     intel-oneapi-compiler-fortran-2021.2.0
     intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2021.2.0
@@ -34,7 +33,7 @@ jobs:
           compiler: gnu
           version: 12
 
-        - os: ubuntu-latest
+        - os: ubuntu-24.04
           build: meson
           build-type: debug
           compiler: gnu
@@ -46,7 +45,7 @@ jobs:
           compiler: gnu
           version: 11
 
-        - os: ubuntu-latest
+        - os: ubuntu-24.04
           build: meson
           build-type: debug
           compiler: intel
@@ -60,14 +59,14 @@ jobs:
       FC: ${{ matrix.compiler == 'intel' && 'ifort' || 'gfortran' }}
       CC: ${{ matrix.compiler == 'intel' && 'icc' || 'gcc' }}
       GCC_V: ${{ matrix.version }}
-      PYTHON_V: 3.9
+      PYTHON_V: "3.14"
       OMP_NUM_THREADS: 1,2,1
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v7
       with:
         python-version: ${{ env.PYTHON_V }}
 
@@ -97,7 +96,7 @@ jobs:
 
     - name: Install fpm
       if: ${{ matrix.build == 'fpm' }}
-      uses: fortran-lang/setup-fpm@v7  # fpm 0.11.0
+      uses: fortran-lang/setup-fpm@v11  # fpm 0.13.0
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -110,7 +109,7 @@ jobs:
     - name: Cache Intel install
       if: ${{ matrix.compiler == 'intel' }}
       id: cache-install
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: /opt/intel/oneapi
         key: install-${{ matrix.compiler }}-${{ matrix.version }}-${{ matrix.os }}
@@ -137,7 +136,9 @@ jobs:
 
     - name: Install build and test dependencies
       if: ${{ ! contains(matrix.os, 'windows') }}
-      run: pip3 install ${{ env.PIP_PACKAGES }}
+      run: pip3 install $PIP_PACKAGES "gcovr>=8.7"
+      env:
+        PIP_PACKAGES: ${{ env.PIP_PACKAGES }}
 
     - name: Configure build (meson)
       if: ${{ matrix.build == 'meson' }}
@@ -147,9 +148,11 @@ jobs:
         --prefix=$PWD/_dist
         --libdir=lib
         --warnlevel=0
+        -Dopenmp=${{ env.OPENMP }}
         -Db_coverage=${{ env.COVERAGE }}
         ${{ env.MESON_ARGS }}
       env:
+        OPENMP: ${{ matrix.build-type != 'coverage' }}
         COVERAGE: ${{ matrix.build-type == 'coverage' }}
         MESON_ARGS: >-
           ${{ matrix.compiler == 'intel' && '-Dfortran_link_args=-qopenmp' || '' }}
@@ -187,10 +190,21 @@ jobs:
          ctest --output-on-failure --parallel 2 -R '^mctc-lib/'
       working-directory: ${{ env.BUILD_DIR }}
 
+    # Use gcovr directly instead of `ninja -C _build coverage` for explicit filtering.
+    # Requires gcovr >= 8.7 (Python >= 3.10) so Fortran module procedures
+    # (`__<mod>_MOD_<proc>`) are preserved natively while compiler-synthesized
+    # OOP vtable thunks (`___copy_*`, `___final_*`) remain excluded.
     - name: Create coverage report
       if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
-      run:
-         ninja -C ${{ env.BUILD_DIR }} coverage
+      run: |
+        gcovr ${{ env.BUILD_DIR }} \
+          --root . \
+          --filter "app/" \
+          --filter "src/" \
+          --exclude "subprojects/" \
+          --exclude "test/" \
+          --cobertura coverage.xml \
+          --txt-summary
 
     - name: Install project
       if: ${{ matrix.build != 'fpm' }}
@@ -221,24 +235,28 @@ jobs:
 
     - name: Upload package
       if: ${{ matrix.build == 'meson' && matrix.build-type != 'coverage' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.MCTCLIB_OUTPUT }}
         path: ${{ env.MCTCLIB_OUTPUT }}
 
     - name: Upload coverage report
       if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v7
       with:
+        fail_ci_if_error: false
+        files: coverage.xml
+        disable_search: true
+        flags: fortran
         token: ${{ secrets.CODECOV_TOKEN }}
 
   lint:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v7
       with:
         python-version: '3.x'
 

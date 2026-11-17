@@ -1,2 +1,13 @@
 fixes:
   - "/home/runner/work/mctc-lib/mctc-lib::"
+
+# Only cover core library and CLI (`app` and `src` directories)
+ignore:
+  - "build/"
+  - "config/"
+  - "doc/"
+  - "example/"
+  - "include/"
+  - "man/"
+  - "subprojects/"
+  - "test/"

@@ -37,3 +37,10 @@
 /docs*/
 /subprojects/*/
 /subprojects/test-drive.wrap
+
+# Coverage
+.coverage*
+coverage*
+*.gcov
+*.gcda
+*.gcno
