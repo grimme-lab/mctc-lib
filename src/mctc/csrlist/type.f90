@@ -297,10 +297,13 @@ subroutine build_list(self, mol, error, wsc)
    if (allocated(self%inl)) deallocate(self%inl)
    allocate(self%inl(nat + 1), source=1_i8)
    if (nat <= 0) then
+      allocate(self%nlat(0))
       if (use_wsc) then
          allocate(wsc%nimg_list(0))
          allocate(wsc%itr_list(1), source=1_i8)
          allocate(wsc%tridx_list(0))
+      else if (periodic) then
+         allocate(self%nltr(0))
       end if
       return
    end if
