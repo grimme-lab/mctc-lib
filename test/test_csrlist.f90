@@ -83,6 +83,7 @@ subroutine collect_csrlist(testsuite)
       & new_unittest("wsc-parity-slab-2d", test_wsc_parity_slab), &
       & new_unittest("wsc-parity-wire-1d", test_wsc_parity_wire), &
       & new_unittest("wsc-reuse", test_wsc_reuse), &
+      & new_unittest("empty-structure", test_empty_structure), &
       & new_unittest("csr-vs-verlet-slab-2d", test_list_slab), &
       & new_unittest("csr-vs-verlet-wire-1d", test_list_wire) &
       & ]
@@ -1345,6 +1346,25 @@ subroutine test_wsc_reuse(error)
    call check(error, size(wsc%nimg_list), 0)
 
 end subroutine test_wsc_reuse
+
+
+!> Index arrays of an empty structure are allocated with zero size
+subroutine test_empty_structure(error)
+   type(error_type), allocatable, intent(out) :: error
+   type(structure_type) :: mol
+   type(csr_list) :: list
+
+   call get_structure(mol, "nacl")
+   mol%nat = 0
+   call new_csr_list(list, mol, error, cutoff=5.0_wp)
+   if (allocated(error)) return
+   if (.not.allocated(list%nlat) .or. .not.allocated(list%nltr)) then
+      call test_failed(error, "Index arrays of an empty structure are not allocated")
+      return
+   end if
+   call check(error, size(list%nlat) + size(list%nltr), 0)
+
+end subroutine test_empty_structure
 
 
 end module test_csrlist
