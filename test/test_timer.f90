@@ -13,6 +13,7 @@
 ! limitations under the License.
 
 module test_timer
+   use, intrinsic :: iso_c_binding, only : c_int
    use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_env_timer, only : timer_type, format_time
@@ -20,6 +21,14 @@ module test_timer
    private
 
    public :: collect_timer
+
+   interface
+      function c_sleep(seconds) result(status) bind(C, name="sleep")
+         import :: c_int
+         integer(c_int), value :: seconds
+         integer(c_int) :: status
+      end function c_sleep
+    end interface
 
 contains
 
@@ -68,5 +77,15 @@ subroutine test_push_pop(error)
    call check(error, elapsed > 1.0_wp, .true., "timer elapsed time must be positive")
 
 end subroutine test_push_pop
+
+
+subroutine sleep(seconds)
+
+   integer, intent(in) :: seconds
+   integer :: status
+
+   status = c_sleep(seconds)
+
+end subroutine sleep
 
 end module test_timer
