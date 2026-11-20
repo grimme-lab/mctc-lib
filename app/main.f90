@@ -95,6 +95,11 @@ program main
       error stop
    end if
 
+   if (mol%info%magnetic) then
+      write(error_unit, "(a)") "Warning: Magnetic moments and magnetic symmetry in '"//input//&
+         & "' are not retained, only positions and lattice are converted"
+   end if
+
    if (allocated(mol_template)) then
       if (mol%nat /= mol_template%nat) then
          write(error_unit, "(*(a, 1x))") &

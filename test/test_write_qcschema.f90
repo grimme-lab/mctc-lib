@@ -13,7 +13,9 @@
 ! limitations under the License.
 
 module test_write_qcschema
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
+   use mctc_io_math, only : matdet_3x3
    use mctc_io_read_qcschema, only : read_qcschema
    use mctc_io_structure, only : structure_type
    use mctc_io_write_qcschema, only : write_qcschema
@@ -40,7 +42,8 @@ subroutine collect_write_qcschema(testsuite)
 
    testsuite = [ &
       & new_unittest("valid1-qcschema", test_valid1_qcschema, should_fail=.not.with_json), &
-      & new_unittest("valid2-qcschema", test_valid2_qcschema, should_fail=.not.with_json) &
+      & new_unittest("valid2-qcschema", test_valid2_qcschema, should_fail=.not.with_json), &
+      & new_unittest("valid3-qcschema", test_valid3_qcschema, should_fail=.not.with_json) &
       & ]
 
 end subroutine collect_write_qcschema
@@ -103,6 +106,33 @@ subroutine test_valid2_qcschema(error)
    if (allocated(error)) return
 
 end subroutine test_valid2_qcschema
+
+
+subroutine test_valid3_qcschema(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: struc
+   integer :: unit
+   real(wp) :: chirality
+
+   call get_structure(struc, "chiral")
+   chirality = matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3))
+
+   open(status="scratch", newunit=unit)
+   call write_qcschema(struc, unit)
+   rewind(unit)
+
+   call read_qcschema(struc, unit, error)
+   close(unit)
+   if (allocated(error)) return
+
+   call check(error, matdet_3x3(struc%xyz(:, 2:4) - spread(struc%xyz(:, 1), 2, 3)), &
+      & chirality, thr=1.0e-8_wp, message="Handedness of the structure is not preserved")
+   if (allocated(error)) return
+
+end subroutine test_valid3_qcschema
 
 
 end module test_write_qcschema

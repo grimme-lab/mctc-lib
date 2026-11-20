@@ -17,6 +17,7 @@ module mctc_io_write_cjson
    use mctc_io_constants, only : pi
    use mctc_io_convert, only : autoaa
    use mctc_io_math, only : matinv_3x3
+   use mctc_io_periodic, only : dlat_to_cell
    use mctc_io_structure, only : structure_type
    implicit none
    private
@@ -281,26 +282,5 @@ pure function json_value_int(val) result(string)
 
    string = buffer(pos:)
 end function json_value_int
-
-!> Convert direct lattice to cell parameters
-pure subroutine dlat_to_cell(lattice,cellpar)
-   implicit none
-   real(wp),intent(in)  :: lattice(3,3) !< direct lattice
-   real(wp),intent(out) :: cellpar(6)   !< cell parameters
-
-   associate( alen => cellpar(1), blen => cellpar(2), clen => cellpar(3), &
-      &       alp  => cellpar(4), bet  => cellpar(5), gam  => cellpar(6) )
-
-   alen = norm2(lattice(:,1))
-   blen = norm2(lattice(:,2))
-   clen = norm2(lattice(:,3))
-
-   alp = acos(dot_product(lattice(:,2),lattice(:,3))/(blen*clen))
-   bet = acos(dot_product(lattice(:,1),lattice(:,3))/(alen*clen))
-   gam = acos(dot_product(lattice(:,1),lattice(:,2))/(alen*blen))
-
-   end associate
-
-end subroutine dlat_to_cell
 
 end module mctc_io_write_cjson

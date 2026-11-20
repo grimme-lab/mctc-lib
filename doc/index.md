@@ -10,6 +10,7 @@ All formats can be auto-detected by file extension or explicitly specified using
 - [XYZ format](./format-xyz.html) - Ordinary and Extended XYZ (`.xyz`, `.log`, `.extxyz`)
 - [Connection table files](./format-ctfile.html) - MDL molfile and SDF formats (`.mol`, `.sdf`)
 - [Protein Data Bank](./format-pdb.html) - PDB format for biomolecules (`.pdb`)
+- [Crystallographic Information File](./format-cif.html) - CIF crystal structures, read only (`.cif`)
 
 ## JSON-based Formats
 
