@@ -20,6 +20,7 @@ srcs += files(
   'codata2018.f90',
   'constants.f90',
   'convert.f90',
+  'dotfiles.f90',
   'filetype.f90',
   'math.f90',
   'read.f90',

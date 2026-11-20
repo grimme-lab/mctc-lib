@@ -20,6 +20,7 @@
 !> - [[structure_type]]: Central data structure for molecular and periodic systems
 !> - [[read_structure]]: Read structures from files or formatted units
 !> - [[write_structure]]: Write structures to files or formatted units
+!> - [[read_dotfiles]] / [[read_chrg]] / [[read_uhf]]: Read `.CHRG` and `.UHF` auxiliary files
 !> - [[mctc_io_filetype:filetype]]: Enumerator for supported file formats
 !> - [[to_symbol]] / [[to_number]]: Convert between element symbols and atomic numbers
 !>
@@ -45,6 +46,7 @@
 !> call write_structure(mol, "output.mol", error)
 !>```
 module mctc_io
+   use mctc_io_dotfiles, only : read_dotfiles, read_chrg, read_uhf
    use mctc_io_filetype, only : filetype, get_filetype
    use mctc_io_read, only : read_structure
    use mctc_io_structure, only : structure_type, new_structure, new
@@ -55,6 +57,7 @@ module mctc_io
 
    public :: filetype, get_filetype
    public :: read_structure, write_structure
+   public :: read_dotfiles, read_chrg, read_uhf
    public :: structure_type, new_structure, new
    public :: to_symbol, to_number
 

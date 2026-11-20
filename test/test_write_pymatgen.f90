@@ -13,6 +13,7 @@
 ! limitations under the License.
 
 module test_write_pymatgen
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_read_pymatgen, only : read_pymatgen
    use mctc_io_structure, only : structure_type
@@ -23,6 +24,8 @@ module test_write_pymatgen
    private
 
    public :: collect_write_pymatgen
+
+   real(wp), parameter :: thr = 100 * epsilon(1.0_wp)
 
 
 contains
@@ -55,6 +58,7 @@ subroutine test_valid1_pymatgen(error)
    integer :: unit, nat, nid
 
    call get_structure(struc, "mindless01")
+   struc%charge = 0.5_wp
    nat = struc%nat
    nid = struc%nid
 
@@ -66,6 +70,8 @@ subroutine test_valid1_pymatgen(error)
    close(unit)
    if (allocated(error)) return
 
+   call check(error, struc%charge, 0.5_wp, "Fractional charge not preserved", thr=thr)
+   if (allocated(error)) return
    call check(error, struc%nat, nat, "Number of atoms does not match")
    if (allocated(error)) return
    call check(error, struc%nid, nid, "Number of species does not match")

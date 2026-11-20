@@ -16,7 +16,7 @@ module test_utils
    use mctc_env_accuracy, only : wp, i8
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
-   use mctc_io_utils, only : token_type, read_token, read_next_token
+   use mctc_io_utils, only : token_type, next_token, read_token, read_next_token
    implicit none
    private
 
@@ -331,6 +331,11 @@ subroutine test_real_next_token(error)
 
    call read_next_token(line, pos, token, val, stat)
    call check(error, stat /= 0, "Read past the last token")
+   if (allocated(error)) return
+
+   pos = 0
+   call next_token("   "//achar(9)//achar(13), pos, token)
+   call check(error, token%first, 6, "Trailing whitespace did not advance past end")
 
 end subroutine test_real_next_token
 
