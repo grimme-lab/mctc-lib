@@ -64,7 +64,8 @@ pure function json_string(mol, indent) result(string)
       string = string // ","
 
       if (present(indent)) string = string // nl // indent
-      string = string // json_key("charge", indent) // json_value(nint(mol%charge))
+      string = string // json_key("charge", indent) // &
+         & json_value(mol%charge, "(es23.16)")
       string = string // ","
 
       if (present(indent)) string = string // nl // indent

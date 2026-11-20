@@ -19,6 +19,7 @@ module mctc_env_system
 
    public :: get_argument, get_variable
    public :: is_windows, is_unix
+   public :: dirname, join_path
 
 
 contains
@@ -120,6 +121,67 @@ function is_unix()
    is_unix = .not. is_windows()
 
 end function is_unix
+
+
+!> Extract directory component from a file path ("." if none is present)
+pure function dirname(path) result(dir)
+
+   !> Input file path
+   character(len=*), intent(in) :: path
+
+   !> Extracted directory path
+   character(len=:), allocatable :: dir
+
+   integer :: isep, last
+
+   isep = scan(trim(path), "/\", back=.true.)
+   if (isep == 0) then
+      dir = "."
+      return
+   end if
+
+   last = verify(path(:isep), "/\", back=.true.)
+   if (last == 0) then
+      dir = path(1:1)
+   else if (last == 2 .and. path(2:2) == ":") then
+      dir = path(1:3)
+   else
+      dir = path(1:last)
+   end if
+
+end function dirname
+
+
+!> Join directory and leaf path segments with OS file separator
+function join_path(a1, a2) result(path)
+
+   !> Leading path segment
+   character(len=*), intent(in) :: a1
+
+   !> Trailing path segment
+   character(len=*), intent(in) :: a2
+
+   !> Joined path string
+   character(len=:), allocatable :: path
+
+   character :: filesep
+   integer :: n1
+
+   n1 = len_trim(a1)
+   if (n1 == 0) then
+      path = trim(a2)
+      return
+   end if
+
+   if (a1(n1:n1) == "/" .or. a1(n1:n1) == "\") then
+      path = a1(:n1) // trim(a2)
+      return
+   end if
+
+   filesep = merge("\", "/", is_windows())
+   path = a1(:n1) // filesep // trim(a2)
+
+end function join_path
 
 
 end module mctc_env_system

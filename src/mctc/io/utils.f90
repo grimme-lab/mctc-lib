@@ -147,8 +147,13 @@ subroutine next_token(string, pos, token)
       return
    end if
 
-   do while(pos < len(string))
+   do
       pos = pos + 1
+      if (pos > len(string)) then
+         token = token_type(len(string)+1, len(string)+1)
+         return
+      end if
+
       select case(string(pos:pos))
       case(" ", achar(9), achar(10), achar(13))
          continue

@@ -30,20 +30,19 @@
 !> in a similar manner.
 program main
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
-   use mctc_env, only : error_type, fatal_error, get_argument, wp
+   use mctc_env, only : error_type, fatal_error, get_argument
    use mctc_io, only : structure_type, read_structure, write_structure, &
-      & filetype, get_filetype, to_symbol
+      & read_dotfiles, filetype, get_filetype, to_symbol
    use mctc_version, only : get_mctc_version
    implicit none
    character(len=*), parameter :: prog_name = "mctc-convert"
 
-   character(len=:), allocatable :: input, output, template, filename
+   character(len=:), allocatable :: input, output, template
    integer, allocatable :: input_format, output_format, template_format
    type(structure_type) :: mol
    type(structure_type), allocatable :: mol_template
    type(error_type), allocatable :: error
    logical :: normalize, read_dot_files
-   integer :: charge, unpaired
 
    call get_arguments(input, input_format, output, output_format, normalize, &
       & template, template_format, read_dot_files, error)
@@ -73,21 +72,8 @@ program main
       call read_structure(mol, input_unit, input_format, error)
    else
       call read_structure(mol, input, error, input_format)
-
-      if (read_dot_files) then
-         charge = nint(mol%charge)
-         if (.not.allocated(error)) then
-            filename = join(dirname(input), ".CHRG")
-            if (exists(filename)) call read_file(filename, charge, error)
-         end if
-         mol%charge = charge
-
-         unpaired = mol%uhf
-         if (.not.allocated(error)) then
-            filename = join(dirname(input), ".UHF")
-            if (exists(filename)) call read_file(filename, unpaired, error)
-         end if
-         mol%uhf = unpaired
+      if (read_dot_files .and. .not. allocated(error)) then
+         call read_dotfiles(mol, input, error)
       end if
    end if
    if (allocated(error)) then
@@ -274,77 +260,6 @@ subroutine get_arguments(input, input_format, output, output_format, normalize, 
    end if
 
 end subroutine get_arguments
-
-
-!> Extract dirname from path
-function dirname(filename)
-   character(len=*), intent(in) :: filename
-   character(len=:), allocatable :: dirname
-
-   dirname = filename(1:scan(filename, "/\", back=.true.))
-   if (len_trim(dirname) == 0) dirname = "."
-end function dirname
-
-
-!> Construct path by joining strings with os file separator
-function join(a1, a2) result(path)
-   use mctc_env_system, only : is_windows
-   character(len=*), intent(in) :: a1, a2
-   character(len=:), allocatable :: path
-   character :: filesep
-
-   if (is_windows()) then
-      filesep = "\"
-   else
-      filesep = "/"
-   end if
-
-   path = a1 // filesep // a2
-end function join
-
-
-!> test if pathname already exists
-function exists(filename)
-    character(len=*), intent(in) :: filename
-    logical :: exists
-    inquire(file=filename, exist=exists)
-end function exists
-
-
-subroutine read_file(filename, val, error)
-   use mctc_io_utils, only : next_line, read_next_token, io_error, token_type
-   character(len=*), intent(in) :: filename
-   integer, intent(out) :: val
-   type(error_type), allocatable, intent(out) :: error
-
-   integer :: io, stat, lnum, pos
-   type(token_type) :: token
-   character(len=:), allocatable :: line
-
-   lnum = 0
-
-   open(file=filename, newunit=io, status="old", iostat=stat)
-   if (stat /= 0) then
-      call fatal_error(error, "Error: Could not open file '"//filename//"'")
-      return
-   end if
-
-   call next_line(io, line, pos, lnum, stat)
-   if (stat == 0) then
-     call read_next_token(line, pos, token, val, stat)
-   end if
-   if (stat /= 0) then
-      call io_error(error, "Cannot read value from file", line, token, &
-         filename, lnum, "expected integer value")
-      return
-   end if
-
-   close(io, iostat=stat)
-   if (stat /= 0) then
-      call fatal_error(error, "Error: Could not close file '"//filename//"'")
-   end if
-
-end subroutine read_file
 
 
 end program main

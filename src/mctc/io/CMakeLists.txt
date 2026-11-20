@@ -23,6 +23,7 @@ list(
   "${dir}/codata2018.f90"
   "${dir}/constants.f90"
   "${dir}/convert.f90"
+  "${dir}/dotfiles.f90"
   "${dir}/filetype.f90"
   "${dir}/math.f90"
   "${dir}/read.f90"

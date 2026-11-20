@@ -13,6 +13,7 @@
 ! limitations under the License.
 
 module test_write_qcschema
+   use mctc_env_accuracy, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io_read_qcschema, only : read_qcschema
    use mctc_io_structure, only : structure_type
@@ -23,6 +24,8 @@ module test_write_qcschema
    private
 
    public :: collect_write_qcschema
+
+   real(wp), parameter :: thr = 100 * epsilon(1.0_wp)
 
 
 contains
@@ -56,6 +59,7 @@ subroutine test_valid1_qcschema(error)
 
    call get_structure(struc, "mindless01")
    struc%comment = "mindless"
+   struc%charge = -0.25_wp
    nat = struc%nat
    nid = struc%nid
 
@@ -68,6 +72,8 @@ subroutine test_valid1_qcschema(error)
    if (allocated(error)) return
 
    call check(error, struc%comment, "mindless", "Comment no preserved")
+   if (allocated(error)) return
+   call check(error, struc%charge, -0.25_wp, "Fractional charge not preserved", thr=thr)
    if (allocated(error)) return
    call check(error, struc%nat, nat, "Number of atoms does not match")
    if (allocated(error)) return

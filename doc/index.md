@@ -34,3 +34,7 @@ File formats are detected automatically based on:
 2. Basename (e.g., `coord`, `POSCAR`, `CONTCAR`, `geometry.in`)
 
 When automatic detection is not possible (e.g., reading from stdin), use the format hint options in `mctc-convert` or the `filetype` enumerator in the library API.
+
+## Auxiliary Dot-Files
+
+`read_structure` only reads metadata embedded in the structure file itself. Auxiliary `.CHRG` (total molecular charge, canonically `real(wp)` so both integer and decimal/fractional values are accepted) and `.UHF` (number of unpaired electrons, canonically `integer`) files in the input directory can be loaded explicitly via `read_dotfiles`, `read_chrg`, and `read_uhf` from `mctc_io`.

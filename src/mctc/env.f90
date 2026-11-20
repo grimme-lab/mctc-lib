@@ -42,14 +42,14 @@ module mctc_env
    use mctc_env_accuracy, only : sp, dp, wp, i1, i2, i4, i8
    use mctc_env_error, only : error_type, fatal_error, mctc_stat
    use mctc_env_system, only : get_argument, get_variable, &
-      & is_unix, is_windows
+      & is_unix, is_windows, dirname, join_path
    use mctc_env_timer, only : timer_type, format_time
    implicit none
    private
 
    public :: sp, dp, wp, i1, i2, i4, i8
    public :: error_type, fatal_error, mctc_stat
-   public :: get_argument, get_variable, is_unix, is_windows
+   public :: get_argument, get_variable, is_unix, is_windows, dirname, join_path
    public :: timer_type, format_time
 
 end module mctc_env
